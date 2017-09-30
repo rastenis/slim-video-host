@@ -33,6 +33,9 @@ app.use(session({
 
 // postas loginui. Reikalingas, kad butu pasiekiama $store.state.authUser
 app.post('/api/login', function(req, res) {
+
+    //bcrypt.compareSync(pass, hash);
+
     if (req.body.username === 'demo' && req.body.password === 'demo') {
         req.session.authUser = { username: 'demo' }; //paliekam username, visa kita griebsim su juo + pasitikesim authUser
         return res.json({ username: 'demo' });
@@ -120,15 +123,8 @@ function resolveCode(cursor) {
 }
 
 function hashUpPass(pass) {
-    var saltRounds = 10;
-    bcrypt.genSalt(saltRounds, function(err, salt) {
-        if (err) console.error(err);
-
-        bcrypt.hash(user.password, salt, null, function(err, hash) {
-            if (err) console.error(err);
-            return hash;
-        });
-    });
+    var hash = bcrypt.hashSync(pass, 10);
+    return hash;
 }
 
 function checkForDuplicateUN(username, cursor) {
