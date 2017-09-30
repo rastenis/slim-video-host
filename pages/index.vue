@@ -1,0 +1,239 @@
+<template>
+  <div class="hiddenOverflow" >
+    <div v-bind:style="intro">
+     <style <style scoped> .bl{-webkit-filter: blur(4px);filter:blur(4px);}</style>
+    </div>
+      <a class="hvr-fade introMainButton" @click="activateLogin(true)" v-show="!showLogin">
+        <p v-if="!$store.state.authUser" class="nudge">Login</p> 
+        <p v-else class="nudge" >Welcome back</p>
+      </a>
+      <div v-show="showLogin" class="introLoginForm">
+        <div class="centerHor" v-if="!$store.state.authUser">
+          <form v-on:submit.prevent="login" class="formField">
+            <p class="error" v-if="formError">{{ formError }}</p>
+            <p></p>Login</i></p>
+            <p><el-input @keyup.enter.native="login" @keyup.alt.82.native="redirectToRegister()" placeholder="Username" type="text" v-model="formUsername" name="username" /></p>
+            <p><el-input @keyup.enter.native="login" placeholder="Password" type="password" v-model="formPassword" name="password" /></p>
+            <el-button class="loginButton" type="submit" @click="login">Login</el-button >
+          </form>
+        </div>
+        <div v-else>
+          Welcome back, {{ $store.state.authUser.username }}!
+          <p><i>Redirecting you to your dashboard.</i></p>
+        </div>
+      </div>
+    </div>
+</template>
+
+<script>
+import axios from 'axios'
+
+export default {
+  data () {
+    return { 
+      intro:{
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        backgroundImage:'',
+        backgroundSize:'cover',
+        '-webkit-background-size': 'cover',
+        '-moz-background-size': 'cover',
+        '-o-background-size': 'cover',
+        'background-size': 'cover',
+        'z-index':-1
+        //,transform: 'scale(1.1)' cia jei blura desiu
+        },
+      formError: null,
+      formUsername: '',
+      formPassword: '',
+      showLogin:false
+    }
+  },
+  methods:{
+    assignNewGif(){
+     axios.get('http://api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag=art')
+            .then((res) => {
+              console.log("received gif: "+ res.data.data.image_url);
+              this.intro.backgroundImage='url('+ res.data.data.image_url+') no-repeat center center fixed'
+            })
+    },
+    activateLogin(bool){
+      if(!this.$store.state.authUser){
+        this.showLogin=bool;
+      }else{ //user pressed welcome back. Redirect to dashboard
+        this.$store.app.router.push("/dash")
+      }
+    },
+    async redirectToRegister(){
+      this.$store.app.router.push("/regMeUpYo")
+    },
+    async login () {
+      try {
+        await this.$store.dispatch('login', {
+          username: this.formUsername,
+          password: this.formPassword
+        })
+        this.formUsername = ''
+        this.formPassword = ''
+        this.formError = null
+        
+      } catch(e) {
+        this.formError = e.message
+      }
+    },
+    async logout () {
+      try {
+        await this.$store.dispatch('logout')
+      } catch (e) {
+        this.formError = e.message
+      }
+    }
+  },
+  created:function(){
+  //gif setter
+    axios.get('http://api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag=abstract')
+          .then((res) => {
+            console.log("ok setting shit to "+ res.data.data.image_original_url);
+              this.intro.backgroundImage='url('+ res.data.data.image_original_url+')';
+          })
+  }
+  
+}
+</script>
+
+<style>
+
+  a{
+   
+    text-decoration: none;
+  }
+  .nudge{
+     padding-top: 10px;
+  }
+  .introButton{
+    border-style: solid;
+    border-width: 3px;
+    border-color:white;
+    font-size:2em;
+    border-radius: 10px;
+    background-color:transparent;
+    animation-name: loginButtonAnim;
+    animation-duration: 1s;
+  }
+  .welcomeText{
+    color:white;
+    text-align: center;
+    vertical-align: middle;
+    position: relative;
+    width:100%;
+    height:100%;
+
+  }
+
+  .centerHor{
+    justify-content: center;
+  }
+
+  .introMainButton{
+    background: black;
+    text-align: center;
+    position: absolute;
+    margin: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    opacity: 0.7;
+    height: 30%;
+    width: 40%;
+    content: center;
+    font-size: 16px; 
+    font-size: 8vh;
+    color:white;
+    border-style: solid;
+    border-color:white;
+    border-width: 5px;
+  }
+
+  .introLoginForm{
+    background: black;
+    position: absolute;
+    margin: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    opacity: 0.7;
+    height: 30%;
+    width: 40%;
+    color:white;
+    border-style: solid;
+    border-color:white;
+    border-width: 5px;
+  }
+
+  .introLoginForm{
+    background: black;
+    position: absolute;
+    margin: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    opacity: 0.7;
+    height: 30%;
+    width: 40%;
+    color:white;
+    border-style: solid;
+    border-color:white;
+    border-width: 5px;
+  }
+  
+
+  /* Fade */
+  .hvr-fade {
+    display: inline-block;
+    vertical-align: middle;
+    -webkit-transform: perspective(1px) translateZ(0);
+    transform: perspective(1px) translateZ(0);
+    box-shadow: 0 0 1px transparent;
+    overflow: hidden;
+    -webkit-transition-duration: 0.3s;
+    transition-duration: 0.3s;
+    -webkit-transition-property: color, background-color;
+    transition-property: color, background-color;
+  }
+  .hvr-fade:hover, .hvr-fade:focus, .hvr-fade:active {
+    background-color: white;
+    color: black;
+    opacity:0.95;
+  }
+  body{
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+
+  }
+
+  .inputField{
+    max-width: 100%;
+  }
+
+  .formField{
+    max-width: 50%;
+    margin: 0 auto;
+  }
+
+  .loginButton{
+    margin: 0 auto;
+
+  }
+
+</style>
+
+
+
+
+
