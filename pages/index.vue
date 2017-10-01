@@ -11,8 +11,9 @@
         <div class="centerHor" v-if="!$store.state.authUser">
           <form v-on:submit.prevent="login" class="formField">
             <p class="error" v-if="formError">{{ formError }}</p>
-            <p><el-input @keyup.enter.native="login" @keyup.alt.82.native="redirectToRegister()" placeholder="Username" type="text" v-model="formUsername" name="username" /></p>
-            <p><el-input @keyup.enter.native="login" placeholder="Password" type="password" v-model="formPassword" name="password" /></p>
+            <p>Login</p>
+            <p><el-input @keyup.alt.82.native="redirectToRegister()" placeholder="Username" type="text" v-model="form.username" name="username" /></p>
+            <p><el-input @keyup.enter.native="login" placeholder="Password" type="password" v-model="form.password" name="password" /></p>
             <el-button class="loginButton" type="submit" @click="login">Login</el-button >
           </form>
         </div>
@@ -45,9 +46,11 @@ export default {
         'z-index':-1
         //,transform: 'scale(1.1)' cia jei blura desiu
         },
+      form:{
+        username:'',
+        password:''
+      },
       formError: null,
-      formUsername: '',
-      formPassword: '',
       showLogin:false
     }
   },
@@ -72,13 +75,13 @@ export default {
     async login () {
       try {
         await this.$store.dispatch('login', {
-          username: this.formUsername,
-          password: this.formPassword
+          username: this.form.username,
+          password: this.form.password
         })
-        this.formUsername = ''
-        this.formPassword = ''
+        this.form.username = ''
+        this.form.password = ''
         this.formError = null
-        
+        this.$store.app.router.push("/dash")
       } catch(e) {
         this.formError = e.message
       }
@@ -93,7 +96,7 @@ export default {
   },
   created:function(){
   //gif setter
-    axios.get('http://api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag=abstract')
+    axios.get('http://api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag=art')
           .then((res) => {
             console.log("ok setting shit to "+ res.data.data.image_original_url);
               this.intro.backgroundImage='url('+ res.data.data.image_original_url+')';

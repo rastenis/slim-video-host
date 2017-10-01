@@ -42,10 +42,10 @@
               this.$store.app.router.push("/regMeUpYo")
             }
             break;
-          case 3:
+          case "3":
               this.$store.app.router.push("/upload")
             break;
-          case 4:
+          case "4":
               this.logout();
           break;
           default:

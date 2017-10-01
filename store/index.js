@@ -42,6 +42,8 @@ const store = () => new Vuex.Store({
                 .then((res) => {
                     if (res.status === 401) {
                         throw new Error('Bad credentials.')
+                    } else if (res.status === 402) {
+                        throw new Error('No user with those credentials found.')
                     } else {
                         return res.json()
                     }

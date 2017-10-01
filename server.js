@@ -1,16 +1,16 @@
 require('dotenv').config();
-const FileSystemStore = require("file-system-store");
 const MongoPortable = require("mongo-portable").MongoPortable;
 const bcrypt = require('bcrypt');
 const shortid = require('shortid');
 const chalk = require('chalk');
+var FileSystemStore = require("file-system-store");
 
 //setupinam databasus
-var db = new MongoPortable("main");
+var db = new MongoPortable("TEST");
 db.addStore(FileSystemStore);
 
 var adminRegistered = checkAdminReg();
-console.log(adminRegistered);
+console.log("admin reg: " + adminRegistered);
 
 process.env.DEBUG = 'nuxt:*'
 
@@ -19,7 +19,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const app = require('express')();
 
-var defaultStorageSpace = 10;
+var defaultStorageSpace = 10; //gigabaitais
 
 // Body parser, to access req.body
 app.use(bodyParser.json());
@@ -39,12 +39,25 @@ app.post('/api/login', function(req, res) {
     var users = db.collection("users");
     var cursor = users.find({ username: req.body.username.toLowerCase() });
 
-    var ver = verifyUser(cursor, req.body.password);
-    if (ver) {
-        req.session.authUser = ver;
-        return res.json(ver);
-    } else {
-        res.status(401).json({ error: 'Bad credentials' });
+    let count = 0;
+    cursor.forEach(function(doc) { //jei randa daugiau nei 1 - problem
+        console.log(chalk.bgGreen("ELEMENT: " + doc));
+        if (count >= 1) { //checkas del butent dupe username accounts (NETURETU TOKIU BUT EVER)
+            console.log(chalk.bgRed.white("== ACCOUNTS WITH MATCHING USERNAMES DETECTED =="));
+        } else {
+            if (bcrypt.compareSync(req.body.password, doc.password)) { //passwords match
+                console.log(chalk.green("passwords match!"));
+                req.session.authUser = doc;
+            } else {
+                console.log(chalk.red("passwords don't match!"));
+                res.status(401).json({ error: 'Bad credentials' });
+            }
+        }
+        count++;
+    });
+
+    if (count == 0) {
+        res.status(402).json({ error: 'No user with those credentials found.' });
     }
 
 });
@@ -144,20 +157,12 @@ function checkForDuplicateUN(username, cursor) {
     return false;
 }
 
-function verifyUser(cursor, pass) {
-    let count = 0;
-    cursor.forEach(function(doc) { //jei randa daugiau nei 1 - problem
-        if (count >= 1) { //checkas del butent dupe username accounts (NETURETU TOKIU BUT EVER)
-            console.log(chalk.bgRed.white("== ACCOUNTS WITH MATCHING USERNAMES DETECTED =="));
-        } else {
-            if (bcrypt.compareSync(pass, doc.password)) { //passwords match
-                console.log(chalk.green("passwords match!"));
-                return doc;
-            } else {
-                console.log(chalk.red("passwords don't match!"));
-                return false;
-            }
-        }
-        count++;
-    });
+function isJSON(data) {
+    var ret = true;
+    try {
+        JSON.parse(data);
+    } catch (e) {
+        ret = false;
+    }
+    return ret;
 }
