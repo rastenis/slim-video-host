@@ -11,7 +11,6 @@
         <div class="centerHor" v-if="!$store.state.authUser">
           <form v-on:submit.prevent="login" class="formField">
             <p class="error" v-if="formError">{{ formError }}</p>
-            <p></p>Login</i></p>
             <p><el-input @keyup.enter.native="login" @keyup.alt.82.native="redirectToRegister()" placeholder="Username" type="text" v-model="formUsername" name="username" /></p>
             <p><el-input @keyup.enter.native="login" placeholder="Password" type="password" v-model="formPassword" name="password" /></p>
             <el-button class="loginButton" type="submit" @click="login">Login</el-button >

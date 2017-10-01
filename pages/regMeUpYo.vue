@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class='RegForm' v-if="!$store.state.authUser">
-      <el-form v-model="regForm" label-width="100px" v-rules="rules">
+      <el-form :model="regForm" label-width="100px" ref="regForm" :rules="formRules">
         <el-form-item label="Username" prop="username">
           <el-input v-model="regForm.username"></el-input>
         </el-form-item>
@@ -48,7 +48,7 @@ export default {
       hasCode:false,
       activeIndex: "2",
       activeIndexUnreg: "2",
-      rules: {
+      formRules: {
         username: [
           { required: true, message: 'Please input a valid username', trigger: 'blur' },
           { min: 5, max: 100, message: 'Length should be 5 to 100', trigger: 'blur' }
@@ -58,11 +58,11 @@ export default {
           { type: 'email', message: 'Please enter a valid email address', trigger: 'blur' }
         ],
         pass: [
-          { type: 'date', required: true, message: 'Please pick a date', trigger: 'change' },
+          { required: true, message: 'Please enter a password.', trigger: 'blur' },
           { min: 8, max: 100, message: 'Length should be 8 to 100', trigger: 'blur' }
         ],
         passconf: [
-          { type: 'date', required: true, message: 'Please pick a time', trigger: 'change' }
+          { required: true, message: 'Please confirm your password.', trigger: 'blur' }
         ]
       }
     }

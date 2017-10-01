@@ -41,7 +41,7 @@ const store = () => new Vuex.Store({
                 })
                 .then((res) => {
                     if (res.status === 401) {
-                        throw new Error('Bad credentials')
+                        throw new Error('Bad credentials.')
                     } else {
                         return res.json()
                     }
@@ -51,7 +51,7 @@ const store = () => new Vuex.Store({
                 })
         },
         register({ commit }, { username, password, passconf, email, code }) {
-            return fetch('/api/login', {
+            return fetch('/api/register', {
                     // Send the client cookies to the server
                     credentials: 'same-origin',
                     method: 'POST',
@@ -65,7 +65,7 @@ const store = () => new Vuex.Store({
                 })
                 .then((res) => {
                     if (res.status === 401) {
-                        throw new Error('Bad credentials')
+                        throw new Error('An account with that username already exists.')
                     } else {
                         return res.json()
                     }
