@@ -1,7 +1,7 @@
 require('dotenv').config();
 const FileSystemStore = require("file-system-store");
 const MongoPortable = require("mongo-portable").MongoPortable;
-const bcrypt = require('bcrypt-nodejs');
+const bcrypt = require('bcrypt');
 const shortid = require('shortid');
 const chalk = require('chalk');
 
