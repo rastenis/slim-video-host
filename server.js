@@ -1,8 +1,9 @@
 require('dotenv').config();
-var FileSystemStore = require("file-system-store");
-var MongoPortable = require("mongo-portable").MongoPortable;
-var bcrypt = require('bcrypt-nodejs');
-var shortid = require('shortid');
+const FileSystemStore = require("file-system-store");
+const MongoPortable = require("mongo-portable").MongoPortable;
+const bcrypt = require('bcrypt-nodejs');
+const shortid = require('shortid');
+const chalk = require('chalk');
 
 //setupinam databasus
 var db = new MongoPortable("main");
@@ -35,12 +36,17 @@ app.use(session({
 app.post('/api/login', function(req, res) {
 
     //bcrypt.compareSync(pass, hash);
+    var users = db.collection("users");
+    var cursor = users.find({ username: req.body.username.toLowerCase() });
 
-    if (req.body.username === 'demo' && req.body.password === 'demo') {
-        req.session.authUser = { username: 'demo' }; //paliekam username, visa kita griebsim su juo + pasitikesim authUser
-        return res.json({ username: 'demo' });
+    var ver = verifyUser(cursor, req.body.password);
+    if (ver) {
+        req.session.authUser = ver;
+        return res.json(ver);
+    } else {
+        res.status(401).json({ error: 'Bad credentials' });
     }
-    res.status(401).json({ error: 'Bad credentials' });
+
 });
 
 app.post('/api/register', function(req, res) {
@@ -66,10 +72,10 @@ app.post('/api/register', function(req, res) {
         var hashedPass = hashUpPass(req.body.password);
         console.log("hashed to " + hashedPass);
 
-        var newUser = users.insert({ username: req.body.username, password: hashedPass, email: req.body.email, totalSpace: storageSpace, userStatus: defUserStatus });
+        var newUser = users.insert({ username: req.body.username.toLowerCase(), password: hashedPass, email: req.body.email, totalSpace: storageSpace, userStatus: defUserStatus });
 
-        req.session.authUser = { username: req.body.username }; //paliekam username, visa kita griebsim su juo + pasitikesim authUser
-        return res.json({ username: req.body.username });
+        req.session.authUser = newUser; //kabinam visa user ant authUser
+        return res.json(newUser);
     }
 
 
@@ -136,4 +142,22 @@ function checkForDuplicateUN(username, cursor) {
         }
     });
     return false;
+}
+
+function verifyUser(cursor, pass) {
+    let count = 0;
+    cursor.forEach(function(doc) { //jei randa daugiau nei 1 - problem
+        if (count >= 1) { //checkas del butent dupe username accounts (NETURETU TOKIU BUT EVER)
+            console.log(chalk.bgRed.white("== ACCOUNTS WITH MATCHING USERNAMES DETECTED =="));
+        } else {
+            if (bcrypt.compareSync(pass, doc.password)) { //passwords match
+                console.log(chalk.green("passwords match!"));
+                return doc;
+            } else {
+                console.log(chalk.red("passwords don't match!"));
+                return false;
+            }
+        }
+        count++;
+    });
 }
