@@ -25,6 +25,7 @@
     "jquery": "^3.2.1",
     "mongo-portable": "^1.4.0",
     "mongoose": "^4.11.11",
+    "nedb": "^1.8.0",
     "nuxt": "^1.0.0-rc11",
     "short-id": "^0.1.0",
     "shortid": "^2.2.8",
