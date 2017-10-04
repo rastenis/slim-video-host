@@ -1,6 +1,6 @@
 <template>
   <div class="hiddenOverflow" >
-    <div v-bind:style="intro">
+    <div v-bind:style="intro" ref="introBCG">
      <style <style scoped> .bl{-webkit-filter: blur(4px);filter:blur(4px);}</style>
     </div>
       <a class="hvr-fade introMainButton" @click="activateLogin(true)" v-show="!showLogin">
@@ -9,13 +9,19 @@
       </a>
       <div v-show="showLogin" class="introLoginForm">
         <div class="centerHor" v-if="!$store.state.authUser">
-          <form v-on:submit.prevent="login" class="formField">
+          <el-form v-on:submit.prevent="login" class="formField">
             <p class="error" v-if="formError">{{ formError }}</p>
             <p>Login</p>
-            <p><el-input @keyup.alt.82.native="redirectToRegister()" placeholder="Username" type="text" v-model="form.username" name="username" /></p>
-            <p><el-input @keyup.enter.native="login" placeholder="Password" type="password" v-model="form.password" name="password" /></p>
-            <el-button class="loginButton" type="submit" @click="login">Login</el-button >
-          </form>
+            <el-form-item prop="username">
+              <el-input @keyup.alt.82.native="redirectToRegister()" placeholder="Username" type="text" v-model="form.username" name="username" />
+            </el-form-item>
+            <el-form-item prop="password">
+              <el-input @keyup.alt.82.native="redirectToRegister()" placeholder="Password" type="text" v-model="form.password" name="password" />
+            </el-form-item>
+            <el-form-item>
+             <el-button class="loginButton" type="submit" @click="login">Login</el-button >
+            </el-form-item>
+          </el-form>
         </div>
         <div v-else>
           Welcome back, {{ $store.state.authUser.username }}!
@@ -56,10 +62,13 @@ export default {
   },
   methods:{
     assignNewGif(){
-     axios.get('http://api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag=art')
+     axios.get("http://api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag=art")
             .then((res) => {
               console.log("received gif: "+ res.data.data.image_url);
-              this.intro.backgroundImage='url('+ res.data.data.image_url+') no-repeat center center fixed'
+              let preparedURL="url("+ res.data.data.image_url+") no-repeat center center fixed";
+              this.intro.backgroundImage=preparedURL;
+              //fallbackas
+              this.$refs.introBCG.backgroundImage=preparedURL;
             })
     },
     activateLogin(bool){
@@ -98,8 +107,8 @@ export default {
   //gif setter
     axios.get('http://api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag=art')
           .then((res) => {
-            console.log("ok setting shit to "+ res.data.data.image_original_url);
-              this.intro.backgroundImage='url('+ res.data.data.image_original_url+')';
+            console.log('ok setting shit to '+ res.data.data.image_original_url);
+            this.intro.backgroundImage='url('+ res.data.data.image_original_url+')';
           })
   }
   

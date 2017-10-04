@@ -69,8 +69,6 @@ app.post('/api/login', function(req, res) {
 
 app.post('/api/register', function(req, res) {
 
-    console.log(chalk.bgCyanBright("OK "));
-
     db.users.find({ username: req.body.username.toLowerCase() }, function(err, docs) {
 
         //checkai del duplicate usernames
@@ -85,7 +83,6 @@ app.post('/api/register', function(req, res) {
 
             async.waterfall([
                 function(callback) { //tikrinimas ar yra atitinkanciu privelegiju kodu
-                    console.log(chalk.bgCyanBright("step 1"));
                     db.codes.find({ code: req.body.code }, function(err, docs) {
                         if (docs.length == 0) { //rado useri su tokiu paciu username
                             //no matching code, go on
@@ -98,7 +95,6 @@ app.post('/api/register', function(req, res) {
                     });
                 },
                 function(code, callback) {
-                    console.log(chalk.bgCyanBright("step 2"));
                     if (code !== null) { //got code
                         //TODO: code logic, padidint duomenu kieki OR statusa pakeist
                     }
@@ -111,14 +107,14 @@ app.post('/api/register', function(req, res) {
                     console.log(req.body);
 
                     db.users.insert({ username: req.body.username.toLowerCase(), password: hashedPass, email: req.body.email, totalSpace: storageSpace, userStatus: userStatus }, function(err, doc) {
-                        console.log(chalk.bgCyanBright("successfully inserted user " + doc.username));
+                        console.log(chalk.bgCyanBright.black("successfully inserted user " + doc.username));
                         req.session.authUser = doc; //kabinam visa user ant authUser
                         return res.json(doc);
                     });
 
                 }
             ], function(err, res) {
-                if (err) {
+                if (err) { //catchas jei pareitu koks unexpected error
                     console.log(chalk.bgRed.white(err));
                 }
             });
@@ -164,7 +160,6 @@ function checkAdminReg() {
         }
     });
 }
-
 
 function hashUpPass(pass) {
     var hash = bcrypt.hashSync(pass, 10);
