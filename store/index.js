@@ -40,10 +40,12 @@ const store = () => new Vuex.Store({
                     })
                 })
                 .then((res) => {
-                    if (res.status === 401) {
+                    if (res.status === 556) {
                         throw new Error('Bad credentials.')
-                    } else if (res.status === 402) {
+                    } else if (res.status === 555) {
                         throw new Error('No user with those credentials found.')
+                    } else if (res.status === 557) {
+                        throw new Error('Server error.')
                     } else {
                         return res.json()
                     }
@@ -62,7 +64,10 @@ const store = () => new Vuex.Store({
                     },
                     body: JSON.stringify({
                         username,
-                        password
+                        password,
+                        passconf,
+                        email,
+                        code
                     })
                 })
                 .then((res) => {

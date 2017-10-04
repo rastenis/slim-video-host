@@ -41,14 +41,12 @@ app.post('/api/login', function(req, res) {
         //checkai del duplicate usernames
         if (docs.length == 0) { //rado useri su tokiu username
             console.log(chalk.bgRed("No matching account."));
-            res.status(401).json({ error: 'No account with that username found.' });
-            //TODO: add handle for this in vuex
+            res.status(555).json({ error: 'No account with that username found.' });
         }
 
         if (docs.length > 1) { //rado daugiau nei 1 useri su tokiu username
             console.log(chalk.bgRed("==DUPLICATE ACCOUNTS FOUND=="));
-            res.status(401).json({ error: '' });
-            //TODO: add handle for this in vuex
+            res.status(557).json({ error: 'Server error.' });
         }
 
         docs.forEach(function(doc) { //jei randa daugiau nei 1 - problem
@@ -60,7 +58,7 @@ app.post('/api/login', function(req, res) {
                 return res.json(doc);
             } else {
                 console.log(chalk.red("passwords don't match!"));
-                res.status(401).json({ error: 'Bad credentials' });
+                res.status(556).json({ error: 'Bad credentials' });
             }
 
         });
@@ -88,9 +86,8 @@ app.post('/api/register', function(req, res) {
             async.waterfall([
                 function(callback) { //tikrinimas ar yra atitinkanciu privelegiju kodu
                     console.log(chalk.bgCyanBright("step 1"));
-                    callback(null, null);
                     db.codes.find({ code: req.body.code }, function(err, docs) {
-                        if (!Array.isArray(docs) || !docs.length) { //rado useri su tokiu paciu username
+                        if (docs.length == 0) { //rado useri su tokiu paciu username
                             //no matching code, go on
                             callback(null, null);
                         } else {
@@ -110,6 +107,8 @@ app.post('/api/register', function(req, res) {
                     }
 
                     var hashedPass = hashUpPass(req.body.password);
+
+                    console.log(req.body);
 
                     db.users.insert({ username: req.body.username.toLowerCase(), password: hashedPass, email: req.body.email, totalSpace: storageSpace, userStatus: userStatus }, function(err, doc) {
                         console.log(chalk.bgCyanBright("successfully inserted user " + doc.username));
