@@ -37,9 +37,8 @@ app.post('/api/login', function(req, res) {
 
     db.users.find({ username: req.body.username.toLowerCase() }, function(err, docs) {
 
-
         //checkai del duplicate usernames
-        if (docs.length == 0) { //rado useri su tokiu username
+        if (docs.length == 0) { //nerado userio su tokiu username
             console.log(chalk.bgRed("No matching account."));
             res.status(555).json({ error: 'No account with that username found.' });
         }
@@ -49,10 +48,10 @@ app.post('/api/login', function(req, res) {
             res.status(557).json({ error: 'Server error.' });
         }
 
-        docs.forEach(function(doc) { //jei randa daugiau nei 1 - problem
+        docs.forEach(function(doc) {
             console.log(chalk.bgGreen("ELEMENT: " + doc.username));
 
-            if (bcrypt.compareSync(req.body.password, doc.password)) { //passwords match
+            if (bcrypt.compareSync(req.body.password, doc.password)) { //passwordas atitinka
                 console.log(chalk.green("passwords match!"));
                 req.session.authUser = doc;
                 return res.json(doc);
@@ -104,14 +103,11 @@ app.post('/api/register', function(req, res) {
 
                     var hashedPass = hashUpPass(req.body.password);
 
-                    console.log(req.body);
-
                     db.users.insert({ username: req.body.username.toLowerCase(), password: hashedPass, email: req.body.email, totalSpace: storageSpace, userStatus: userStatus }, function(err, doc) {
                         console.log(chalk.bgCyanBright.black("successfully inserted user " + doc.username));
                         req.session.authUser = doc; //kabinam visa user ant authUser
                         return res.json(doc);
                     });
-
                 }
             ], function(err, res) {
                 if (err) { //catchas jei pareitu koks unexpected error

@@ -16,7 +16,7 @@
               <el-input @keyup.alt.82.native="redirectToRegister()" placeholder="Username" type="text" v-model="form.username" name="username" />
             </el-form-item>
             <el-form-item prop="password">
-              <el-input @keyup.alt.82.native="redirectToRegister()" placeholder="Password" type="text" v-model="form.password" name="password" />
+              <el-input @keyup.enter.native="login()" placeholder="Password" type="password" v-model="form.password" name="password" />
             </el-form-item>
             <el-form-item>
              <el-button class="loginButton" type="submit" @click="login">Login</el-button >
