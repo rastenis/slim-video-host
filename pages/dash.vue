@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="$store.state.authUser">
     <div v-if="$store.state.authUser.videos.length==0" class="centeredUploadVideoSuggestion">
       <p>You don't have any videos yet!</p>
       <el-button @click="goToUpload()">
@@ -28,6 +28,12 @@ export default {
   },
   methods:{
 
+  },  
+  created:function(){
+  //authUser checkeris
+    if(!this.$store.state.authUser){
+      this.$store.app.router.push("/")
+    }
   },
   layout:'main'
 }

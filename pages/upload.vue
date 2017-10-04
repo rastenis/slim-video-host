@@ -14,6 +14,12 @@ export default {
       activeIndex: "2",
       activeIndexUnreg: "2"
     }
+  },  
+  created:function(){
+  //authUser checkeris
+    if(!this.$store.state.authUser){
+      this.$store.app.router.push("/")
+    }
   },
   layout:'main'
 }
