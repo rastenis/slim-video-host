@@ -4,6 +4,7 @@ process.env.DEBUG = 'nuxt:*'
 const bcrypt = require('bcrypt');
 const shortid = require('shortid');
 const chalk = require('chalk');
+const async = require('async');
 var Datastore = require('nedb');
 const { Nuxt, Builder } = require('nuxt');
 const bodyParser = require('body-parser');
@@ -36,27 +37,34 @@ app.post('/api/login', function(req, res) {
 
     db.users.find({ username: req.body.username.toLowerCase() }, function(err, docs) {
 
-        let count = 0;
+
+        //checkai del duplicate usernames
+        if (docs.length == 0) { //rado useri su tokiu username
+            console.log(chalk.bgRed("No matching account."));
+            res.status(401).json({ error: 'No account with that username found.' });
+            //TODO: add handle for this in vuex
+        }
+
+        if (docs.length > 1) { //rado daugiau nei 1 useri su tokiu username
+            console.log(chalk.bgRed("==DUPLICATE ACCOUNTS FOUND=="));
+            res.status(401).json({ error: '' });
+            //TODO: add handle for this in vuex
+        }
+
         docs.forEach(function(doc) { //jei randa daugiau nei 1 - problem
             console.log(chalk.bgGreen("ELEMENT: " + doc.username));
-            if (count >= 1) { //checkas del butent dupe username accounts (NETURETU TOKIU BUT EVER)
-                console.log(chalk.bgRed.white("== ACCOUNTS WITH MATCHING USERNAMES DETECTED =="));
+
+            if (bcrypt.compareSync(req.body.password, doc.password)) { //passwords match
+                console.log(chalk.green("passwords match!"));
+                req.session.authUser = doc;
+                return res.json(doc);
             } else {
-                if (bcrypt.compareSync(req.body.password, doc.password)) { //passwords match
-                    console.log(chalk.green("passwords match!"));
-                    req.session.authUser = doc;
-                    return res.json(doc);
-                } else {
-                    console.log(chalk.red("passwords don't match!"));
-                    res.status(401).json({ error: 'Bad credentials' });
-                }
+                console.log(chalk.red("passwords don't match!"));
+                res.status(401).json({ error: 'Bad credentials' });
             }
-            count++;
+
         });
 
-        if (count == 0) {
-            res.status(402).json({ error: 'No user with those credentials found.' });
-        }
     });
 
 });
@@ -68,15 +76,18 @@ app.post('/api/register', function(req, res) {
     db.users.find({ username: req.body.username.toLowerCase() }, function(err, docs) {
 
         //checkai del duplicate usernames
-        if (Array.isArray(docs) || docs.length) { //rado useri su tokiu paciu username
+        if (docs.length != 0) { //rado useri su tokiu paciu username
+            console.log(chalk.bgRed("Failed account creation (duplicate username)"));
             res.status(401).json({ error: 'An account with that username already exists.' });
             //TODO: add handle for this in vuex
         } else { //ok, dedam i DB ir prikabinam prie session kad nereiktu loginintis
             var storageSpace = defaultStorageSpace;
             var userStatus = defaultUserStatus;
+            console.log(chalk.bgRed(chalk.bgCyanBright("no duplicate account!")));
 
             async.waterfall([
                 function(callback) { //tikrinimas ar yra atitinkanciu privelegiju kodu
+                    console.log(chalk.bgCyanBright("step 1"));
                     callback(null, null);
                     db.codes.find({ code: req.body.code }, function(err, docs) {
                         if (!Array.isArray(docs) || !docs.length) { //rado useri su tokiu paciu username
@@ -90,6 +101,7 @@ app.post('/api/register', function(req, res) {
                     });
                 },
                 function(code, callback) {
+                    console.log(chalk.bgCyanBright("step 2"));
                     if (code !== null) { //got code
                         //TODO: code logic, padidint duomenu kieki OR statusa pakeist
                     }
@@ -103,7 +115,6 @@ app.post('/api/register', function(req, res) {
                         console.log(chalk.bgCyanBright("successfully inserted user " + doc.username));
                         req.session.authUser = doc; //kabinam visa user ant authUser
                         return res.json(doc);
-                        callback(null); //shouldnt be reached siaip
                     });
 
                 }
@@ -144,7 +155,6 @@ function checkAdminReg() {
     db.users.find({}, function(err, docs) {
         var userCount = 0;
         docs.forEach(function(doc) {
-            console.log("user found = " + doc.username);
             userCount++;
         });
 
@@ -153,8 +163,6 @@ function checkAdminReg() {
         } else {
             return true;
         }
-
-        console.log("admin reg: " + adminRegistered);
     });
 }
 

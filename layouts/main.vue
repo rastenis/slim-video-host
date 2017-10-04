@@ -55,7 +55,8 @@
       },
     async logout () {
       try {
-        await this.$store.dispatch('logout')
+        await this.$store.dispatch('logout');
+        this.$store.app.router.push("/")
       } catch (e) {
         this.formError = e.message
       }
