@@ -1,6 +1,17 @@
 <template>
   <div>
-  
+    <div v-if="$store.state.authUser.videos.length==0" class="centeredUploadVideoSuggestion">
+      <p>You don't have any videos yet!</p>
+      <el-button @click="goToUpload()">
+        Upload a video
+      </el-button>
+    </div>
+    <div v-else>
+      <el-card v-for="video in $store.state.authUser.videos" class="videoCard" :key="video.ID">
+        <p>{{video.name}}</p>
+        <el-input v-model="video.link" disabled @click="this.select()"></el-input>
+      </el-card>
+    </div>
   </div>
 </template>
 
@@ -11,15 +22,12 @@
 export default {
   data () {
     return {
-      regForm:{
-        username:'',
-        email:'',
-        pass:'',
-        passconf:''
-      },
       activeIndex: "2",
       activeIndexUnreg: "2"
     }
+  },
+  methods:{
+
   },
   layout:'main'
 }
@@ -36,5 +44,22 @@ export default {
     left: 0;
     height: 50%;
     width: 40%;
+  }
+  .videoCard{
+    width:80%;
+  }
+
+  .centeredUploadVideoSuggestion{
+    text-align: center;
+    position: absolute;
+    margin: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 30%;
+    width: 30%;
+    content: center;
+    font-size: 2vh; 
   }
 </style>

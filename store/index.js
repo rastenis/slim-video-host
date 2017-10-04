@@ -17,6 +17,9 @@ const store = () => new Vuex.Store({
     mutations: {
         SET_USER: function(state, user) {
             state.authUser = user
+        },
+        SET_VIDEOS: function(state, videos) {
+            state.authUser.videos = videos
         }
     },
 
@@ -28,7 +31,6 @@ const store = () => new Vuex.Store({
         },
         login({ commit }, { username, password }) {
             return fetch('/api/login', {
-                    // Send the client cookies to the server
                     credentials: 'same-origin',
                     method: 'POST',
                     headers: {
@@ -51,7 +53,31 @@ const store = () => new Vuex.Store({
                     }
                 })
                 .then((authUser) => {
-                    commit('SET_USER', authUser)
+                    commit('SET_USER', authUser);
+
+                })
+        },
+        getVideos({ commit }, { username }) {
+            return fetch('/api/getVideos', {
+                    credentials: 'same-origin',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }, //turetu vis dar paeit username, jei ne tai virsuj i var isidet reiks
+                    body: JSON.stringify({
+                        username
+                    })
+                })
+                .then((res) => {
+                    if (res.status === 555) {
+                        throw new Error('No such user.')
+                    } else {
+                        return res.json()
+                    }
+                })
+                .then((videos) => {
+                    commit('SET_VIDEOS', videos);
+
                 })
         },
         register({ commit }, { username, password, passconf, email, code }) {

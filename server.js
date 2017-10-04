@@ -118,6 +118,21 @@ app.post('/api/register', function(req, res) {
     });
 });
 
+// postas userio video paimimui
+app.post('/api/getVideos', function(req, res) {
+
+    db.videos.find({ username: req.body.username.toLowerCase() }, function(err, docs) {
+        if (err) {
+            console.log(chalk.bgRed.white(err));
+        }
+
+        req.session.authUser.videos = docs;
+        var returner = {};
+        returner.videos = docs;
+        return res.json(returner);
+    });
+});
+
 // removinam useri is req.session on logout
 app.post('/api/logout', function(req, res) {
     delete req.session.authUser;

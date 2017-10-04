@@ -87,6 +87,9 @@ export default {
           username: this.form.username,
           password: this.form.password
         })
+        await this.$store.dispatch('getVideos', {
+          username: this.form.username
+        })
         this.form.username = ''
         this.form.password = ''
         this.formError = null
@@ -161,7 +164,6 @@ export default {
     height: 30%;
     width: 40%;
     content: center;
-    font-size: 16px; 
     font-size: 8vh;
     color:white;
     border-style: solid;
