@@ -11,7 +11,8 @@ const store = () => new Vuex.Store({
 
     state: {
         authUser: null,
-        gifURL: null
+        gifURL: null,
+        activeTab: 1
     },
 
     mutations: {
@@ -55,6 +56,25 @@ const store = () => new Vuex.Store({
                 .then((authUser) => {
                     commit('SET_USER', authUser);
 
+                })
+        },
+        upload({ commit }, { file }) {
+            return fetch('/api/upload', {
+                    credentials: 'same-origin',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        file
+                    })
+                })
+                .then((res) => {
+                    if (res.status === 555) {
+                        throw new Error('Not a valid file to upload.')
+                    } else {
+                        return res.json()
+                    }
                 })
         },
         getVideos({ commit }, { username }) {

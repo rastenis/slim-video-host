@@ -1,12 +1,11 @@
 <template>
   <div class="main">
-    <el-menu v-if="!$store.state.authUser" theme="dark" class="nav" mode="horizontal" :default-active="activeIndexUnreg" @select="handleSelect">
+    <el-menu v-if="!$store.state.authUser" theme="dark" class="nav" mode="horizontal" :default-active="$store.state.activeTab" @select="handleSelect">
       <el-menu-item index="1">Intro</el-menu-item>
       <el-menu-item index="2" class="pRight">Register</el-menu-item>
     </el-menu>
 
-
-    <el-menu v-else theme="dark" class="nav" mode="horizontal" :default-active="activeIndex" @select="handleSelect">
+    <el-menu v-else theme="dark" class="nav" mode="horizontal" :default-active="$store.state.activeTab" @select="handleSelect">
       <el-menu-item index="1">
          <nuxt-link to="/" >Intro</nuxt-link>
       </el-menu-item>
@@ -25,8 +24,6 @@
   export default {
     data() {
       return {
-        activeIndex: "2",
-        activeIndexUnreg: "2"
       };
     },
     methods: {
@@ -38,12 +35,15 @@
           case "2":
             if(this.$store.state.authUser){
               this.$store.app.router.push("/dash")
+              this.$store.state.activeTab = 2;
             }else{
               this.$store.app.router.push("/regMeUpYo")
+              this.$store.state.activeTab = 2;
             }
             break;
           case "3":
               this.$store.app.router.push("/upload")
+              this.$store.state.activeTab = 3;
             break;
           case "4":
               this.logout();

@@ -76,10 +76,12 @@ export default {
         this.showLogin=bool;
       }else{ //user pressed welcome back. Redirect to dashboard
         this.$store.app.router.push("/dash")
+        this.$store.state.activeTab=2;
       }
     },
     async redirectToRegister(){
       this.$store.app.router.push("/regMeUpYo")
+      this.$store.state.activeTab=2;
     },
     async login () {
       try {
@@ -94,6 +96,7 @@ export default {
         this.form.password = ''
         this.formError = null
         this.$store.app.router.push("/dash")
+        this.$store.state.activeTab=2;
       } catch(e) {
         this.formError = e.message
       }

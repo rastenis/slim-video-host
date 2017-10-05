@@ -10,6 +10,9 @@ const { Nuxt, Builder } = require('nuxt');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const app = require('express')();
+const fileUpload = require('express-fileupload');
+const fs = require("fs");
+
 
 //uzkraunam DB
 db = {};
@@ -17,13 +20,20 @@ db.users = new Datastore({ filename: 'db/users', autoload: true });
 db.codes = new Datastore({ filename: 'db/codes', autoload: true });
 db.videos = new Datastore({ filename: 'db/videos', autoload: true });
 
+//default optionai
 const defaultUserStatus = 0; //1 - admin
-const defaultStorageSpace = 10; //gigabaitais
+const defaultStorageSpace = 10240; //megabaitais
+
+// video storage path
+const storagePath = "videos/";
 
 //skirta isjungti admin registered flagui, kad tik pirma useri padarytu automatiskai adminu.
 var adminRegistered = checkAdminReg();
 
-
+app.use(fileUpload({
+    limits: { fileSize: 50 * 1024 * 1024 },
+    safeFileNames: true
+}));
 app.use(bodyParser.json());
 app.use(session({
     secret: 'super-secret-key',
@@ -38,14 +48,10 @@ app.post('/api/login', function(req, res) {
     db.users.find({ username: req.body.username.toLowerCase() }, function(err, docs) {
 
         //checkai del duplicate usernames
-        if (docs.length == 0) { //nerado userio su tokiu username
-            console.log(chalk.bgRed("No matching account."));
-            res.status(555).json({ error: 'No account with that username found.' });
-        }
-
-        if (docs.length > 1) { //rado daugiau nei 1 useri su tokiu username
-            console.log(chalk.bgRed("==DUPLICATE ACCOUNTS FOUND=="));
-            res.status(557).json({ error: 'Server error.' });
+        try {
+            performSecurityChecks(docs);
+        } catch (e) {
+            res.status(e.status).json({ error: e.message });
         }
 
         docs.forEach(function(doc) {
@@ -133,6 +139,40 @@ app.post('/api/getVideos', function(req, res) {
     });
 });
 
+// postas video ikelimui
+app.post('/api/upload', function(req, res) {
+
+    var stats = fs.statSync(req.files.vid);
+    var fileSizeInBytes = stats["size"];
+    //pasiverciam i megabaitus
+    var fileSizeInMegabytes = fileSizeInBytes / 1000000.0;
+
+    if (fileSizeInMegabytes > 10240) { //hard limitas kad neikeltu didesniu uz 10gb failu
+        res.status(557).json({ error: 'File too big.' });
+        console.log("file size is fine");
+    }
+
+    db.users.find({ username: req.body.username.toLowerCase() }, function(err, docs) {
+
+        //checkai del duplicate usernames
+        try {
+            performSecurityChecks(docs);
+        } catch (e) {
+            res.status(e.status).json({ error: e.message });
+        }
+
+        //patikrinam, ar useriui pakanka storage space
+        if (docs[0].remainingSpace < fileSizeInMegabytes) {
+            res.status(557).json({ error: 'You do not have enough space remaining to upload this file.' });
+        } else {
+            //dedam video i storage
+            console.log(chalk.bgGreen.black("storing video!"));
+        }
+
+    });
+
+});
+
 // removinam useri is req.session on logout
 app.post('/api/logout', function(req, res) {
     delete req.session.authUser;
@@ -170,6 +210,18 @@ function checkAdminReg() {
             return true;
         }
     });
+}
+
+function performSecurityChecks(docs) {
+    if (docs.length == 0) { //nerado userio su tokiu username
+        console.log(chalk.bgRed("No matching account."));
+        throw { status: 555, message: 'No account with that username found.' };
+    }
+
+    if (docs.length > 1) { //rado daugiau nei 1 useri su tokiu username
+        console.log(chalk.bgRed("==DUPLICATE ACCOUNTS FOUND=="));
+        throw { status: 556, message: 'Server error.' };
+    }
 }
 
 function hashUpPass(pass) {

@@ -2,7 +2,7 @@
   <div v-if="$store.state.authUser">
     <div v-if="$store.state.authUser.videos.length==0" class="centeredUploadVideoSuggestion">
       <p>You don't have any videos yet!</p>
-      <el-button @click="goToUpload()">
+      <el-button @click="$store.app.router.push('/upload'); this.$store.state.activeTab = 3;">
         Upload a video
       </el-button>
     </div>
@@ -21,19 +21,19 @@
 
 export default {
   data () {
-    return {
-      activeIndex: "2",
-      activeIndexUnreg: "2"
-    }
+    return {}
   },
   methods:{
-
   },  
   created:function(){
   //authUser checkeris
     if(!this.$store.state.authUser){
       this.$store.app.router.push("/")
+    }else{
+      this.$store.state.activeTab = 2;
     }
+
+    
   },
   layout:'main'
 }

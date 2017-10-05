@@ -98,6 +98,11 @@ export default {
         this.$refs[formName].resetFields();
     }
   },
+  created:function(){
+    if(!this.$store.state.authUser){
+      this.$store.state.activeTab = 2;
+    }
+  },
   layout:'main'
 }
 </script>
