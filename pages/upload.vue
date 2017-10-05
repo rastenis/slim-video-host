@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div class='uploadForm' v-if="!$store.state.authUser">
+    <div v-if="$store.state.authUser">
       <el-upload
-        class="vid-uploader"
+        class="vid-uploader uploadForm"
         action="/api/upload"
         :show-file-list="false"
         :on-success="handleAvatarSuccess"
@@ -84,8 +84,8 @@ export default {
     right: 0;
     bottom: 0;
     left: 0;
-    height: 50%;
-    width: 50%;
+    height: 50vh;
+    width: 50vw;
   }
 
   .vid-uploader .el-upload {

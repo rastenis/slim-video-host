@@ -12,6 +12,8 @@ const session = require('express-session');
 const app = require('express')();
 const fileUpload = require('express-fileupload');
 const fs = require("fs");
+const util = require('util');
+
 
 
 //uzkraunam DB
@@ -142,17 +144,27 @@ app.post('/api/getVideos', function(req, res) {
 // postas video ikelimui
 app.post('/api/upload', function(req, res) {
 
-    var stats = fs.statSync(req.files.vid);
-    var fileSizeInBytes = stats["size"];
+
+    console.log(util.inspect(req.files.file, { showHidden: false, depth: null }))
+
+    var fileSizeInBytes = req.files.file.data.byteLength;
     //pasiverciam i megabaitus
-    var fileSizeInMegabytes = fileSizeInBytes / 1000000.0;
+    var fileSizeInMegabytes = fileSizeInBytes / 1024 / 1024;
+    console.log("size is " + fileSizeInMegabytes + "mb");
 
     if (fileSizeInMegabytes > 10240) { //hard limitas kad neikeltu didesniu uz 10gb failu
         res.status(557).json({ error: 'File too big.' });
         console.log("file size is fine");
     }
 
-    db.users.find({ username: req.body.username.toLowerCase() }, function(err, docs) {
+    var extension = ".mp4";
+    if (req.files.file.mimetype == "video/avi") {
+        extension = ".avi";
+    } else if (req.files.file.mimetype == "video/webm") {
+        extension = ".webm";
+    }
+
+    db.users.find({ username: req.session.authUser.username.toLowerCase() }, function(err, docs) {
 
         //checkai del duplicate usernames
         try {
@@ -166,7 +178,9 @@ app.post('/api/upload', function(req, res) {
             res.status(557).json({ error: 'You do not have enough space remaining to upload this file.' });
         } else {
             //dedam video i storage
+            var videoID = shortid.generate();
             console.log(chalk.bgGreen.black("storing video!"));
+            req.files.file.mv(storagePath + videoID + extension);
         }
 
     });
