@@ -12,7 +12,7 @@ const store = () => new Vuex.Store({
     state: {
         authUser: null,
         gifURL: null,
-        activeTab: 1
+        activeTab: '1'
     },
 
     mutations: {
@@ -97,7 +97,6 @@ const store = () => new Vuex.Store({
                 })
                 .then((videos) => {
                     commit('SET_VIDEOS', videos);
-
                 })
         },
         register({ commit }, { username, password, passconf, email, code }) {

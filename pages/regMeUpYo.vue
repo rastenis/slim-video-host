@@ -100,7 +100,7 @@ export default {
   },
   created:function(){
     if(!this.$store.state.authUser){
-      this.$store.state.activeTab = 2;
+      this.$store.state.activeTab = '2';
     }
   },
   layout:'main'

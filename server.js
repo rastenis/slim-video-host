@@ -145,45 +145,56 @@ app.post('/api/getVideos', function(req, res) {
 app.post('/api/upload', function(req, res) {
 
 
-    console.log(util.inspect(req.files.file, { showHidden: false, depth: null }))
+    if (!req.session.authUser) {
+        res.status(557).json({ error: 'User not signed in.' });
+    } else {
+        console.log(util.inspect(req.files.file, { showHidden: false, depth: null }))
 
-    var fileSizeInBytes = req.files.file.data.byteLength;
-    //pasiverciam i megabaitus
-    var fileSizeInMegabytes = fileSizeInBytes / 1024 / 1024;
-    console.log("size is " + fileSizeInMegabytes + "mb");
+        var fileSizeInBytes = req.files.file.data.byteLength;
+        //pasiverciam i megabaitus
+        var fileSizeInMegabytes = fileSizeInBytes / 1024 / 1024;
+        console.log("size is " + fileSizeInMegabytes + "mb");
 
-    if (fileSizeInMegabytes > 10240) { //hard limitas kad neikeltu didesniu uz 10gb failu
-        res.status(557).json({ error: 'File too big.' });
-        console.log("file size is fine");
-    }
-
-    var extension = ".mp4";
-    if (req.files.file.mimetype == "video/avi") {
-        extension = ".avi";
-    } else if (req.files.file.mimetype == "video/webm") {
-        extension = ".webm";
-    }
-
-    db.users.find({ username: req.session.authUser.username.toLowerCase() }, function(err, docs) {
-
-        //checkai del duplicate usernames
-        try {
-            performSecurityChecks(docs);
-        } catch (e) {
-            res.status(e.status).json({ error: e.message });
+        if (fileSizeInMegabytes > 10240) { //hard limitas kad neikeltu didesniu uz 10gb failu
+            res.status(557).json({ error: 'File too big.' });
+            console.log("file size is fine");
         }
 
-        //patikrinam, ar useriui pakanka storage space
-        if (docs[0].remainingSpace < fileSizeInMegabytes) {
-            res.status(557).json({ error: 'You do not have enough space remaining to upload this file.' });
-        } else {
-            //dedam video i storage
-            var videoID = shortid.generate();
-            console.log(chalk.bgGreen.black("storing video!"));
-            req.files.file.mv(storagePath + videoID + extension);
+        var extension = ".mp4";
+        if (req.files.file.mimetype == "video/avi") {
+            extension = ".avi";
+        } else if (req.files.file.mimetype == "video/webm") {
+            extension = ".webm";
         }
 
-    });
+        db.users.find({ username: req.session.authUser.username.toLowerCase() }, function(err, docs) {
+
+            //checkai del duplicate usernames
+            try {
+                performSecurityChecks(docs);
+            } catch (e) {
+                res.status(e.status).json({ error: e.message });
+            }
+
+            //patikrinam, ar useriui pakanka storage space
+            if (docs[0].remainingSpace < fileSizeInMegabytes) {
+                res.status(557).json({ error: 'You do not have enough space remaining to upload this file.' });
+            } else {
+                //dedam video i storage
+                var videoID = shortid.generate();
+                var vidLink = "https://cigari.ga/v/" + videoID;
+                console.log(chalk.bgGreen.black("storing video!"));
+
+                db.videos.insert({ username: req.session.authUser.username.toLowerCase(), link: vidLink, name: req.files.file.name, videoID: videoID }, function() {
+                    req.files.file.mv(storagePath + videoID + extension);
+                });
+
+            }
+
+        });
+    }
+
+
 
 });
 

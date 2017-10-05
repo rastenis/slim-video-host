@@ -35,15 +35,15 @@
           case "2":
             if(this.$store.state.authUser){
               this.$store.app.router.push("/dash")
-              this.$store.state.activeTab = 2;
+              this.$store.state.activeTab = '2';
             }else{
               this.$store.app.router.push("/regMeUpYo")
-              this.$store.state.activeTab = 2;
+              this.$store.state.activeTab = '2';
             }
             break;
           case "3":
               this.$store.app.router.push("/upload")
-              this.$store.state.activeTab = 3;
+              this.$store.state.activeTab = '3';
             break;
           case "4":
               this.logout();
@@ -84,7 +84,7 @@
 
 .container{
   max-height: 100%;
-  min-height:1000px;
+  min-height:100vh;
   max-width: 75%;
   display: block;
   background: #E5E9F2;
