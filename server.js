@@ -204,6 +204,22 @@ app.post('/api/logout', function(req, res) {
     res.json({ ok: true });
 });
 
+
+
+//patikra ar yra toks video
+app.get('https://cigari.ga/api/checkVideo/:id', function(req, res) {
+    var path = './videos/' + req.params.id + '.mp4';
+    console.log("looking for " + path);
+
+    //check if requested video exists
+    if (fs.existsSync(path)) {
+        res.json({ error: 0, scr: path });
+    } else {
+        res.json({ error: 1 });
+    }
+
+});
+
 //nuxt config
 let config = require('./nuxt.config.js');
 config.dev = !(process.env.NODE_ENV === 'production');

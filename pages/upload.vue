@@ -15,7 +15,7 @@
         
         <i class="el-icon-upload"></i>
         <div class="el-upload__text">Drop file here or <em>click to upload</em></div>
-        <div class="el-upload__tip" slot="tip">mp4/avi/webm files with a size less than 10GB</div>
+        <div class="el-upload__tip" slot="tip">mp4 files with a size less than 10GB</div>
 
       </el-upload>
       <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="18" :percentage="progressBar.percentage"></el-progress>
@@ -49,7 +49,7 @@ export default {
 
       var mbFilesize= file.size / 1024 / 1024 ;
 
-      if (file.type !== 'video/mp4' && file.type !== 'video/avi' && file.type !== 'video/webm') {
+      if (file.type !== 'video/mp4') {
         this.$message.error('Invalid video format!');
         this.uploading=false;  
         return false;
