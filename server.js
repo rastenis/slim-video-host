@@ -27,7 +27,7 @@ const defaultUserStatus = 0; //1 - admin
 const defaultStorageSpace = 10240; //megabaitais
 
 // video storage path
-const storagePath = "videos/";
+const storagePath = "static/videos/";
 
 //skirta isjungti admin registered flagui, kad tik pirma useri padarytu automatiskai adminu.
 var adminRegistered = checkAdminReg();
@@ -207,13 +207,14 @@ app.post('/api/logout', function(req, res) {
 
 
 //patikra ar yra toks video
-app.get('https://cigari.ga/api/checkVideo/:id', function(req, res) {
-    var path = './videos/' + req.params.id + '.mp4';
+app.get('/api/checkVideo/:id', function(req, res) {
+    var path = storagePath + req.params.id + '.mp4';
     console.log("looking for " + path);
 
     //check if requested video exists
     if (fs.existsSync(path)) {
-        res.json({ error: 0, scr: path });
+        let vidpath = '/videos/' + req.params.id + '.mp4';
+        res.json({ error: 0, scr: vidpath });
     } else {
         res.json({ error: 1 });
     }

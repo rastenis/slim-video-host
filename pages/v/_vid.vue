@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="mainDiv" v-loading="loading">
     <video :src="videoSrc">
       
     </video>
@@ -8,7 +8,6 @@
 
 <script>
 
-//TODO:  single drag-drop (+ selection based also?) for uploading single video. Post it to backend and get link when uploaded. Generate link w/ shortID
 import axios from 'axios'
 
 export default {
@@ -16,23 +15,24 @@ export default {
   data () {
     return {
       videoSrc:'',
-      nonExistent:true
+      nonExistent:true,
+      loading:true
     }
   },
   asyncData (context) {
     var nonExistent = false;
     var src='';
     console.log("requested video ID - "+context.params.vid);
-    axios.get(`/api/checkVideo/${context.params.vid}`)
+    return axios.get(`https://cigari.ga/api/checkVideo/${context.params.vid}`)
     .then((res) => {
-      if(res.error==0){
-        src=res.src;
+      if(res.data.error==0){
+        src=res.data.src;
         console.log("found video");
       }else{
         nonExistent = true;
         console.log("doesnt exist");
       }
-      return { nonExistent: nonExistent, videoSrc:src }
+      return { nonExistent: nonExistent, videoSrc:src,loading:false }
     })
   },
   methods:{
@@ -45,6 +45,11 @@ export default {
 <style>
   template{
     overflow: hidden;
+  }
+
+  .mainDiv{
+    height: 100vh;
+    width: 100vw;
   }
 
 </style>
