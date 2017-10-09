@@ -14,7 +14,7 @@ const fileUpload = require('express-fileupload');
 const fs = require("fs");
 const util = require('util');
 
-
+shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
 
 //uzkraunam DB
 db = {};
@@ -208,16 +208,22 @@ app.post('/api/logout', function(req, res) {
 
 //patikra ar yra toks video
 app.get('/api/checkVideo/:id', function(req, res) {
-    var path = storagePath + req.params.id + '.mp4';
-    console.log("looking for " + path);
 
-    //check if requested video exists
-    if (fs.existsSync(path)) {
-        let vidpath = '/videos/' + req.params.id + '.mp4';
-        res.json({ error: 0, scr: vidpath });
+    if (!req.params.id) {
+        console.log("empty request, probably a refresh");
     } else {
-        res.json({ error: 1 });
+        var path = storagePath + req.params.id + '.mp4';
+        console.log("looking for " + path);
+
+        //check if requested video exists
+        if (fs.existsSync(path)) {
+            let vidpath = '/videos/' + req.params.id + '.mp4';
+            res.json({ error: 0, src: vidpath });
+        } else {
+            res.json({ error: 1 });
+        }
     }
+
 
 });
 

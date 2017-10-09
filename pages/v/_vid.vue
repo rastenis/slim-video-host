@@ -1,8 +1,16 @@
 <template>
-  <div class="mainDiv" v-loading="loading">
-    <video :src="videoSrc">
-      
-    </video>
+  <div class="mainDiv" @click="changeSrc">
+      <video
+        v-if="videoSrc!=''" 
+        id="mainPlayer"
+        class="video-js videoDiv"
+        v-loading="loading" 
+        controls
+        preload="auto"
+        autoplay 
+        data-setup='{}'>
+        <source :src="videoSrc" type="video/mp4"></source>
+      </video>
   </div>
 </template>
 
@@ -11,7 +19,6 @@
 import axios from 'axios'
 
 export default {
-  
   data () {
     return {
       videoSrc:'',
@@ -36,8 +43,19 @@ export default {
     })
   },
   methods:{
+    changeSrc(){
+      console.log(this.videoSrc);
+    }
   },
-  layout:'video'
+  layout:'video',
+  head: {
+    script: [
+      { src: '//vjs.zencdn.net/5.19/video.min.js' }
+    ],
+    link: [
+      { rel: 'stylesheet', href: '//vjs.zencdn.net/5.19/video-js.min.css' }
+    ]
+  }
 }
 </script>
 
@@ -50,6 +68,13 @@ export default {
   .mainDiv{
     height: 100vh;
     width: 100vw;
+  }
+
+  .videoDiv{
+    margin: auto; 
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
   }
 
 </style>
