@@ -18,9 +18,6 @@ const store = () => new Vuex.Store({
     mutations: {
         SET_USER: function(state, user) {
             state.authUser = user
-        },
-        SET_VIDEOS: function(state, videos) {
-            state.authUser.videos = videos
         }
     },
 
@@ -77,7 +74,7 @@ const store = () => new Vuex.Store({
                     }
                 })
         },
-        getVideos({ commit }, { username }) {
+        getVideos({ commit }, { username }) { //DEPRECATED
             return fetch('/api/getVideos', {
                     credentials: 'same-origin',
                     method: 'POST',

@@ -2,8 +2,7 @@
   <div>
     <div v-if="$store.state.authUser" class="uploadForm">
       <el-upload
-        :on-success="handleVideoUp"
-        multiple=false
+        :multiple="false" 
         v-loading="uploading" 
         element-loading-text="Uploading..." 
         class="vid-uploader" 
@@ -66,14 +65,14 @@ export default {
         this.uploadedNotification();
         //todo effect for finished upload
       }
-      this.progressBar.percentage=event.percent.toFixed(1);
+      this.progressBar.percentage= parseFloat( event.percent.toFixed(2));
     },
     uploadedNotification() {
       this.$notify({
           title: 'Success',
           message: 'Your video has been successfully uploaded!',
           type: 'success',
-          duration: 5
+          duration: 4000
         });
       }
   

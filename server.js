@@ -129,13 +129,17 @@ app.post('/api/register', function(req, res) {
 // postas userio video paimimui
 app.post('/api/getVideos', function(req, res) {
 
-    db.videos.find({ username: req.body.username.toLowerCase() }, function(err, docs) {
+    console.log("requester : " + req.body.user.username);
+
+    db.videos.find({ username: req.body.user.username.toLowerCase() }, function(err, docs) {
         if (err) {
             console.log(chalk.bgRed.white(err));
+            returner.error = 1;
         }
-
+        console.log("OKE, " + docs);
         req.session.authUser.videos = docs;
         var returner = {};
+        returner.error = 0;
         returner.videos = docs;
         return res.json(returner);
     });
@@ -161,11 +165,13 @@ app.post('/api/upload', function(req, res) {
         }
 
         var extension = ".mp4";
-        if (req.files.file.mimetype == "video/avi") {
-            extension = ".avi";
-        } else if (req.files.file.mimetype == "video/webm") {
-            extension = ".webm";
-        }
+        // if (req.files.file.mimetype == "video/avi") {
+        //     extension = ".avi";
+        // } else if (req.files.file.mimetype == "video/webm") {
+        //     extension = ".webm";
+        // }
+
+        //TODO: support for more formats
 
         db.users.find({ username: req.session.authUser.username.toLowerCase() }, function(err, docs) {
 
@@ -176,6 +182,7 @@ app.post('/api/upload', function(req, res) {
                 res.status(e.status).json({ error: e.message });
             }
 
+            var cleanedName = req.files.file.name.replace(/[^a-z0-9\s]/gi, "");
             //patikrinam, ar useriui pakanka storage space
             if (docs[0].remainingSpace < fileSizeInMegabytes) {
                 res.status(557).json({ error: 'You do not have enough space remaining to upload this file.' });
@@ -185,7 +192,7 @@ app.post('/api/upload', function(req, res) {
                 var vidLink = "https://cigari.ga/v/" + videoID;
                 console.log(chalk.bgGreen.black("storing video!"));
 
-                db.videos.insert({ username: req.session.authUser.username.toLowerCase(), link: vidLink, name: req.files.file.name, videoID: videoID }, function() {
+                db.videos.insert({ username: req.session.authUser.username.toLowerCase(), link: vidLink, name: cleanedName, videoID: videoID }, function() {
                     req.files.file.mv(storagePath + videoID + extension);
                 });
 

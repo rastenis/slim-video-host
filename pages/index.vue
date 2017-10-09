@@ -89,9 +89,6 @@ export default {
           username: this.form.username,
           password: this.form.password
         })
-        await this.$store.dispatch('getVideos', {
-          username: this.form.username
-        })
         this.form.username = ''
         this.form.password = ''
         this.formError = null
