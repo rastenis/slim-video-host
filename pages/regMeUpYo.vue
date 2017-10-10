@@ -80,8 +80,9 @@ export default {
         this.formUsername = ''
         this.formPassword = ''
         this.formError = null
+        this.$message.success("You have successfully created an account!");
       } catch(e) {
-        this.formError = e.message
+        this.$message.error(e.message);
       }
     },
     submitForm(formName) {

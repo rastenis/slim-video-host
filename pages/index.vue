@@ -61,16 +61,6 @@ export default {
     }
   },
   methods:{
-    assignNewGif(){
-     axios.get("http://api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag=art")
-            .then((res) => {
-              console.log("received gif: "+ res.data.data.image_url);
-              let preparedURL="url("+ res.data.data.image_url+") no-repeat center center fixed";
-              this.intro.backgroundImage=preparedURL;
-              //fallbackas
-              this.$refs.introBCG.backgroundImage=preparedURL;
-            })
-    },
     activateLogin(bool){
       if(!this.$store.state.authUser){
         this.showLogin=bool;
@@ -95,14 +85,14 @@ export default {
         this.$store.app.router.push("/dash")
         this.$store.state.activeTab='2';
       } catch(e) {
-        this.formError = e.message
+        this.$message.error(e.message);
       }
     },
     async logout () {
       try {
         await this.$store.dispatch('logout')
       } catch (e) {
-        this.formError = e.message
+        this.$message.error(e.message);
       }
     }
   },

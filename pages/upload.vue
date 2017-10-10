@@ -48,12 +48,18 @@ export default {
 
       var mbFilesize= file.size / 1024 / 1024 ;
 
-      if (file.type !== 'video/mp4') {
-        this.$message.error('Invalid video format!');
-        this.uploading=false;  
+      if(this.$store.state.authUser.remainingSpace < mbFilesize){
+        this.$message.error('You do not have enough space remaining to upload this video! Delete some existing videos or request a storage upgrade.');
+        this.$store.app.router.push("/")
         return false;
       }else if (mbFilesize > 10240) {
         this.$message.error('Video size can not exceed 10GB!');
+        this.uploading=false;  
+        return false;
+      }
+
+      if (file.type !== 'video/mp4') {
+        this.$message.error('Invalid video format!');
         this.uploading=false;  
         return false;
       }
