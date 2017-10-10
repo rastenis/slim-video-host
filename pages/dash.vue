@@ -8,10 +8,31 @@
       </el-button>
     </div>
     <div class="videoList" v-else>
-      <el-card v-loading="loadingMore" element-loading-text="Loading..." v-for="video in videos" class="videoCard" :key="video.ID">
-        <p>{{video.name}}</p>
-        <el-input v-model="video.link" readonly @click.native="$event.target.select()"></el-input>
-      </el-card>
+      <el-table
+        :data="videos"
+        style="width: 100%">
+        <el-table-column
+          prop="name"
+          label="Video">
+        </el-table-column>
+        <el-table-column
+          prop="link"
+          label="Link"
+          @click.native="$event.target.select()">
+        </el-table-column>
+        <el-table-column
+          prop="views"
+          label="Views">
+        </el-table-column>
+        <el-table-column
+          label="Actions">
+
+          <template scope="scope">
+            <el-button type="button" size="small">Remove</el-button>
+          </template>
+      </el-table-column>
+      </el-table>
+
     </div>
   </div>
 </template>
@@ -77,7 +98,7 @@ export default {
     bottom: 0;
     left: 0;
     height: 80%;
-    width: 70%;
+    width: 90%;
   }
   .videoCard{
     width:80%;

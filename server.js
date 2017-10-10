@@ -192,7 +192,7 @@ app.post('/api/upload', function(req, res) {
                 var vidLink = "https://cigari.ga/v/" + videoID;
                 console.log(chalk.bgGreen.black("storing video!"));
 
-                db.videos.insert({ username: req.session.authUser.username.toLowerCase(), link: vidLink, name: cleanedName, videoID: videoID }, function() {
+                db.videos.insert({ username: req.session.authUser.username.toLowerCase(), link: vidLink, name: cleanedName, videoID: videoID, views: 0, likes: 0, dislikes: 0 }, function() {
                     req.files.file.mv(storagePath + videoID + extension);
                 });
 
