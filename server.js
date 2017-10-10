@@ -14,6 +14,7 @@ const fileUpload = require('express-fileupload');
 const fs = require("fs");
 const util = require('util');
 
+//isemu - ir _ is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
 
 //uzkraunam DB
@@ -137,7 +138,6 @@ app.post('/api/getVideos', function(req, res) {
             returner.error = 1;
         }
         console.log("OKE, " + docs);
-        req.session.authUser.videos = docs;
         var returner = {};
         returner.error = 0;
         returner.videos = docs;

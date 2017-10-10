@@ -1,6 +1,6 @@
 <template>
   <div v-if="$store.state.authUser">
-    <h1 class="title" @click="test">Dashboard</h1>
+    <h1 class="title" >Dashboard</h1>
     <div v-if="videos.length==0" class="centeredUploadVideoSuggestion">
       <p>You don't have any videos yet!</p>
       <el-button @click="$store.app.router.push('/upload'); this.$store.state.activeTab = '3';">
@@ -28,20 +28,17 @@ export default {
       }
   },
   asyncData (context) {
-    console.log(context.app.store.state.authUser);
+    console.log("authuser is "+context.app.store.state.authUser);
     return axios({ 
-      url: '/api/getVideos',
+      url: 'http://cigari.ga/api/getVideos',
       method:'post',
-      headers : {
-          'Content-Type': 'application/json'
-      },
       credentials: 'same-origin',
       data: {
           user: context.app.store.state.authUser
       }
     })
     .then((res) => {
-      console.log(res);
+      console.log("res data is"+res.data);
       if(res.data.error==0){
         console.log("fetched videos");
         return { videos: res.data.videos, loadingMore:false}
@@ -55,9 +52,6 @@ export default {
 
   },
   methods:{
-    test(){
-      console.log(this.videos);
-    }
   },  
   created:function(){
   //authUser checkeris
