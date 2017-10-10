@@ -130,6 +130,7 @@ app.post('/api/register', function(req, res) {
 // postas userio video paimimui
 app.post('/api/getVideos', function(req, res) {
 
+    var returner = {};
     console.log("requester : " + req.body.user.username);
 
     db.videos.find({ username: req.body.user.username.toLowerCase() }, function(err, docs) {
@@ -138,11 +139,42 @@ app.post('/api/getVideos', function(req, res) {
             returner.error = 1;
         }
         console.log("OKE, " + docs);
-        var returner = {};
+
         returner.error = 0;
         returner.videos = docs;
         return res.json(returner);
     });
+});
+
+// postas userio video paimimui
+app.post('/api/removeVideo', function(req, res) {
+
+    var returner = {};
+    console.log("requester : " + req.body.user.username + ", video ID : " + req.body.videoID);
+
+    db.videos.find({ videoID: req.body.videoID }, function(err, docs) {
+        if (err) {
+            console.log(chalk.bgRed.white(err));
+            returner.error = 1;
+        } else {
+            db.users.update({ username: req.body.user.username }, { $inc: { remainingSpace: docs[0].size } }, {}, function() {
+                //pridejom atgal storage space useriui
+
+                //taip pat ir istrinam pati video is storage
+                fs.unlink(storagePath + req.body.videoID + ".mp4");
+            });
+
+            db.videos.remove({ videoID: req.body.videoID }, function(err, docs) {
+                if (err) {
+                    console.log(chalk.bgRed.white(err));
+                    returner.error = 1;
+                }
+                return res.json(returner);
+            });
+        }
+    });
+
+
 });
 
 // postas video ikelimui
@@ -192,7 +224,7 @@ app.post('/api/upload', function(req, res) {
                     var vidLink = "https://cigari.ga/v/" + videoID;
                     console.log(chalk.bgGreen.black("storing video!"));
 
-                    db.videos.insert({ username: req.session.authUser.username.toLowerCase(), link: vidLink, name: cleanedName, videoID: videoID, views: 0, likes: 0, dislikes: 0 }, function() {
+                    db.videos.insert({ username: req.session.authUser.username.toLowerCase(), link: vidLink, name: cleanedName, videoID: videoID, views: 0, likes: 0, dislikes: 0, size: fileSizeInMegabytes }, function() {
                         req.files.file.mv(storagePath + videoID + extension);
                     });
 

@@ -26,9 +26,8 @@
         </el-table-column>
         <el-table-column
           label="Actions">
-
           <template scope="scope">
-            <el-button type="button" size="small">Remove</el-button>
+            <el-button type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
           </template>
       </el-table-column>
       </el-table>
@@ -66,14 +65,39 @@ export default {
       }else if (res.data.error==1){
         console.log("error while fetching videos");
       }
-      
     }).catch(function (e) {
       console.log(e);
     });
 
   },
   methods:{
-  },  
+    async deleteVideo(index){
+      var videoID = this.videos[index].videoID;
+      console.log("removing video: "+videoID);
+      console.log("authuser is "+this.$store.state.authUser);
+
+      axios({ 
+        url: 'http://cigari.ga/api/removeVideo',
+        method:'post',
+        credentials: 'same-origin',
+        data: {
+            user: this.$store.state.authUser,
+            videoID:videoID
+        }
+      })
+      .then((res) => {
+        if(res.data.error==0){
+          console.log("removed video");
+          this.$message.success("Successfully removed video!");
+          this.videos = this.videos.filter(function(el){ return el.videoID != videoID; });
+        }else if (res.data.error==1){
+          console.log("error while deleting video");
+        }
+      }).catch(function (e) {
+        console.log(e);
+      });
+    
+  }},  
   created:function(){
   //authUser checkeris
     if(!this.$store.state.authUser){
