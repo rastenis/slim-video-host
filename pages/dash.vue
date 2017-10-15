@@ -1,37 +1,74 @@
 <template>
   <div v-if="$store.state.authUser">
     <h1 class="title">Dashboard</h1>
-    <div v-if="videos.length==0" class="centeredUploadVideoSuggestion">
-      <p>You don't have any videos yet!</p>
-      <el-button @click="$store.app.router.push('/upload'); this.$store.state.activeTab = '3';">
-        Upload a video
-      </el-button>
+    <div v-if="$store.state.authUser.userStatus==1" class="pads">
+      <el-row>
+        <el-col class="adminVideoPanel panel" :span="12">
+          <p class="adminPanelText">All Videos</p>
+          <el-collapse>
+            <el-collapse-item title="Expand videos" name="1">
+              <el-table
+                :data="videos"
+                style="width: 100%">
+                <el-table-column
+                  prop="name"
+                  label="Video">
+                </el-table-column>
+                <el-table-column
+                  prop="link"
+                  label="Link"
+                  @click.native="$event.target.select()">
+                </el-table-column>
+                <el-table-column
+                  prop="views"
+                  label="Views">
+                </el-table-column>
+                <el-table-column
+                  label="Actions">
+                </el-table-column>
+              </el-table>
+            </el-collapse-item>
+          </el-collapse>
+        </el-col>
+        <el-col class="adminStatsPanel panel" :span="12">
+          <p class="adminPanelText">Stats</p>
+          <p>Total users registered: {{stats.userCount}}</p>
+          <p>Total videos uploaded: {{stats.videoCount}}</p>
+        </el-col>
+      </el-row>
     </div>
-    <div class="videoList" v-else>
-      <el-table
-        :data="videos"
-        style="width: 100%">
-        <el-table-column
-          prop="name"
-          label="Video">
-        </el-table-column>
-        <el-table-column
-          prop="link"
-          label="Link"
-          @click.native="$event.target.select()">
-        </el-table-column>
-        <el-table-column
-          prop="views"
-          label="Views">
-        </el-table-column>
-        <el-table-column
-          label="Actions">
-          <template slot-scope="scope">
-            <el-button type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
-          </template>
-      </el-table-column>
-      </el-table>
-
+    <div v-else>
+      <div v-if="videos.length==0" class="centeredUploadVideoSuggestion">
+        <p>You don't have any videos yet!</p>
+        <el-button @click="$store.app.router.push('/upload'); this.$store.state.activeTab = '3';">
+          Upload a video
+        </el-button>
+      </div>
+      <div class="videoList" v-else>
+        <el-table
+          :data="videos"
+          style="width: 100%">
+          <el-table-column
+            prop="name"
+            label="Video">
+          </el-table-column>
+          <el-table-column
+            prop="link"
+            label="Link"
+            @click.native="$event.target.select()">
+          </el-table-column>
+          <el-table-column
+            prop="views"
+            label="Views">
+          </el-table-column>
+          <el-table-column
+            label="Actions">
+            <template slot-scope="scope">
+              <el-button type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </div>
   </div>
 </template>
@@ -44,30 +81,56 @@ export default {
   data () {
     return {
       loadingMore:true,
-      videos:[]
+      videos:[],
+      stats:{}
       }
   },
   asyncData (context) {
-    console.log("authuser is "+context.app.store.state.authUser);
-    return axios({ 
-      url: 'http://cigari.ga/api/getVideos',
-      method:'post',
-      credentials: 'same-origin',
-      data: {
-          user: context.app.store.state.authUser
-      }
-    })
-    .then((res) => {
-      console.log("res data is"+res.data);
-      if(res.data.error==0){
-        console.log("fetched videos");
-        return { videos: res.data.videos, loadingMore:false}
-      }else if (res.data.error==1){
-        console.log("error while fetching videos");
-      }
-    }).catch(function (e) {
-      console.log(e);
-    });
+    try{
+      if(context.app.store.state.authUser.userStatus!=1){
+      console.log("authuser is "+context.app.store.state.authUser);
+      return axios({ 
+        url: 'http://cigari.ga/api/getVideos',
+        method:'post',
+        credentials: 'same-origin',
+        data: {
+            user: context.app.store.state.authUser
+        }
+      })
+      .then((res) => {
+        console.log("res data is"+res.data);
+        if(res.data.error==0){
+          console.log("fetched videos");
+          return { videos: res.data.videos, loadingMore:false}
+        }else if (res.data.error==1){
+          console.log("error while fetching videos");
+        }
+      }).catch(function (e) {
+        console.log(e);
+      });
+    }else{
+      //fetchinam additional stats
+      return axios({ 
+        url: 'http://cigari.ga/api/getAdminStats',
+        method:'post',
+        credentials: 'same-origin',
+        data: {
+            user: context.app.store.state.authUser
+        }
+      })
+      .then((res) => {
+        if(res.data.error==0){
+          return { stats: res.data, loadingMore:false}
+        }else if (res.data.error==1){
+          console.log("error while fetching admin stats");
+        }
+      }).catch(function (e) {
+        console.log(e);
+      });
+    }
+    }catch(e){
+      console.log("skipping");
+    }
 
   },
   methods:{
@@ -162,4 +225,33 @@ export default {
     padding-top:10vh;
     padding-left:3vw;
   }
+
+  .adminVideoPanel{
+    background: #d3dce6;
+  }
+
+  .videoPanelExpander{
+    background: #d8cdd7;
+  }
+
+  .adminStatsPanel{
+    background: #cbcad0;
+    
+  }
+
+  .adminPanelText{
+    text-align: center;
+    font-family: LatoLight;
+    font-size:20px;
+  }
+
+  .panel{
+    border-radius: 15px;
+    min-height: 40vh;
+  }
+
+  .pads{
+    padding:3vh;
+  }
+
 </style>

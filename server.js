@@ -135,7 +135,14 @@ app.post('/api/getVideos', function(req, res) {
     var returner = {};
     console.log("requester : " + req.body.user.username);
 
-    db.videos.find({ username: req.body.user.username.toLowerCase() }, function(err, docs) {
+    let query = {};
+    if (req.body.user.userStatus == 1) { //admin, get all videos
+        //query lieka {}, todel paims VISUS video
+    } else {
+        query = { username: req.body.user.username.toLowerCase() };
+    }
+
+    db.videos.find(query, function(err, docs) {
         if (err) {
             console.log(chalk.bgRed.white(err));
             returner.error = 1;
@@ -149,6 +156,37 @@ app.post('/api/getVideos', function(req, res) {
 });
 
 // postas userio video paimimui
+app.post('/api/getAdminStats', function(req, res) {
+
+    var returner = {};
+    if (req.body.user.userStatus == 1) {
+        db.users.count({}, function(err, count) {
+            if (err) {
+                console.log(chalk.bgRed.white(err));
+                returner.error = 1;
+            }
+            returner.userCount = count;
+
+            db.videos.count({}, function(err, count) {
+                if (err) {
+                    console.log(chalk.bgRed.white(err));
+                    returner.error = 1;
+                }
+
+                returner.videoCount = count;
+
+                returner.error = 0;
+                return res.json(returner);
+            });
+
+
+        });
+    }
+
+
+});
+
+// postas userio video pasalinimui
 app.post('/api/removeVideo', function(req, res) {
 
     var returner = {};
