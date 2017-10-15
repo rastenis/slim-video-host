@@ -13,6 +13,7 @@ const app = require('express')();
 const fileUpload = require('express-fileupload');
 const fs = require("fs");
 const util = require('util');
+const helmet = require('helmet')
 
 //isemu - ir _ is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
@@ -33,6 +34,7 @@ const storagePath = "static/videos/";
 //skirta isjungti admin registered flagui, kad tik pirma useri padarytu automatiskai adminu.
 var adminRegistered = checkAdminReg();
 
+app.use(helmet());
 app.use(fileUpload({
     limits: { fileSize: 50 * 1024 * 1024 },
     safeFileNames: true

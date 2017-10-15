@@ -26,7 +26,7 @@
         </el-table-column>
         <el-table-column
           label="Actions">
-          <template scope="scope">
+          <template slot-scope="scope">
             <el-button type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
           </template>
       </el-table-column>
