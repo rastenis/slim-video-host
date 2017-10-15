@@ -1,7 +1,6 @@
 <template>
   <div v-if="$store.state.authUser">
-    <h1 class="title" 
-          @click="tester">Dashboard</h1>
+    <h1 class="title">Dashboard</h1>
     <div v-if="videos.length==0" class="centeredUploadVideoSuggestion">
       <p>You don't have any videos yet!</p>
       <el-button @click="$store.app.router.push('/upload'); this.$store.state.activeTab = '3';">
@@ -119,6 +118,15 @@ export default {
 
 
 <style>
+  @font-face {
+    font-family: "LatoLight";
+    src: url("/fonts/LatoLight/Lato-Light.eot"),
+    url("/fonts/LatoLight/Lato-Light.woff") format("woff"),
+    url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
+    font-style: normal;
+    font-weight: normal;
+  }
+
   .videoList{
     padding-top:10vh;
     position: relative;
@@ -149,7 +157,7 @@ export default {
   }
 
   .title{
-    font-weight: lighter;
+    font-family: LatoLight;
     font-size: 50px;
     padding-top:10vh;
     padding-left:3vw;

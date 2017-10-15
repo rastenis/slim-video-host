@@ -109,13 +109,21 @@ export default {
 </script>
 
 <style>
+  @font-face {
+    font-family: "LatoRegular";
+    src: url("/fonts/LatoRegular/Lato-Regular.eot"),
+    url("/fonts/LatoRegular/Lato-Regular.woff") format("woff"),
+    url("/fonts/LatoRegular/Lato-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-weight: normal;
+  }
 
   a{
    
     text-decoration: none;
   }
   .nudge{
-     padding-top: 10px;
+     padding-top: 15px;
   }
   .introButton{
     border-style: solid;
@@ -134,6 +142,7 @@ export default {
     position: relative;
     width:100%;
     height:100%;
+
 
   }
 
@@ -159,6 +168,7 @@ export default {
     border-style: solid;
     border-color:white;
     border-width: 5px;
+    font-family: LatoRegular;
   }
 
   .introLoginForm{

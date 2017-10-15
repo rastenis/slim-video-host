@@ -73,38 +73,49 @@
 
 <style scoped>
 
-.main {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  min-height: 100%;
-  background: #EFF2F7;
-}
+  @font-face {
+    font-family: "LatoRegular";
+    src: url("/fonts/LatoRegular/Lato-Regular.eot"),
+    url("/fonts/LatoRegular/Lato-Regular.woff") format("woff"),
+    url("/fonts/LatoRegular/Lato-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-weight: normal;
+  }
 
-.container{
-  max-height: 100%;
-  min-height:100vh;
-  max-width: 75%;
-  display: block;
-  background: #E5E9F2;
-  margin-left: auto;
-  margin-right: auto;
-}
-.pRight{
-  float: right;
-}
+  .main {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100%;
+    background: #EFF2F7;
+  }
 
-.nav{
-  position: absolute;
-  top: 0;
-  left: 0;
-  min-width: 100%;
-}
+  .container{
+    max-height: 100%;
+    min-height:100vh;
+    max-width: 75%;
+    display: block;
+    background: #E5E9F2;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .pRight{
+    float: right;
+  }
 
-nuxt-link{
-  text-decoration: none;
-}
+  .nav{
+    position: absolute;
+    top: 0;
+    left: 0;
+    min-width: 100%;
+    font-family: LatoRegular;
+    font-size: large;
+  }
+
+  nuxt-link{
+    text-decoration: none;
+  }
 </style>
 
 
