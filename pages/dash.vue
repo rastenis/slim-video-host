@@ -1,6 +1,7 @@
 <template>
   <div v-if="$store.state.authUser">
-    <h1 class="title" >Dashboard</h1>
+    <h1 class="title" 
+          @click="tester">Dashboard</h1>
     <div v-if="videos.length==0" class="centeredUploadVideoSuggestion">
       <p>You don't have any videos yet!</p>
       <el-button @click="$store.app.router.push('/upload'); this.$store.state.activeTab = '3';">
@@ -73,9 +74,10 @@ export default {
   methods:{
     async deleteVideo(index){
       var videoID = this.videos[index].videoID;
-      console.log("removing video: "+videoID);
+      console.log("removing video: "+videoID+", index is "+index);
       console.log("authuser is "+this.$store.state.authUser);
-
+      this.videos.splice(index,1);
+      
       axios({ 
         url: 'http://cigari.ga/api/removeVideo',
         method:'post',
@@ -89,7 +91,8 @@ export default {
         if(res.data.error==0){
           console.log("removed video");
           this.$message.success("Successfully removed video!");
-          this.videos = this.videos.filter(function(el){ return el.videoID != videoID; });
+          //sitoj vietoj tinkamai neisfiltruoja
+          
         }else if (res.data.error==1){
           console.log("error while deleting video");
         }
@@ -97,6 +100,9 @@ export default {
         console.log(e);
       });
     
+  },
+  tester(){
+    console.log(this.videos);
   }},  
   created:function(){
   //authUser checkeris

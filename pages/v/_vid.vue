@@ -1,5 +1,10 @@
 <template>
   <div class="mainDiv" @click="changeSrc">
+      <div v-if="nonExistent" class="nonExistentText">
+        <h1>
+          Requested video does not exist. (404)
+        </h1>
+      </div>
       <video
         v-if="videoSrc!=''" 
         id="mainPlayer"
@@ -11,6 +16,7 @@
         data-setup='{}'>
         <source :src="videoSrc" type="video/mp4"></source>
       </video>
+
   </div>
 </template>
 
@@ -43,9 +49,6 @@ export default {
     })
   },
   methods:{
-    changeSrc(){
-      console.log(this.videoSrc);
-    }
   },
   layout:'video',
   head: {
@@ -61,6 +64,16 @@ export default {
 
 
 <style>
+
+  @font-face {
+    font-family: "LatoLight";
+    src: url("/fonts/LatoLight/Lato-Light.eot"),
+    url("/fonts/LatoLight/Lato-Light.woff") format("woff"),
+    url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
+    font-style: normal;
+    font-weight: normal;
+  }
+
   template{
     overflow: hidden;
   }
@@ -71,6 +84,17 @@ export default {
   }
 
   .videoDiv{
+    margin: auto; 
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .nonExistentText{
+    color: white;
+    text-align: center;
+    font-family: LatoLight;
+    background: gray;
     margin: auto; 
     position: relative;
     top: 50%;
