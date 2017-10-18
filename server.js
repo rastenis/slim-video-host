@@ -13,7 +13,7 @@ const app = require('express')();
 const fileUpload = require('express-fileupload');
 const fs = require("fs");
 const util = require('util');
-const helmet = require('helmet')
+const helmet = require('helmet');
 
 //isemu - ir _ is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
@@ -25,14 +25,12 @@ db.codes = new Datastore({ filename: 'db/codes', autoload: true });
 db.videos = new Datastore({ filename: 'db/videos', autoload: true });
 
 //default optionai
-const defaultUserStatus = 0; //1 - admin
-const defaultStorageSpace = 10240; //megabaitais
+var defaultUserStatus = 0; //1 - admin
+var defaultStorageSpace = 10240; //megabaitais
 
 // video storage path
 const storagePath = "static/videos/";
 
-//skirta isjungti admin registered flagui, kad tik pirma useri padarytu automatiskai adminu.
-var adminRegistered = checkAdminReg();
 
 app.use(helmet());
 app.use(fileUpload({
@@ -77,6 +75,33 @@ app.post('/api/login', function(req, res) {
 
 });
 
+//patikra ar yra toks video
+app.get('/api/cv/:id', function(req, res) {
+
+    console.log("check check");
+
+    if (!req.params.id) {
+        console.log("empty request, probably a refresh");
+    } else {
+        var path = storagePath + req.params.id + '.mp4';
+        console.log("looking for " + path);
+
+        //check if requested video exists
+        if (fs.existsSync(path)) {
+            let vidpath = '/videos/' + req.params.id + '.mp4';
+            db.videos.update({ videoID: req.params.id }, { $inc: { views: 1 } }, {}, function() {
+                console.log("added a view to video " + req.params.id);
+                res.json({ error: 0, src: vidpath });
+            });
+
+        } else {
+            res.json({ error: 1 });
+        }
+    }
+
+
+});
+
 app.post('/api/register', function(req, res) {
 
     db.users.find({ username: req.body.username.toLowerCase() }, function(err, docs) {
@@ -108,17 +133,28 @@ app.post('/api/register', function(req, res) {
                     if (code !== null) { //got code
                         //TODO: code logic, padidint duomenu kieki OR statusa pakeist
                     }
-                    if (!adminRegistered) {
-                        userStatus = 1; //duodam pirmam useriui admin statusa
-                    }
 
-                    var hashedPass = hashUpPass(req.body.password);
+                    db.users.find({}, function(err, docs) {
+                        var userCount = 0;
+                        docs.forEach(function(doc) {
+                            userCount++;
+                        });
 
-                    db.users.insert({ username: req.body.username.toLowerCase(), password: hashedPass, email: req.body.email, totalSpace: storageSpace, remainingSpace: storageSpace, userStatus: userStatus }, function(err, doc) {
-                        console.log(chalk.bgCyanBright.black("successfully inserted user " + doc.username));
-                        req.session.authUser = doc; //kabinam visa user ant authUser
-                        return res.json(doc);
+                        if (userCount == 0) { //ADMINAS DAR NEPRISIREGISTRAVES; settinam admin flag to false
+                            userStatus = 1
+                        } else {
+                            userStatus = 0;
+                        }
+
+                        var hashedPass = hashUpPass(req.body.password);
+
+                        db.users.insert({ username: req.body.username.toLowerCase(), password: hashedPass, email: req.body.email, totalSpace: storageSpace, remainingSpace: storageSpace, userStatus: userStatus }, function(err, doc) {
+                            console.log(chalk.bgCyanBright.black("successfully inserted user " + doc.username));
+                            req.session.authUser = doc; //kabinam visa user ant authUser
+                            return res.json(doc);
+                        });
                     });
+
                 }
             ], function(err, res) {
                 if (err) { //catchas jei pareitu koks unexpected error
@@ -135,19 +171,16 @@ app.post('/api/getVideos', function(req, res) {
     var returner = {};
     console.log("requester : " + req.body.user.username);
 
-    let query = {};
-    if (req.body.user.userStatus == 1) { //admin, get all videos
-        //query lieka {}, todel paims VISUS video
-    } else {
-        query = { username: req.body.user.username.toLowerCase() };
-    }
+
+    query = { username: req.body.user.username.toLowerCase() };
+
 
     db.videos.find(query, function(err, docs) {
         if (err) {
             console.log(chalk.bgRed.white(err));
             returner.error = 1;
         }
-        console.log("OKE, " + docs);
+        console.log("OKE, " + docs[0]);
 
         returner.error = 0;
         returner.videos = docs;
@@ -159,13 +192,15 @@ app.post('/api/getVideos', function(req, res) {
 app.post('/api/getAdminStats', function(req, res) {
 
     var returner = {};
+    returner.stats = {};
+
     if (req.body.user.userStatus == 1) {
         db.users.count({}, function(err, count) {
             if (err) {
                 console.log(chalk.bgRed.white(err));
                 returner.error = 1;
             }
-            returner.userCount = count;
+            returner.stats.userCount = count;
 
             db.videos.count({}, function(err, count) {
                 if (err) {
@@ -173,10 +208,20 @@ app.post('/api/getAdminStats', function(req, res) {
                     returner.error = 1;
                 }
 
-                returner.videoCount = count;
+                returner.stats.videoCount = count;
 
-                returner.error = 0;
-                return res.json(returner);
+                db.videos.find({}, function(err, docs) {
+                    if (err) {
+                        console.log(chalk.bgRed.white(err));
+                        returner.error = 1;
+                    }
+                    console.log("OKE, " + docs[0]);
+
+                    returner.error = 0;
+                    returner.videos = docs;
+                    return res.json(returner);
+                });
+
             });
 
 
@@ -261,7 +306,7 @@ app.post('/api/upload', function(req, res) {
                 } else {
                     // dedam video i storage
                     var videoID = shortid.generate();
-                    var vidLink = "https://cigari.ga/v/" + videoID;
+                    var vidLink = "https://gamtosau.ga/v/" + videoID;
                     console.log(chalk.bgGreen.black("storing video!"));
 
                     db.videos.insert({ username: req.session.authUser.username.toLowerCase(), link: vidLink, name: cleanedName, videoID: videoID, views: 0, likes: 0, dislikes: 0, size: fileSizeInMegabytes }, function() {
@@ -293,30 +338,7 @@ app.post('/api/logout', function(req, res) {
 
 //TODO: recalculate user remaining space each start?
 
-//patikra ar yra toks video
-app.get('/api/checkVideo/:id', function(req, res) {
 
-    if (!req.params.id) {
-        console.log("empty request, probably a refresh");
-    } else {
-        var path = storagePath + req.params.id + '.mp4';
-        console.log("looking for " + path);
-
-        //check if requested video exists
-        if (fs.existsSync(path)) {
-            let vidpath = '/videos/' + req.params.id + '.mp4';
-            db.videos.update({ videoID: req.params.id }, { $inc: { views: 1 } }, {}, function() {
-                console.log("added a view to video " + req.params.id);
-                res.json({ error: 0, src: vidpath });
-            });
-
-        } else {
-            res.json({ error: 1 });
-        }
-    }
-
-
-});
 
 //nuxt config
 let config = require('./nuxt.config.js');
@@ -334,22 +356,6 @@ app.use(nuxt.render);
 app.listen(10700);
 console.log('Server is listening on http://localhost:10700');
 
-
-function checkAdminReg() {
-
-    db.users.find({}, function(err, docs) {
-        var userCount = 0;
-        docs.forEach(function(doc) {
-            userCount++;
-        });
-
-        if (userCount == 0) { //ADMINAS DAR NEPRISIREGISTRAVES; settinam admin flag to false
-            return false;
-        } else {
-            return true;
-        }
-    });
-}
 
 function performSecurityChecks(docs) {
     if (docs.length == 0) { //nerado userio su tokiu username

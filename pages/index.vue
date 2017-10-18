@@ -98,7 +98,7 @@ export default {
   },
   created:function(){
   //gif setter
-    axios.get('http://api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag=art')
+    axios.get('//api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag=art')
           .then((res) => {
             console.log('ok setting shit to '+ res.data.data.image_original_url);
             this.intro.backgroundImage='url('+ res.data.data.image_original_url+')';

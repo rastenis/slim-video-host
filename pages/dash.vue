@@ -2,7 +2,7 @@
   <div v-if="$store.state.authUser">
     <h1 class="title">Dashboard</h1>
     <div v-if="$store.state.authUser.userStatus==1" class="pads">
-      <el-row>
+      <el-row :gutter="20">
         <el-col class="adminVideoPanel panel" :span="12">
           <p class="adminPanelText">All Videos</p>
           <el-collapse>
@@ -32,8 +32,10 @@
         </el-col>
         <el-col class="adminStatsPanel panel" :span="12">
           <p class="adminPanelText">Stats</p>
-          <p>Total users registered: {{stats.userCount}}</p>
-          <p>Total videos uploaded: {{stats.videoCount}}</p>
+          <div class="stats">
+            <p>Total users registered: {{stats.userCount}}</p>
+            <p>Total videos uploaded: {{stats.videoCount}}</p>
+          </div>
         </el-col>
       </el-row>
     </div>
@@ -87,10 +89,32 @@ export default {
   },
   asyncData (context) {
     try{
-      if(context.app.store.state.authUser.userStatus!=1){
+      if(context.app.store.state.authUser.userStatus==1){
+
+       //fetchinam additional stats
+      return axios({ 
+        url: '//gamtosau.ga/api/getAdminStats',
+        method:'post',
+        credentials: 'same-origin',
+        data: {
+            user: context.app.store.state.authUser
+        }
+      })
+      .then((res) => {
+        if(res.data.error==0){
+          return { stats: res.data.stats, loadingMore:false,videos:res.data.videos}
+        }else if (res.data.error==1){
+          console.log("error while fetching admin stats");
+        }
+      }).catch(function (e) {
+        console.log(e);
+      });
+
+    }else{
+
       console.log("authuser is "+context.app.store.state.authUser);
       return axios({ 
-        url: 'http://cigari.ga/api/getVideos',
+        url: '//gamtosau.ga/api/getVideos',
         method:'post',
         credentials: 'same-origin',
         data: {
@@ -108,26 +132,8 @@ export default {
       }).catch(function (e) {
         console.log(e);
       });
-    }else{
-      //fetchinam additional stats
-      return axios({ 
-        url: 'http://cigari.ga/api/getAdminStats',
-        method:'post',
-        credentials: 'same-origin',
-        data: {
-            user: context.app.store.state.authUser
-        }
-      })
-      .then((res) => {
-        if(res.data.error==0){
-          return { stats: res.data, loadingMore:false}
-        }else if (res.data.error==1){
-          console.log("error while fetching admin stats");
-        }
-      }).catch(function (e) {
-        console.log(e);
-      });
     }
+
     }catch(e){
       console.log("skipping");
     }
@@ -141,7 +147,7 @@ export default {
       this.videos.splice(index,1);
       
       axios({ 
-        url: 'http://cigari.ga/api/removeVideo',
+        url: '//cigari.ga/api/removeVideo',
         method:'post',
         credentials: 'same-origin',
         data: {
@@ -252,6 +258,11 @@ export default {
 
   .pads{
     padding:3vh;
+  }
+
+  .stats{
+    padding: 1vh;
+    font-family: LatoLight;
   }
 
 </style>
