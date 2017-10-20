@@ -43,7 +43,7 @@ export default {
 
 
     return axios({ 
-      url: `//gamtosau.ga/api/cv/${context.params.vid}`,
+      url: `http://gamtosau.ga/api/cv/${context.params.vid}`,
       method:'GET',
       credentials: 'same-origin',      
       data:{

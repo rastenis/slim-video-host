@@ -93,7 +93,7 @@ export default {
 
        //fetchinam additional stats
       return axios({ 
-        url: '//gamtosau.ga/api/getAdminStats',
+        url: 'https://cigari.ga/api/getAdminStats',
         method:'post',
         credentials: 'same-origin',
         data: {
@@ -114,7 +114,7 @@ export default {
 
       console.log("authuser is "+context.app.store.state.authUser);
       return axios({ 
-        url: '//gamtosau.ga/api/getVideos',
+        url: 'https://cigari.ga/api/getVideos',
         method:'post',
         credentials: 'same-origin',
         data: {
@@ -141,37 +141,49 @@ export default {
   },
   methods:{
     async deleteVideo(index){
-      var videoID = this.videos[index].videoID;
-      console.log("removing video: "+videoID+", index is "+index);
-      console.log("authuser is "+this.$store.state.authUser);
-      this.videos.splice(index,1);
+      this.$confirm('This will permanently delete the video. Continue?', 'Warning', {
+          confirmButtonText: 'OK',
+          cancelButtonText: 'Cancel',
+          type: 'warning'
+      }).then(()=>{
+        var videoID = this.videos[index].videoID;
+        console.log("removing video: "+videoID+", index is "+index);
+        console.log("authuser is "+this.$store.state.authUser);
+        this.videos.splice(index,1);
       
-      axios({ 
-        url: '//cigari.ga/api/removeVideo',
-        method:'post',
-        credentials: 'same-origin',
-        data: {
-            user: this.$store.state.authUser,
-            videoID:videoID
-        }
-      })
-      .then((res) => {
-        if(res.data.error==0){
-          console.log("removed video");
-          this.$message.success("Successfully removed video!");
-          //sitoj vietoj tinkamai neisfiltruoja
-          
-        }else if (res.data.error==1){
-          console.log("error while deleting video");
-        }
-      }).catch(function (e) {
-        console.log(e);
+        axios({ 
+          url: 'https://cigari.ga/api/removeVideo',
+          method:'post',
+          credentials: 'same-origin',
+          data: {
+              user: this.$store.state.authUser,
+              videoID:videoID
+          }
+        })
+        .then((res) => {
+          if(res.data.error==0){
+            console.log("removed video");
+            this.$message({
+              type: 'success',
+              message: 'Delete successful'
+            });   
+
+          }else if (res.data.error==1){
+            console.log("error while deleting video");
+          }
+        }).catch(function (e) {
+          console.log(e);
+        });
+
+      }).catch(()=>{
+        this.$message({
+          type: 'info',
+          message: 'Delete canceled'
+        });   
+
       });
-    
-  },
-  tester(){
-    console.log(this.videos);
-  }},  
+  }
+  },  
   created:function(){
   //authUser checkeris
     if(!this.$store.state.authUser){
