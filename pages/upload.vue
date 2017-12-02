@@ -3,7 +3,6 @@
     <div v-if="$store.state.authUser" class="uploadForm">
       <el-upload
         :multiple="false" 
-        v-loading="uploading" 
         element-loading-text="Uploading..." 
         class="vid-uploader" 
         drag 
@@ -17,7 +16,20 @@
         <div class="el-upload__tip" slot="tip">mp4 files with a size less than 10GB</div>
 
       </el-upload>
-      <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="18" :percentage="progressBar.percentage"></el-progress>
+
+      <el-dialog title="Uploading video" :visible.sync="uploading" :on-close="revertUpload">
+        <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="18" :percentage="progressBar.percentage"></el-progress>
+        <el-form>
+          <el-form-item label="Video name">
+            <el-input v-model="currentVidName"></el-input>
+          </el-form-item>
+
+          <el-button type="success" @click="finishUpload(currentVidName)">Finish upload</el-button>
+          <el-button :plain="true" type="danger" @click="revertUpload">Cancel</el-button>
+        </el-form>
+
+
+      </el-dialog>
 
     </div>
   </div>
@@ -25,7 +37,7 @@
 
 <script>
 
-//TODO:  single drag-drop (+ selection based also?) for uploading single video. Post it to backend and get link when uploaded. Generate link w/ shortID
+import axios from 'axios'
 
 export default {
   data () {
@@ -34,7 +46,8 @@ export default {
       progressBar:{
         status:'',
         percentage:0
-      }
+      },
+      currentVidName:''
     }
   },
   methods:{
@@ -67,9 +80,10 @@ export default {
     uploadProgress(event, file, fileList){
       console.log(event)
       if(event.percent>=100){
-        this.uploading=false; 
-        this.uploadedNotification();
-        //todo effect for finished upload
+        // this.uploading=false; 
+        
+        // todo effect for finished upload
+
       }
       this.progressBar.percentage= parseFloat( event.percent.toFixed(2));
     },
@@ -80,7 +94,56 @@ export default {
           type: 'success',
           duration: 4000
         });
+      },
+    revertUpload(){
+      axios({ 
+      url: 'https://cigari.ga/api/confirmVideo',
+      method:'post',
+      credentials: 'same-origin',
+      data: {
+          user: this.$store.state.authUser,
+          action:1
       }
+      })
+      .then((res) => {
+        if(res.data.error==0){
+          this.$message.error('Upload canceled.');
+          this.uploading=false;
+        }else if (res.data.error==1){
+          console.log("error while confirming video");
+        }
+      }).catch(function (e) {
+        console.log(e);
+      });
+      
+
+    },
+    finishUpload(name){
+      if(name==""){
+        this.$message.error('Please enter a valid name!');
+      }else{
+        axios({ 
+        url: 'https://cigari.ga/api/confirmVideo',
+        method:'post',
+        credentials: 'same-origin',
+        data: {
+            user: this.$store.state.authUser,
+            action:0,
+            name:name
+        }
+        })
+        .then((res) => {
+          if(res.data.error==0){
+            this.uploadedNotification();
+            this.uploading=false;
+          }else if (res.data.error==1){
+            console.log("error while confirming video");
+          }
+        }).catch(function (e) {
+          console.log(e);
+        });
+      }
+    }
   
   }, 
   created:function(){

@@ -125,6 +125,7 @@ export default {
         console.log("res data is"+res.data);
         if(res.data.error==0){
           console.log("fetched videos");
+          console.log(res.data.videos.length);
           return { videos: res.data.videos, loadingMore:false}
         }else if (res.data.error==1){
           console.log("error while fetching videos");

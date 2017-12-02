@@ -171,11 +171,7 @@ app.post('/api/getVideos', function(req, res) {
     var returner = {};
     console.log("requester : " + req.body.user.username);
 
-
-    query = { username: req.body.user.username.toLowerCase() };
-
-
-    db.videos.find(query, function(err, docs) {
+    db.videos.find({ username: req.body.user.username.toLowerCase() }, function(err, docs) {
         if (err) {
             console.log(chalk.bgRed.white(err));
             returner.error = 1;
@@ -184,6 +180,23 @@ app.post('/api/getVideos', function(req, res) {
 
         returner.error = 0;
         returner.videos = docs;
+        return res.json(returner);
+    });
+});
+
+
+// postas userio video paimimui
+app.post('/api/confirmVideo', function(req, res) {
+
+    var returner = {};
+
+    db.videos.update({ confirmed: false, username: req.body.user.username.toLowerCase() }, { name: req.body.name, confirmed: true }, function(err) {
+        if (err) {
+            console.log(chalk.bgRed.white(err));
+            returner.error = 1;
+        }
+
+        returner.error = 0;
         return res.json(returner);
     });
 });
@@ -309,8 +322,14 @@ app.post('/api/upload', function(req, res) {
                     var vidLink = "https://gamtosau.ga/v/" + videoID;
                     console.log(chalk.bgGreen.black("storing video!"));
 
-                    db.videos.insert({ username: req.session.authUser.username.toLowerCase(), link: vidLink, name: cleanedName, videoID: videoID, views: 0, likes: 0, dislikes: 0, size: fileSizeInMegabytes }, function() {
-                        req.files.file.mv(storagePath + videoID + extension);
+                    db.videos.find({ confirmed: false }, function(err, docs) {
+                        if (docs.length != 0) {
+                            res.status(558).json({ error: 'You have an unconfirmed video' });
+                        } else {
+                            db.videos.insert({ username: req.session.authUser.username.toLowerCase(), link: vidLink, name: cleanedName, videoID: videoID, views: 0, likes: 0, dislikes: 0, size: fileSizeInMegabytes, confirmed: false }, function() {
+                                req.files.file.mv(storagePath + videoID + extension);
+                            });
+                        }
                     });
 
                     var decrement = fileSizeInMegabytes *= -1;
