@@ -185,23 +185,36 @@ app.post('/api/getVideos', function(req, res) {
 });
 
 
-// postas userio video paimimui
-app.post('/api/confirmVideo', function(req, res) {
+// postas video ikelimo uzbaigimui (cancel or finalize)
+app.post('/api/finalizeUpload', function(req, res) {
 
     var returner = {};
 
-    db.videos.update({ confirmed: false, username: req.body.user.username.toLowerCase() }, { name: req.body.name, confirmed: true }, function(err) {
-        if (err) {
-            console.log(chalk.bgRed.white(err));
-            returner.error = 1;
-        }
+    if (req.body.video.finalizationStatus == 0) { //video was successfully uploaded and named
+        console.log("finalized " + req.body.video.name);
+        db.videos.update({ confirmed: false, username: req.body.user.username.toLowerCase() }, { $set: { name: req.body.video.name, confirmed: true } }, {}, function(err) {
+            if (err) {
+                console.log(chalk.bgRed.white(err));
+                returner.error = 1;
+            }
 
-        returner.error = 0;
-        return res.json(returner);
-    });
+            returner.error = 0;
+            return res.json(returner);
+        });
+    } else if (req.body.video.finalizationStatus == 1) { //video was not successfully uploaded (canceled)
+        //non-multi removal (gal ir praverstu multi false check, TODO)
+        console.log("cancelled " + req.body.video.name);
+
+        db.videos.remove({ confirmed: false, username: req.body.user.username.toLowerCase() }, {}, function(err, res) {});
+        fs.unlink(storagePath + video.videoID + ".mp4");
+
+    }
+
+
 });
 
-// postas userio video paimimui
+
+// postas adminu statistikom
 app.post('/api/getAdminStats', function(req, res) {
 
     var returner = {};
@@ -319,12 +332,17 @@ app.post('/api/upload', function(req, res) {
                 } else {
                     // dedam video i storage
                     var videoID = shortid.generate();
-                    var vidLink = "https://gamtosau.ga/v/" + videoID;
+                    var vidLink = "https://cigari.ga/v/" + videoID;
                     console.log(chalk.bgGreen.black("storing video!"));
 
                     db.videos.find({ confirmed: false }, function(err, docs) {
                         if (docs.length != 0) {
-                            res.status(558).json({ error: 'You have an unconfirmed video' });
+                            //removing all unconfirmed videos
+                            docs.forEach(function(video) {
+                                // removing video from both database and storage
+                                db.videos.remove({ videoID: video.videoID }, function(err, res) {});
+                                fs.unlink(storagePath + video.videoID + ".mp4");
+                            });
                         } else {
                             db.videos.insert({ username: req.session.authUser.username.toLowerCase(), link: vidLink, name: cleanedName, videoID: videoID, views: 0, likes: 0, dislikes: 0, size: fileSizeInMegabytes, confirmed: false }, function() {
                                 req.files.file.mv(storagePath + videoID + extension);

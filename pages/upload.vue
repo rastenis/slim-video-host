@@ -18,14 +18,14 @@
       </el-upload>
 
       <el-dialog title="Uploading video" :visible.sync="uploading" :on-close="revertUpload">
-        <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="18" :percentage="progressBar.percentage"></el-progress>
+        <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage" :status="progressBar.status"></el-progress>
         <el-form>
           <el-form-item label="Video name">
             <el-input v-model="currentVidName"></el-input>
           </el-form-item>
 
-          <el-button type="success" @click="finishUpload(currentVidName)">Finish upload</el-button>
-          <el-button :plain="true" type="danger" @click="revertUpload">Cancel</el-button>
+          <el-button type="success" @click="finishUpload(currentVidName,0)">Finish upload</el-button>
+          <el-button :plain="true" type="danger" @click="finishUpload(currentVidName,1)">Cancel</el-button>
         </el-form>
 
 
@@ -81,7 +81,7 @@ export default {
       console.log(event)
       if(event.percent>=100){
         // this.uploading=false; 
-        
+        this.progressBar.status="success";
         // todo effect for finished upload
 
       }
@@ -94,7 +94,7 @@ export default {
           type: 'success',
           duration: 4000
         });
-      },
+    },
     revertUpload(){
       axios({ 
       url: 'https://cigari.ga/api/confirmVideo',
@@ -118,18 +118,20 @@ export default {
       
 
     },
-    finishUpload(name){
+    finishUpload(name,status){
       if(name==""){
         this.$message.error('Please enter a valid name!');
       }else{
         axios({ 
-        url: 'https://cigari.ga/api/confirmVideo',
+        url: 'https://cigari.ga/api/finalizeUpload',
         method:'post',
         credentials: 'same-origin',
         data: {
             user: this.$store.state.authUser,
-            action:0,
-            name:name
+            video:{
+              name:name,
+              finalizationStatus:status
+            }
         }
         })
         .then((res) => {
@@ -187,8 +189,8 @@ export default {
 
   .progress{
     position: relative;
-    width:80%;
-    padding-top:10vh;
+    width:100%;
+    padding-top:1vh;
   }
   .vid-uploader .el-upload:hover {
     border-color: #20a0ff;
