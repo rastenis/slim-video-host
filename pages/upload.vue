@@ -21,7 +21,7 @@
         <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage" :status="progressBar.status"></el-progress>
         <el-form>
           <el-form-item label="Video name">
-            <el-input v-model="currentVidName"></el-input>
+            <el-input @keyup.enter.native="finishUpload(currentVidName,0)" v-model="currentVidName"></el-input>
           </el-form-item>
 
           <el-button type="success" @click="finishUpload(currentVidName,0)">Finish upload</el-button>
@@ -87,11 +87,11 @@ export default {
       }
       this.progressBar.percentage= parseFloat( event.percent.toFixed(2));
     },
-    uploadedNotification() {
+    uploadedNotification(msg,type) {
       this.$notify({
-          title: 'Success',
-          message: 'Your video has been successfully uploaded!',
-          type: 'success',
+          title: 'Information',
+          message: msg,
+          type: type,
           duration: 4000
         });
     },
@@ -136,10 +136,10 @@ export default {
         })
         .then((res) => {
           if(res.data.error==0){
-            this.uploadedNotification();
+            this.uploadedNotification(res.data.msg,res.data.msgType);
             this.uploading=false;
           }else if (res.data.error==1){
-            console.log("error while confirming video");
+            console.log();
           }
         }).catch(function (e) {
           console.log(e);

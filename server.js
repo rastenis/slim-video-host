@@ -199,6 +199,8 @@ app.post('/api/finalizeUpload', function(req, res) {
             }
 
             returner.error = 0;
+            returner.msg = "You successfully uploaded the video.";
+            returner.msgType = "success";
             return res.json(returner);
         });
     } else if (req.body.video.finalizationStatus == 1) { //video was not successfully uploaded (canceled)
@@ -208,6 +210,10 @@ app.post('/api/finalizeUpload', function(req, res) {
         db.videos.remove({ confirmed: false, username: req.body.user.username.toLowerCase() }, {}, function(err, res) {});
         fs.unlink(storagePath + video.videoID + ".mp4");
 
+        returner.error = 0;
+        returner.msgType = "error";
+        returner.msg = "You have cancelled the upload.";
+        return res.json(returner);
     }
 
 
