@@ -23,8 +23,7 @@
 <script>
   export default {
     data() {
-      return {
-      };
+      return {};
     },
     methods: {
       handleSelect(key, keyPath) {
@@ -33,38 +32,36 @@
             this.$store.app.router.push("/")
             break;
           case "2":
-            if(this.$store.state.authUser){
+            if (this.$store.state.authUser) {
               this.$store.app.router.push("/dash")
               this.$store.state.activeTab = '2';
-            }else{
+            } else {
               this.$store.app.router.push("/regMeUpYo")
               this.$store.state.activeTab = '2';
             }
             break;
           case "3":
-              this.$store.app.router.push("/upload")
-              this.$store.state.activeTab = '3';
+            this.$store.app.router.push("/upload")
+            this.$store.state.activeTab = '3';
             break;
           case "4":
-              this.logout();
-          break;
+            this.logout();
+            break;
           default:
             console.log("invalid nav choice");
             break;
         }
       },
-    async logout () {
-      try {
-        await this.$store.dispatch('logout');
-        this.$store.app.router.push("/")
-      } catch (e) {
-        this.formError = e.message
+      async logout() {
+        try {
+          await this.$store.dispatch('logout');
+          this.$store.app.router.push("/")
+        } catch (e) {
+          this.formError = e.message
+        }
       }
-    }
     },
-    created:function(){
-      //TODO MAKE ACTIVE TAB SETTER
-      //console.log(this.$app.$router); ? mb route as object?
+    created: function () {
     }
   }
 </script>
@@ -94,7 +91,7 @@
   .container{
     max-height: 100%;
     min-height:100vh;
-    max-width: 75%;
+    max-width: 70vw;
     display: block;
     background: #E5E9F2;
     margin-left: auto;

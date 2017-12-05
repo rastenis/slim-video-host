@@ -1,36 +1,26 @@
 <template>
   <div>
     <div v-if="$store.state.authUser" class="uploadForm">
-      <el-upload
-        :multiple="false" 
-        element-loading-text="Uploading..." 
-        class="vid-uploader" 
-        drag 
-        action="/api/upload" 
-        :show-file-list="false" 
-        :before-upload="beforeVideoUpload" 
-        :on-progress="uploadProgress">
-        
+      <el-upload :multiple="false" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :show-file-list="false"
+        :before-upload="beforeVideoUpload" :on-progress="uploadProgress">
         <i class="el-icon-upload"></i>
-        <div class="el-upload__text">Drop file here or <em>click to upload</em></div>
-        <div class="el-upload__tip" slot="tip">mp4 files with a size less than 10GB</div>
-
+        <div class="el-upload__text">Drop file here or
+          <em>click to upload</em>
+        </div>
+        <div class="el-upload__tip" slot="tip">.mp4 files with a size less than 10GB</div>
       </el-upload>
-
       <el-dialog title="Uploading video" :visible.sync="uploading" :on-close="revertUpload">
-        <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage" :status="progressBar.status"></el-progress>
+        <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage"
+          :status="progressBar.status"></el-progress>
         <el-form>
           <el-form-item label="Video name">
             <el-input @keyup.enter.native="finishUpload(currentVidName,0)" v-model="currentVidName"></el-input>
           </el-form-item>
-
           <el-button type="success" @click="finishUpload(currentVidName,0)">Finish upload</el-button>
           <el-button :plain="true" type="danger" @click="finishUpload(currentVidName,1)">Cancel</el-button>
         </el-form>
-
-
+        
       </el-dialog>
-
     </div>
   </div>
 </template>
@@ -119,8 +109,9 @@ export default {
 
     },
     finishUpload(name,status){
-      if(name==""){
+      if(name=="" && status==0){
         this.$message.error('Please enter a valid name!');
+        //prevent modal close
       }else{
         axios({ 
         url: 'https://cigari.ga/api/finalizeUpload',

@@ -7,24 +7,14 @@
           <p class="adminPanelText">All Videos</p>
           <el-collapse>
             <el-collapse-item title="Expand videos" name="1">
-              <el-table
-                :data="videos"
-                style="width: 100%">
-                <el-table-column
-                  prop="name"
-                  label="Video">
+              <el-table :data="videos" style="width: 100%">
+                <el-table-column prop="name" label="Video">
                 </el-table-column>
-                <el-table-column
-                  prop="link"
-                  label="Link"
-                  @click.native="$event.target.select()">
+                <el-table-column prop="link" label="Link" @click.native="$event.target.select()">
                 </el-table-column>
-                <el-table-column
-                  prop="views"
-                  label="Views">
+                <el-table-column prop="views" label="Views">
                 </el-table-column>
-                <el-table-column
-                  label="Actions">
+                <el-table-column label="Actions">
                 </el-table-column>
               </el-table>
             </el-collapse-item>
@@ -47,24 +37,26 @@
         </el-button>
       </div>
       <div class="videoList" v-else>
-        <el-table
-          :data="videos"
-          style="width: 100%">
-          <el-table-column
-            prop="name"
-            label="Video">
+        <el-card class="box-card" id="statCard">
+          <div slot="header" class="clearfix">
+            <span class="headerOfStatCard">Your stats</span>
+          </div>
+          <div class="text item">
+            {{"Total views: "+stats.totalViews}}
+          </div>
+          <div class="text item">
+            {{"Space used: "+stats.usedSpace+"/"+stats.totalSpace+" MB"}}
+          </div>
+        </el-card>
+        <h2 class="subtitle1">Your videos:</h2>
+        <el-table :data="videos" style="width: 100%">
+          <el-table-column prop="name" label="Video">
           </el-table-column>
-          <el-table-column
-            prop="link"
-            label="Link"
-            @click.native="$event.target.select()">
+          <el-table-column prop="link" label="Link" @click.native="$event.target.select()">
           </el-table-column>
-          <el-table-column
-            prop="views"
-            label="Views">
+          <el-table-column prop="views" label="Views">
           </el-table-column>
-          <el-table-column
-            label="Actions">
+          <el-table-column label="Actions">
             <template slot-scope="scope">
               <el-button type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
             </template>
@@ -80,121 +72,139 @@ import axios from 'axios'
 //TODO:  v-for get all video links w/ titles and views into CARDS (if w/ thumbnails) or just LIST ITEMS (w/o thumbnails)
 
 export default {
-  data () {
+  data() {
     return {
-      loadingMore:true,
-      videos:[],
-      stats:{}
-      }
-  },
-  asyncData (context) {
-    try{
-      if(context.app.store.state.authUser.userStatus==1){
-
-       //fetchinam additional stats
-      return axios({ 
-        url: 'https://cigari.ga/api/getAdminStats',
-        method:'post',
-        credentials: 'same-origin',
-        data: {
-            user: context.app.store.state.authUser
-        }
-      })
-      .then((res) => {
-        if(res.data.error==0){
-          return { stats: res.data.stats, loadingMore:false,videos:res.data.videos}
-        }else if (res.data.error==1){
-          console.log("error while fetching admin stats");
-        }
-      }).catch(function (e) {
-        console.log(e);
-      });
-
-    }else{
-
-      console.log("authuser is "+context.app.store.state.authUser);
-      return axios({ 
-        url: 'https://cigari.ga/api/getVideos',
-        method:'post',
-        credentials: 'same-origin',
-        data: {
-            user: context.app.store.state.authUser
-        }
-      })
-      .then((res) => {
-        console.log("res data is"+res.data);
-        if(res.data.error==0){
-          console.log("fetched videos");
-          console.log(res.data.videos.length);
-          return { videos: res.data.videos, loadingMore:false}
-        }else if (res.data.error==1){
-          console.log("error while fetching videos");
-        }
-      }).catch(function (e) {
-        console.log(e);
-      });
+      loadingMore: true,
+      videos: [],
+      stats: {}
     }
+  },
+  asyncData(context) {
+    try {
+      if (context.app.store.state.authUser.userStatus == 1) {
 
-    }catch(e){
+        //fetchinam additional stats
+        return axios({
+            url: 'https://cigari.ga/api/getAdminStats',
+            method: 'post',
+            credentials: 'same-origin',
+            data: {
+              user: context.app.store.state.authUser
+            }
+          })
+          .then((res) => {
+            if (res.data.error == 0) {
+              return {
+                stats: res.data.stats,
+                loadingMore: false,
+                videos: res.data.videos
+              }
+            } else if (res.data.error == 1) {
+              console.log("error while fetching admin stats");
+            }
+          }).catch(function (e) {
+            console.log(e);
+          });
+
+      } else {
+        return axios({
+            url: 'https://cigari.ga/api/getVideos',
+            method: 'post',
+            credentials: 'same-origin',
+            data: {
+              user: context.app.store.state.authUser
+            }
+          })
+          .then((res) => {
+            console.log("res data is" + res.data);
+            if (res.data.error == 0) {             
+              return {
+                videos: res.data.videos,
+                loadingMore: false
+              }
+            } else if (res.data.error == 1) {
+              console.log("error while fetching videos");
+            }
+          }).catch(function (e) {
+            console.log(e);
+          });
+      }
+
+    } catch (e) {
       console.log("skipping");
     }
 
   },
-  methods:{
-    async deleteVideo(index){
+  mounted(){
+    console.log("created");
+    this.setUpStats(); 
+  },
+  methods: {
+    async deleteVideo(index) {
       this.$confirm('This will permanently delete the video. Continue?', 'Warning', {
-          confirmButtonText: 'OK',
-          cancelButtonText: 'Cancel',
-          type: 'warning'
-      }).then(()=>{
+        confirmButtonText: 'OK',
+        cancelButtonText: 'Cancel',
+        type: 'warning'
+      }).then(() => {
         var videoID = this.videos[index].videoID;
-        console.log("removing video: "+videoID+", index is "+index);
-        console.log("authuser is "+this.$store.state.authUser);
-        this.videos.splice(index,1);
-      
-        axios({ 
-          url: 'https://cigari.ga/api/removeVideo',
-          method:'post',
-          credentials: 'same-origin',
-          data: {
+        console.log("removing video: " + videoID + ", index is " + index);
+        console.log("authuser is " + this.$store.state.authUser);
+        this.videos.splice(index, 1);
+
+        axios({
+            url: 'https://cigari.ga/api/removeVideo',
+            method: 'post',
+            credentials: 'same-origin',
+            data: {
               user: this.$store.state.authUser,
-              videoID:videoID
-          }
-        })
-        .then((res) => {
-          if(res.data.error==0){
-            console.log("removed video");
-            this.$message({
-              type: 'success',
-              message: 'Delete successful'
-            });   
+              videoID: videoID
+            }
+          })
+          .then((res) => {
+            if (res.data.error == 0) {
+              console.log("removed video");
+              this.$message({
+                type: 'success',
+                message: 'Delete successful'
+              });
 
-          }else if (res.data.error==1){
-            console.log("error while deleting video");
-          }
-        }).catch(function (e) {
-          console.log(e);
-        });
+            } else if (res.data.error == 1) {
+              console.log("error while deleting video");
+            }
+          }).catch(function (e) {
+            console.log(e);
+          });
 
-      }).catch(()=>{
+      }).catch(() => {
         this.$message({
           type: 'info',
           message: 'Delete canceled'
-        });   
+        });
 
       });
-  }
-  },  
-  created:function(){
-  //authUser checkeris
-    if(!this.$store.state.authUser){
+    },
+    setUpStats(){
+      console.log("setting up stats");
+      var totalViews=0;
+      this.videos.forEach(element => {
+        totalViews+=element.views;
+      });
+
+      this.stats.totalViews=totalViews;
+      this.stats.totalSpace=this.$store.state.authUser.totalSpace;
+      this.stats.usedSpace=(this.stats.totalSpace-this.$store.state.authUser.remainingSpace).toFixed(1);
+    }
+  },
+  created: function () {
+    //authUser checkeris
+    if (!this.$store.state.authUser) {
       this.$store.app.router.push("/")
-    }else{
+    } else {
       this.$store.state.activeTab = '2';
     }
 
   },
-  layout:'main'
+  layout: 'main'
 }
 </script>
 
@@ -222,6 +232,17 @@ export default {
   }
   .videoCard{
     width:80%;
+  }
+  .subtitle1{
+    font-weight: 300;
+  }
+
+  .headerOfStatCard{
+    font-size:3vh;
+  }
+
+  #statCard{
+    width:20vw;
   }
 
   .centeredUploadVideoSuggestion{

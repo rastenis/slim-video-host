@@ -6,7 +6,10 @@ const shortid = require('shortid');
 const chalk = require('chalk');
 const async = require('async');
 var Datastore = require('nedb');
-const { Nuxt, Builder } = require('nuxt');
+const {
+    Nuxt,
+    Builder
+} = require('nuxt');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const app = require('express')();
@@ -20,9 +23,18 @@ shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX
 
 //uzkraunam DB
 db = {};
-db.users = new Datastore({ filename: 'db/users', autoload: true });
-db.codes = new Datastore({ filename: 'db/codes', autoload: true });
-db.videos = new Datastore({ filename: 'db/videos', autoload: true });
+db.users = new Datastore({
+    filename: 'db/users',
+    autoload: true
+});
+db.codes = new Datastore({
+    filename: 'db/codes',
+    autoload: true
+});
+db.videos = new Datastore({
+    filename: 'db/videos',
+    autoload: true
+});
 
 //default optionai
 var defaultUserStatus = 0; //1 - admin
@@ -34,7 +46,9 @@ const storagePath = "static/videos/";
 
 app.use(helmet());
 app.use(fileUpload({
-    limits: { fileSize: 50 * 1024 * 1024 },
+    limits: {
+        fileSize: 50 * 1024 * 1024
+    },
     safeFileNames: true
 }));
 app.use(bodyParser.json());
@@ -42,19 +56,25 @@ app.use(session({
     secret: 'super-secret-key',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 60000 }
+    cookie: {
+        maxAge: 60000
+    }
 }));
 
 // postas loginui. Reikalingas, kad butu pasiekiama $store.state.authUser
 app.post('/api/login', function(req, res) {
 
-    db.users.find({ username: req.body.username.toLowerCase() }, function(err, docs) {
+    db.users.find({
+        username: req.body.username.toLowerCase()
+    }, function(err, docs) {
 
         //checkai del duplicate usernames
         try {
             performSecurityChecks(docs);
         } catch (e) {
-            res.status(e.status).json({ error: e.message });
+            res.status(e.status).json({
+                error: e.message
+            });
         }
 
         docs.forEach(function(doc) {
@@ -66,7 +86,9 @@ app.post('/api/login', function(req, res) {
                 return res.json(doc);
             } else {
                 console.log(chalk.red("passwords don't match!"));
-                res.status(556).json({ error: 'Bad credentials' });
+                res.status(556).json({
+                    error: 'Bad credentials'
+                });
             }
 
         });
@@ -89,27 +111,41 @@ app.get('/api/cv/:id', function(req, res) {
         //check if requested video exists
         if (fs.existsSync(path)) {
             let vidpath = '/videos/' + req.params.id + '.mp4';
-            db.videos.update({ videoID: req.params.id }, { $inc: { views: 1 } }, {}, function() {
+            db.videos.update({
+                videoID: req.params.id
+            }, {
+                $inc: {
+                    views: 1
+                }
+            }, {}, function() {
                 console.log("added a view to video " + req.params.id);
-                res.json({ error: 0, src: vidpath });
+                res.json({
+                    error: 0,
+                    src: vidpath
+                });
             });
 
         } else {
-            res.json({ error: 1 });
+            res.json({
+                error: 1
+            });
         }
     }
-
 
 });
 
 app.post('/api/register', function(req, res) {
 
-    db.users.find({ username: req.body.username.toLowerCase() }, function(err, docs) {
+    db.users.find({
+        username: req.body.username.toLowerCase()
+    }, function(err, docs) {
 
         //checkai del duplicate usernames
         if (docs.length != 0) { //rado useri su tokiu paciu username
             console.log(chalk.bgRed("Failed account creation (duplicate username)"));
-            res.status(401).json({ error: 'An account with that username already exists.' });
+            res.status(401).json({
+                error: 'An account with that username already exists.'
+            });
             //TODO: add handle for this in vuex
         } else { //ok, dedam i DB ir prikabinam prie session kad nereiktu loginintis
             var storageSpace = defaultStorageSpace;
@@ -118,7 +154,9 @@ app.post('/api/register', function(req, res) {
 
             async.waterfall([
                 function(callback) { //tikrinimas ar yra atitinkanciu privelegiju kodu
-                    db.codes.find({ code: req.body.code }, function(err, docs) {
+                    db.codes.find({
+                        code: req.body.code
+                    }, function(err, docs) {
                         if (docs.length == 0) { //rado useri su tokiu paciu username
                             //no matching code, go on
                             callback(null, null);
@@ -148,7 +186,14 @@ app.post('/api/register', function(req, res) {
 
                         var hashedPass = hashUpPass(req.body.password);
 
-                        db.users.insert({ username: req.body.username.toLowerCase(), password: hashedPass, email: req.body.email, totalSpace: storageSpace, remainingSpace: storageSpace, userStatus: userStatus }, function(err, doc) {
+                        db.users.insert({
+                            username: req.body.username.toLowerCase(),
+                            password: hashedPass,
+                            email: req.body.email,
+                            totalSpace: storageSpace,
+                            remainingSpace: storageSpace,
+                            userStatus: userStatus
+                        }, function(err, doc) {
                             console.log(chalk.bgCyanBright.black("successfully inserted user " + doc.username));
                             req.session.authUser = doc; //kabinam visa user ant authUser
                             return res.json(doc);
@@ -171,7 +216,9 @@ app.post('/api/getVideos', function(req, res) {
     var returner = {};
     console.log("requester : " + req.body.user.username);
 
-    db.videos.find({ username: req.body.user.username.toLowerCase() }, function(err, docs) {
+    db.videos.find({
+        username: req.body.user.username.toLowerCase()
+    }, function(err, docs) {
         if (err) {
             console.log(chalk.bgRed.white(err));
             returner.error = 1;
@@ -192,7 +239,15 @@ app.post('/api/finalizeUpload', function(req, res) {
 
     if (req.body.video.finalizationStatus == 0) { //video was successfully uploaded and named
         console.log("finalized " + req.body.video.name);
-        db.videos.update({ confirmed: false, username: req.body.user.username.toLowerCase() }, { $set: { name: req.body.video.name, confirmed: true } }, {}, function(err) {
+        db.videos.update({
+            confirmed: false,
+            username: req.body.user.username.toLowerCase()
+        }, {
+            $set: {
+                name: req.body.video.name,
+                confirmed: true
+            }
+        }, {}, function(err) {
             if (err) {
                 console.log(chalk.bgRed.white(err));
                 returner.error = 1;
@@ -207,7 +262,10 @@ app.post('/api/finalizeUpload', function(req, res) {
         //non-multi removal (gal ir praverstu multi false check, TODO)
         console.log("cancelled " + req.body.video.name);
 
-        db.videos.remove({ confirmed: false, username: req.body.user.username.toLowerCase() }, {}, function(err, res) {});
+        db.videos.remove({
+            confirmed: false,
+            username: req.body.user.username.toLowerCase()
+        }, {}, function(err, res) {});
         fs.unlink(storagePath + video.videoID + ".mp4");
 
         returner.error = 0;
@@ -216,9 +274,7 @@ app.post('/api/finalizeUpload', function(req, res) {
         return res.json(returner);
     }
 
-
 });
-
 
 // postas adminu statistikom
 app.post('/api/getAdminStats', function(req, res) {
@@ -263,25 +319,37 @@ app.post('/api/getAdminStats', function(req, res) {
 
 });
 
+
+
 // postas userio video pasalinimui
 app.post('/api/removeVideo', function(req, res) {
 
     var returner = {};
     console.log("requester : " + req.body.user.username + ", video ID : " + req.body.videoID);
 
-    db.videos.find({ videoID: req.body.videoID }, function(err, docs) {
+    db.videos.find({
+        videoID: req.body.videoID
+    }, function(err, docs) {
         if (err) {
             console.log(chalk.bgRed.white(err));
             returner.error = 1;
         } else {
-            db.users.update({ username: req.body.user.username }, { $inc: { remainingSpace: docs[0].size } }, {}, function() {
+            db.users.update({
+                username: req.body.user.username
+            }, {
+                $inc: {
+                    remainingSpace: docs[0].size
+                }
+            }, {}, function() {
                 //pridejom atgal storage space useriui
 
                 //taip pat ir istrinam pati video is storage
                 fs.unlink(storagePath + req.body.videoID + ".mp4");
             });
 
-            db.videos.remove({ videoID: req.body.videoID }, function(err, docs) {
+            db.videos.remove({
+                videoID: req.body.videoID
+            }, function(err, docs) {
                 if (err) {
                     console.log(chalk.bgRed.white(err));
                     returner.error = 1;
@@ -290,16 +358,15 @@ app.post('/api/removeVideo', function(req, res) {
             });
         }
     });
-
-
 });
 
 // postas video ikelimui
 app.post('/api/upload', function(req, res) {
 
-
     if (!req.session.authUser) {
-        res.status(557).json({ error: 'User not signed in.' });
+        res.status(557).json({
+            error: 'User not signed in.'
+        });
     } else {
         // console.log(util.inspect(req.files.file, { showHidden: false, depth: null }))
 
@@ -309,10 +376,14 @@ app.post('/api/upload', function(req, res) {
         console.log("size is " + fileSizeInMegabytes + "mb");
 
         if (fileSizeInMegabytes > 10240) { //hard limitas kad neikeltu didesniu uz 10gb failu
-            res.status(557).json({ error: 'File too big.' });
+            res.status(557).json({
+                error: 'File too big.'
+            });
             console.log("file size is fine");
         } else {
-            res.status(557).json({ error: 'QUACK' });
+            res.status(557).json({
+                error: 'QUACK'
+            });
             var extension = ".mp4";
             // if (req.files.file.mimetype == "video/avi") {
             //     extension = ".avi";
@@ -322,35 +393,55 @@ app.post('/api/upload', function(req, res) {
 
             //TODO: support for more formats
 
-            db.users.find({ username: req.session.authUser.username.toLowerCase() }, function(err, docs) {
+            db.users.find({
+                username: req.session.authUser.username.toLowerCase()
+            }, function(err, docs) {
 
                 // checkai del duplicate usernames
                 try {
                     performSecurityChecks(docs);
                 } catch (e) {
-                    res.status(e.status).json({ error: e.message });
+                    res.status(e.status).json({
+                        error: e.message
+                    });
                 }
 
                 var cleanedName = req.files.file.name.replace(/[^a-z0-9\s]/gi, "");
                 // patikrinam, ar useriui pakanka storage space
                 if (docs[0].remainingSpace < fileSizeInMegabytes) {
-                    res.status(557).json({ error: 'You do not have enough space remaining to upload this file.' });
+                    res.status(557).json({
+                        error: 'You do not have enough space remaining to upload this file.'
+                    });
                 } else {
                     // dedam video i storage
                     var videoID = shortid.generate();
                     var vidLink = "https://cigari.ga/v/" + videoID;
                     console.log(chalk.bgGreen.black("storing video!"));
 
-                    db.videos.find({ confirmed: false }, function(err, docs) {
+                    db.videos.find({
+                        confirmed: false
+                    }, function(err, docs) {
                         if (docs.length != 0) {
                             //removing all unconfirmed videos
                             docs.forEach(function(video) {
                                 // removing video from both database and storage
-                                db.videos.remove({ videoID: video.videoID }, function(err, res) {});
+                                db.videos.remove({
+                                    videoID: video.videoID
+                                }, function(err, res) {});
                                 fs.unlink(storagePath + video.videoID + ".mp4");
                             });
                         } else {
-                            db.videos.insert({ username: req.session.authUser.username.toLowerCase(), link: vidLink, name: cleanedName, videoID: videoID, views: 0, likes: 0, dislikes: 0, size: fileSizeInMegabytes, confirmed: false }, function() {
+                            db.videos.insert({
+                                username: req.session.authUser.username.toLowerCase(),
+                                link: vidLink,
+                                name: cleanedName,
+                                videoID: videoID,
+                                views: 0,
+                                likes: 0,
+                                dislikes: 0,
+                                size: fileSizeInMegabytes,
+                                confirmed: false
+                            }, function() {
                                 req.files.file.mv(storagePath + videoID + extension);
                             });
                         }
@@ -359,16 +450,18 @@ app.post('/api/upload', function(req, res) {
                     var decrement = fileSizeInMegabytes *= -1;
 
                     // atimam is userio atitnkama kieki duomenu
-                    db.users.update({ username: req.session.authUser.username.toLowerCase() }, { $inc: { remainingSpace: decrement } }, {}, function() {});
-
+                    db.users.update({
+                        username: req.session.authUser.username.toLowerCase()
+                    }, {
+                        $inc: {
+                            remainingSpace: decrement
+                        }
+                    }, {}, function() {});
                 }
-
 
             });
 
         }
-
-
     }
 
 });
@@ -376,12 +469,12 @@ app.post('/api/upload', function(req, res) {
 // removinam useri is req.session on logout
 app.post('/api/logout', function(req, res) {
     delete req.session.authUser;
-    res.json({ ok: true });
+    res.json({
+        ok: true
+    });
 });
 
 //TODO: recalculate user remaining space each start?
-
-
 
 //nuxt config
 let config = require('./nuxt.config.js');
@@ -399,16 +492,21 @@ app.use(nuxt.render);
 app.listen(10700);
 console.log('Server is listening on http://localhost:10700');
 
-
 function performSecurityChecks(docs) {
     if (docs.length == 0) { //nerado userio su tokiu username
         console.log(chalk.bgRed("No matching account."));
-        throw { status: 555, message: 'No account with that username found.' };
+        throw {
+            status: 555,
+            message: 'No account with that username found.'
+        };
     }
 
     if (docs.length > 1) { //rado daugiau nei 1 useri su tokiu username
         console.log(chalk.bgRed("==DUPLICATE ACCOUNTS FOUND=="));
-        throw { status: 556, message: 'Server error.' };
+        throw {
+            status: 556,
+            message: 'Server error.'
+        };
     }
 }
 
