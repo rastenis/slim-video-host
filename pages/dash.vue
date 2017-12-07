@@ -42,10 +42,10 @@
             <span class="headerOfStatCard">Your stats</span>
           </div>
           <div class="text item">
-            {{"Total views: "+stats.totalViews}}
+            Total views: {{stats.totalViews}}
           </div>
           <div class="text item">
-            {{"Space used: "+stats.usedSpace+"/"+stats.totalSpace+" MB"}}
+            Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
           </div>
         </el-card>
         <h2 class="subtitle1">Your videos:</h2>
@@ -163,6 +163,7 @@ export default {
           .then((res) => {
             if (res.data.error == 0) {
               console.log("removed video");
+              this.stats.usedSpace-=this.videos[index].size;
               this.$message({
                 type: 'success',
                 message: 'Delete successful'

@@ -260,13 +260,25 @@ app.post('/api/finalizeUpload', function(req, res) {
         });
     } else if (req.body.video.finalizationStatus == 1) { //video was not successfully uploaded (canceled)
         //non-multi removal (gal ir praverstu multi false check, TODO)
-        console.log("cancelled " + req.body.video.name);
+        console.log(chalk.red("cancelled " + req.body.video.name));
 
-        db.videos.remove({
+        db.videos.find({
             confirmed: false,
             username: req.body.user.username.toLowerCase()
-        }, {}, function(err, res) {});
-        fs.unlink(storagePath + video.videoID + ".mp4");
+        }, function(err, docs) {
+            if (docs.length == 0) {
+                console.log("video hasnt been uploaded yet, not cancelling");
+            } else {
+                docs.forEach(function(video) {
+                    console.log(chalk.red("removing unconfirmed video " + video.name));
+                    // removing video from both database and storage
+                    db.videos.remove({
+                        videoID: video.videoID
+                    }, function(err, res) {});
+                    fs.unlink(storagePath + video.videoID + ".mp4");
+                });
+            }
+        });
 
         returner.error = 0;
         returner.msgType = "error";
@@ -338,7 +350,7 @@ app.post('/api/removeVideo', function(req, res) {
                 username: req.body.user.username
             }, {
                 $inc: {
-                    remainingSpace: docs[0].size
+                    remainingSpace: Math.abs(docs[0].size)
                 }
             }, {}, function() {
                 //pridejom atgal storage space useriui
@@ -424,6 +436,7 @@ app.post('/api/upload', function(req, res) {
                         if (docs.length != 0) {
                             //removing all unconfirmed videos
                             docs.forEach(function(video) {
+                                console.log(chalk.red("removing unconfirmed video " + video.name));
                                 // removing video from both database and storage
                                 db.videos.remove({
                                     videoID: video.videoID

@@ -9,15 +9,15 @@
         </div>
         <div class="el-upload__tip" slot="tip">.mp4 files with a size less than 10GB</div>
       </el-upload>
-      <el-dialog title="Uploading video" :visible.sync="uploading" :on-close="revertUpload">
+      <el-dialog title="Uploading video" :visible.sync="uploading">
         <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage"
           :status="progressBar.status"></el-progress>
         <el-form>
           <el-form-item label="Video name">
             <el-input @keyup.enter.native="finishUpload(currentVidName,0)" v-model="currentVidName"></el-input>
           </el-form-item>
-          <el-button type="success" @click="finishUpload(currentVidName,0)">Finish upload</el-button>
-          <el-button :plain="true" type="danger" @click="finishUpload(currentVidName,1)">Cancel</el-button>
+          <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(currentVidName,0)">Finish upload</el-button>
+          <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(currentVidName,1)">Cancel</el-button>
         </el-form>
         
       </el-dialog>
@@ -29,6 +29,8 @@
 
 import axios from 'axios'
 
+// :on-close="finishUpload(currentVidName,1)"
+
 export default {
   data () {
     return {
@@ -37,7 +39,17 @@ export default {
         status:'',
         percentage:0
       },
-      currentVidName:''
+      currentVidName:'',
+      dialog:{
+        buttonConfirm:{
+          loading:false,
+          disabled:false
+        },
+        buttonCancel:{
+          loading:false,
+          disabled:false
+        }
+      }
     }
   },
   methods:{
@@ -85,31 +97,17 @@ export default {
           duration: 4000
         });
     },
-    revertUpload(){
-      axios({ 
-      url: 'https://cigari.ga/api/confirmVideo',
-      method:'post',
-      credentials: 'same-origin',
-      data: {
-          user: this.$store.state.authUser,
-          action:1
-      }
-      })
-      .then((res) => {
-        if(res.data.error==0){
-          this.$message.error('Upload canceled.');
-          this.uploading=false;
-        }else if (res.data.error==1){
-          console.log("error while confirming video");
-        }
-      }).catch(function (e) {
-        console.log(e);
-      });
-      
-
-    },
     finishUpload(name,status){
-      if(name=="" && status==0){
+
+      if(status==0){
+        this.dialog.buttonConfirm.loading=true;
+        this.dialog.buttonCancel.disabled=true;
+      }else{
+        this.dialog.buttonCancel.loading=true;
+        this.dialog.buttonConfirm.disabled=true;
+      }
+
+      if(!name && status==0){
         this.$message.error('Please enter a valid name!');
         //prevent modal close
       }else{
@@ -126,11 +124,23 @@ export default {
         }
         })
         .then((res) => {
+            this.uploading=false;  
+            
+            if(status==0){
+              this.dialog.buttonConfirm.loading=false;
+              this.dialog.buttonCancel.disabled=false;
+            }else{
+              this.dialog.buttonCancel.loading=false;
+              this.dialog.buttonConfirm.disabled=false;
+            }
+
           if(res.data.error==0){
             this.uploadedNotification(res.data.msg,res.data.msgType);
-            this.uploading=false;
+            this.progressBar.status="";
+            this.progressBar.percentage=0;
           }else if (res.data.error==1){
-            console.log();
+            //todo: adapt in backend
+            console.log(res.data.errorMsg,res.data.msgType);
           }
         }).catch(function (e) {
           console.log(e);
