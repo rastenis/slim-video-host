@@ -1,11 +1,11 @@
 <template>
   <div class="main">
-    <el-menu v-if="!$store.state.authUser" theme="dark" class="nav" mode="horizontal" :default-active="$store.state.activeTab" @select="handleSelect">
+    <el-menu v-if="!$store.state.authUser" class="nav" mode="horizontal" background-color="#545c64" text-color="#fff" active-text-color="#ffd04b" :default-active="$store.state.activeTab" @select="handleSelect">
       <el-menu-item index="1">Intro</el-menu-item>
       <el-menu-item index="2" class="pRight">Register</el-menu-item>
     </el-menu>
 
-    <el-menu v-else theme="dark" class="nav" mode="horizontal" :default-active="$store.state.activeTab" @select="handleSelect">
+    <el-menu v-else class="nav" mode="horizontal" background-color="#545c64" text-color="#fff" active-text-color="#ffd04b" :default-active="$store.state.activeTab" @select="handleSelect">
       <el-menu-item index="1">
          <nuxt-link to="/" >Intro</nuxt-link>
       </el-menu-item>
@@ -79,6 +79,13 @@
     font-weight: normal;
   }
 
+  @font-face {
+    font-family: "Knucklehead";
+    src: url("/fonts/KH/Knucklehead.otf");
+    font-style: normal;
+    font-weight: normal;
+  }
+
   .main {
     position: absolute;
     top: 0;
@@ -89,7 +96,6 @@
   }
 
   .container{
-    max-height: 100%;
     min-height:100vh;
     max-width: 70vw;
     display: block;
@@ -97,6 +103,8 @@
     margin-left: auto;
     margin-right: auto;
   }
+
+
   .pRight{
     float: right;
   }
@@ -106,8 +114,7 @@
     top: 0;
     left: 0;
     min-width: 100%;
-    font-family: LatoRegular;
-    font-size: large;
+    font-size: larger;
   }
 
   nuxt-link{
@@ -119,6 +126,13 @@
 <style>
   body{
     font-family: Lato, sans-serif;
+  }
+
+  a:link{
+    color:#968e00
+  }
+  a:visited{
+    color:#7a7300
   }
 </style>
 

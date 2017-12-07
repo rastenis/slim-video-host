@@ -25,7 +25,7 @@ while (!end) {
             var space = prompt('enter space ammount in MB:');
             var typeBool = prompt('enter type (0 for initial, 1 for upgrade):');
             type = (typeBool ? "upgrade" : "initial");
-            db.codes.insert({ code: code, space: space, type: type, active: true }, {});
+            db.codes.insert({ code: code, space: parseFloat(space), type: type, active: true }, {});
             console.log(chalk.green("DONE!"));
             break;
         case "2":

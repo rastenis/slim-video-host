@@ -13,7 +13,7 @@ module.exports = {
         '~plugins/element-ui'
     ],
     css: [
-        'element-ui/lib/theme-default/index.css'
+        'element-ui/lib/theme-chalk/index.css'
         // , '~assets/style/pageTranstions.css'  DOESNT FIND THE FILE FOR SOME REASON
     ],
     modules: [

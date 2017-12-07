@@ -49,7 +49,7 @@
             Active videos: {{videos.length}}
           </div>
         </el-card>
-                <el-card class="box-card" id="statCard">
+        <el-card class="box-card" id="statCard">
           <div slot="header" class="clearfix">
             <span class="headerOfStatCard">Storage</span>
           </div>
@@ -60,12 +60,11 @@
             Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
           </div>
           <div class="text item">
-            <a href="#" @click="storageUpgradeInit()">Apply for an upgrade</a> 
+            <p @click="storageUpgradeInit">Apply for an upgrade</p> 
           </div>
         </el-card>
-
-                </el-card>
-                <el-card class="box-card" id="statCard">
+                
+          <el-card class="box-card" id="statCard">
           <div slot="header" class="clearfix">
             <span class="headerOfStatCard">Your stats</span>
           </div>
@@ -222,7 +221,8 @@ export default {
       this.stats.totalViews=totalViews;
       this.stats.totalSpace=this.$store.state.authUser.totalSpace;
       this.stats.usedSpace=(this.stats.totalSpace-this.$store.state.authUser.remainingSpace).toFixed(1);
-    },storageUpgradeInit(){
+    },
+    async storageUpgradeInit(){
       this.$prompt('Please input a promotion code', 'Upgrade', {
           confirmButtonText: 'Apply',
           cancelButtonText: 'Cancel',
@@ -234,11 +234,12 @@ export default {
             method: 'post',
             credentials: 'same-origin',
             data: {
-              user: context.app.store.state.authUser,
+              user: this.$store.state.authUser,
               code:value.value
             }
           })
           .then((res) => {
+            console.log("got respo");
             if (res.data.error == 0) {             
               this.$message({
                 type: 'success',
@@ -256,10 +257,7 @@ export default {
             console.log(e);
           });
 
-          this.$message({
-            type: 'success',
-            message: 'Your email is:' + value
-          });
+        
         });
     }
   },

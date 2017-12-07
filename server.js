@@ -235,7 +235,7 @@ app.post('/api/getVideos', function(req, res) {
 app.post('/api/upgradeStorage', function(req, res) {
 
     var returner = {};
-    console.log("UPGRADE | requester : " + req.body.user.username);
+    console.log("UPGRADE | requester : " + req.body.user.username + ", code:" + req.body.code);
 
     db.codes.find({
         code: req.body.code,
@@ -249,25 +249,16 @@ app.post('/api/upgradeStorage', function(req, res) {
         }
         if (docs.length == 0) {
             returner.error = 1;
-            returner.errorMsg = "No such code exists.";
+            returner.errMsg = "No such code exists.";
             console.log("unsuccessfull no code upgrade");
         } else {
-            db.users.update({
-                username: req.body.user.username
-            }, {
-                $inc: {
-                    totalSpace: docs[0].space
-                }
-            }, {}, function() {
-                //pridejom more storage space 
-            });
-
-            db.codes.update({ code: req.body.code }, { $inc: { active: false } }, {}, function(err, doc) {});
+            db.users.update({ username: req.body.user.username.toLowerCase() }, { $inc: { totalSpace: docs[0].space } }, {}, function(err, doc) {});
+            db.codes.update({ code: req.body.code }, { $set: { active: false } }, {}, function(err, doc) {});
 
             console.log("successful upgrade");
+            returner.error = 0;
             returner.msg = "You have successfully expanded your space limit!";
         }
-        returner.error = 0;
         return res.json(returner);
     });
 });
