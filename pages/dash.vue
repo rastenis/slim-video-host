@@ -60,7 +60,7 @@
             Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
           </div>
           <div class="text item">
-            <p @click="storageUpgradeInit">Apply for an upgrade</p> 
+            <el-button type="text" @click="storageUpgradeInit">Apply for an upgrade</el-button>
           </div>
         </el-card>
                 
@@ -296,6 +296,7 @@ export default {
     height: 80%;
     width: 90%;
   }
+  
   .videoCard{
     width:80%;
   }

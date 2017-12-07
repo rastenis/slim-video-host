@@ -9,7 +9,7 @@
         </div>
         <div class="el-upload__tip" slot="tip">.mp4 files with a size less than 10GB</div>
       </el-upload>
-      <el-dialog title="Uploading video" :visible.sync="uploading">
+      <el-dialog title="Uploading video" :visible.sync="uploading" :closeOnClickModal="false" :inputPlaceholder="'Video name'" :beforeClose="preventClose()">
         <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage"
           :status="progressBar.status"></el-progress>
         <el-form>
@@ -97,13 +97,18 @@ export default {
           duration: 4000
         });
     },
+    preventClose(action, instance, done){
+      console.log("preventing closure ");
+    },
     finishUpload(name,status){
 
       if(status==0){
         this.dialog.buttonConfirm.loading=true;
+        this.dialog.buttonConfirm.disabled=true;
         this.dialog.buttonCancel.disabled=true;
       }else{
         this.dialog.buttonCancel.loading=true;
+        this.dialog.buttonCancel.disabled=true;        
         this.dialog.buttonConfirm.disabled=true;
       }
 
@@ -129,9 +134,11 @@ export default {
             if(status==0){
               this.dialog.buttonConfirm.loading=false;
               this.dialog.buttonCancel.disabled=false;
+              this.dialog.buttonConfirm.disabled=true;
             }else{
               this.dialog.buttonCancel.loading=false;
               this.dialog.buttonConfirm.disabled=false;
+              this.dialog.buttonCancel.disabled=false;              
             }
 
           if(res.data.error==0){
