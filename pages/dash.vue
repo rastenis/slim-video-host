@@ -37,7 +37,35 @@
         </el-button>
       </div>
       <div class="videoList" v-else>
+        <div class="cards">
         <el-card class="box-card" id="statCard">
+          <div slot="header" class="clearfix">
+            <span class="headerOfStatCard">Video stats</span>
+          </div>
+          <div class="text item">
+            Total views: {{stats.totalViews}}
+          </div>
+          <div class="text item">
+            Active videos: {{videos.length}}
+          </div>
+        </el-card>
+                <el-card class="box-card" id="statCard">
+          <div slot="header" class="clearfix">
+            <span class="headerOfStatCard">Storage</span>
+          </div>
+          <div class="text item">
+            Total storage space: {{stats.totalSpace}} MB
+          </div>
+          <div class="text item">
+            Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
+          </div>
+          <div class="text item">
+            <a href="#" @click="storageUpgradeInit()">Apply for an upgrade</a> 
+          </div>
+        </el-card>
+
+                </el-card>
+                <el-card class="box-card" id="statCard">
           <div slot="header" class="clearfix">
             <span class="headerOfStatCard">Your stats</span>
           </div>
@@ -48,6 +76,7 @@
             Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
           </div>
         </el-card>
+        </div>
         <h2 class="subtitle1">Your videos:</h2>
         <el-table :data="videos" style="width: 100%">
           <el-table-column prop="name" label="Video">
@@ -82,7 +111,6 @@ export default {
   asyncData(context) {
     try {
       if (context.app.store.state.authUser.userStatus == 1) {
-
         //fetchinam additional stats
         return axios({
             url: 'https://cigari.ga/api/getAdminStats',
@@ -194,6 +222,45 @@ export default {
       this.stats.totalViews=totalViews;
       this.stats.totalSpace=this.$store.state.authUser.totalSpace;
       this.stats.usedSpace=(this.stats.totalSpace-this.$store.state.authUser.remainingSpace).toFixed(1);
+    },storageUpgradeInit(){
+      this.$prompt('Please input a promotion code', 'Upgrade', {
+          confirmButtonText: 'Apply',
+          cancelButtonText: 'Cancel',
+          inputErrorMessage: 'Invalid code'
+        }).then(value => {
+          //activating the code
+          axios({
+            url: 'https://cigari.ga/api/upgradeStorage',
+            method: 'post',
+            credentials: 'same-origin',
+            data: {
+              user: context.app.store.state.authUser,
+              code:value.value
+            }
+          })
+          .then((res) => {
+            if (res.data.error == 0) {             
+              this.$message({
+                type: 'success',
+                message: res.data.msg
+              });
+
+            } else if (res.data.error == 1) {
+              this.$message({
+                type: 'error',
+                message: res.data.errMsg
+              });
+            
+            }
+          }).catch(function (e) {
+            console.log(e);
+          });
+
+          this.$message({
+            type: 'success',
+            message: 'Your email is:' + value
+          });
+        });
     }
   },
   created: function () {
@@ -243,7 +310,12 @@ export default {
   }
 
   #statCard{
-    width:20vw;
+    width:19vw;
+    margin-right:3vw;
+  }
+
+  .cards{
+    display: flex;
   }
 
   .centeredUploadVideoSuggestion{
