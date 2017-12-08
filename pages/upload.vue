@@ -8,15 +8,15 @@
       <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage" :status="progressBar.status"></el-progress>
         <el-form>
           <el-form-item label="Video name">
-            <el-input v-model="currentVidName" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(currentVidName,0)"></el-input>
+            <el-input v-model="currentVidName" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(currentVidName,0,false)"></el-input>
           </el-form-item>
-          <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(currentVidName,0)">Finish upload</el-button>
-          <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(currentVidName,1)">Cancel</el-button>
+          <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(currentVidName,0,false)">Finish upload</el-button>
+          <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(currentVidName,1,false)">Cancel</el-button>
       </el-form>
     </el-card>
 
-    <el-card class="uploadCard uploadForm clickableCard" v-if="!(uploading)" v-else>
-        <el-upload :multiple="false" element-loading-text="Uploading..." :thumbnail-mode="true" class="vid-uploader" drag action="/api/upload" :show-file-list="false" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
+    <el-card class="uploadCard uploadForm clickableCard" v-else>
+        <el-upload ref="uploader" :multiple="false" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :show-file-list="false" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
           <i class="el-icon-upload"></i>
           <div class="el-upload__text">Drop file here or
             <em>click to upload</em>
@@ -55,6 +55,12 @@ export default {
         input:{
           disabled:false
         }
+      },
+      waitInteval:null,
+      upload:{
+        ready:false,
+        name:null,
+        action:0
       }
     }
   },
@@ -92,6 +98,12 @@ export default {
         this.progressBar.status="success";
         // todo effect for finished upload
 
+        if(this.upload.ready){ //send it
+          setTimeout(() => {
+            this.finishUpload(this.upload.name,this.upload.action,true);
+          }, 1000);
+        }
+
       }
       this.progressBar.percentage= parseFloat( event.percent.toFixed(2));
     },
@@ -103,19 +115,8 @@ export default {
           duration: 4000
         });
     },
-    finishUpload(name,status){
-
-      if(status==0){
-        this.dialog.buttonConfirm.loading=true;
-        this.dialog.buttonConfirm.disabled=true;
-        this.dialog.buttonCancel.disabled=true;
-      }else{
-        this.dialog.buttonCancel.loading=true;
-        this.dialog.buttonCancel.disabled=true;        
-        this.dialog.buttonConfirm.disabled=true;
-      }
-
-      this.dialog.input.disabled=true;
+    finishUpload(name,status,specialPass){
+      if( this.progressBar.percentage==100 || specialPass==true){
       
       if(!name && status==0){
         this.$message.error('Please enter a valid name!');
@@ -145,6 +146,9 @@ export default {
               this.dialog.buttonCancel.disabled=false;              
             }
 
+             this.dialog.input.disabled=false;
+            
+
           if(res.data.error==0){
             this.uploadedNotification(res.data.msg,res.data.msgType);
             this.progressBar.status="";
@@ -157,6 +161,26 @@ export default {
           console.log(e);
         });
       }
+      }else{
+        if(status==0){
+          this.dialog.buttonConfirm.loading=true;
+          this.dialog.buttonConfirm.disabled=true;
+          this.upload.action=0;
+          this.upload.name=name;
+          this.upload.ready=true;
+        }else{
+          this.dialog.buttonCancel.loading=true;
+          this.dialog.buttonCancel.disabled=true;        
+          this.dialog.buttonConfirm.disabled=true;
+          
+          this.uploading=false;
+          location.reload();
+        }
+
+        this.dialog.input.disabled=true;
+
+      }
+       
     }
   
   }, 
