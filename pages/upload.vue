@@ -1,28 +1,31 @@
 <template>
   <div>
-    <div v-if="$store.state.authUser" class="uploadForm">
-      <el-upload :multiple="false" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :show-file-list="false"
-        :before-upload="beforeVideoUpload" :on-progress="uploadProgress">
-        <i class="el-icon-upload"></i>
-        <div class="el-upload__text">Drop file here or
-          <em>click to upload</em>
-        </div>
-        <div class="el-upload__tip" slot="tip">.mp4 files with a size less than 10GB</div>
-      </el-upload>
-      <el-dialog title="Uploading video" :visible.sync="uploading" :closeOnClickModal="false" :inputPlaceholder="'Video name'" :beforeClose="preventClose()">
-        <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage"
-          :status="progressBar.status"></el-progress>
+    <h1 class="title breaker">Upload</h1>
+    <el-card  class="uploadForm" v-if="uploading">
+      <div slot="header" class="clearfix">
+        <span>Uploading video</span>
+      </div>
+      <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage" :status="progressBar.status"></el-progress>
         <el-form>
           <el-form-item label="Video name">
-            <el-input @keyup.enter.native="finishUpload(currentVidName,0)" v-model="currentVidName"></el-input>
+            <el-input v-model="currentVidName" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(currentVidName,0,false)"></el-input>
           </el-form-item>
-          <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(currentVidName,0)">Finish upload</el-button>
-          <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(currentVidName,1)">Cancel</el-button>
-        </el-form>
-        
-      </el-dialog>
+          <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(currentVidName,0,false)">Finish upload</el-button>
+          <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(currentVidName,1,false)">Cancel</el-button>
+      </el-form>
+    </el-card>
+
+    <el-card class="uploadCard uploadForm clickableCard" v-else>
+        <el-upload ref="uploader" :multiple="false" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :show-file-list="false" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
+          <i class="el-icon-upload"></i>
+          <div class="el-upload__text">Drop file here or
+            <em>click to upload</em>
+          </div>
+          <div class="el-upload__tip" slot="tip">.mp4 files with a size less than 10GB</div>
+        </el-upload>
+      </el-card>
     </div>
-  </div>
+  
 </template>
 
 <script>
@@ -48,7 +51,16 @@ export default {
         buttonCancel:{
           loading:false,
           disabled:false
+        },
+        input:{
+          disabled:false
         }
+      },
+      waitInteval:null,
+      upload:{
+        ready:false,
+        name:null,
+        action:0
       }
     }
   },
@@ -86,6 +98,12 @@ export default {
         this.progressBar.status="success";
         // todo effect for finished upload
 
+        if(this.upload.ready){ //send it
+          setTimeout(() => {
+            this.finishUpload(this.upload.name,this.upload.action,true);
+          }, 1000);
+        }
+
       }
       this.progressBar.percentage= parseFloat( event.percent.toFixed(2));
     },
@@ -97,24 +115,11 @@ export default {
           duration: 4000
         });
     },
-    preventClose(action, instance, done){
-      console.log("preventing closure ");
-    },
-    finishUpload(name,status){
-
-      if(status==0){
-        this.dialog.buttonConfirm.loading=true;
-        this.dialog.buttonConfirm.disabled=true;
-        this.dialog.buttonCancel.disabled=true;
-      }else{
-        this.dialog.buttonCancel.loading=true;
-        this.dialog.buttonCancel.disabled=true;        
-        this.dialog.buttonConfirm.disabled=true;
-      }
-
+    finishUpload(name,status,specialPass){
+      if( this.progressBar.percentage==100 || specialPass==true){
+      
       if(!name && status==0){
         this.$message.error('Please enter a valid name!');
-        //prevent modal close
       }else{
         axios({ 
         url: 'https://cigari.ga/api/finalizeUpload',
@@ -141,6 +146,9 @@ export default {
               this.dialog.buttonCancel.disabled=false;              
             }
 
+             this.dialog.input.disabled=false;
+            
+
           if(res.data.error==0){
             this.uploadedNotification(res.data.msg,res.data.msgType);
             this.progressBar.status="";
@@ -153,6 +161,26 @@ export default {
           console.log(e);
         });
       }
+      }else{
+        if(status==0){
+          this.dialog.buttonConfirm.loading=true;
+          this.dialog.buttonConfirm.disabled=true;
+          this.upload.action=0;
+          this.upload.name=name;
+          this.upload.ready=true;
+        }else{
+          this.dialog.buttonCancel.loading=true;
+          this.dialog.buttonCancel.disabled=true;        
+          this.dialog.buttonConfirm.disabled=true;
+          
+          this.uploading=false;
+          location.reload();
+        }
+
+        this.dialog.input.disabled=true;
+
+      }
+       
     }
   
   }, 
@@ -172,27 +200,28 @@ export default {
 
 <style>
   .uploadForm{
-    position: absolute;
+    position: relative;
     margin: auto;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
-    height: 60vh;
+    height: 40vh;
     width: 60vw;
   }
 
   .vid-uploader .el-upload {
-    border: 1px dashed #d9d9d9;
-    border-radius: 6px;
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    
   }
   .vid-uploader{
     width: 40%;
     margin: 0 auto;
+  }
+
+  .breaker{
+    margin-bottom:10vh;
   }
 
   .progress{
@@ -201,15 +230,7 @@ export default {
     padding-top:1vh;
   }
   .vid-uploader .el-upload:hover {
-    border-color: #20a0ff;
-  }
-  .vid-uploader-icon {
-    font-size: 28px;
-    color: #8c939d;
-    width: 18vh;
-    height: 18vh;
-    line-height: 178px;
-    text-align: center;
+    border-color: #ffd04b;
   }
   .vid {
     width: 18vw;
@@ -217,7 +238,7 @@ export default {
     display: block;
   }
   template{
-    overflow: hidden;
+    overflow: scroll;
   }
 
 </style>

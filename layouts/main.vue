@@ -110,11 +110,12 @@
   }
 
   .nav{
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     min-width: 100%;
     font-size: larger;
+    
   }
 
   nuxt-link{
@@ -126,6 +127,7 @@
 <style>
   body{
     font-family: Lato, sans-serif;
+    overflow:scroll;
   }
 
   a:link{

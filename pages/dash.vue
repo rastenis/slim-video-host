@@ -371,4 +371,8 @@ export default {
     font-family: LatoLight;
   }
 
+  template{
+    overflow:scroll;
+  }
+
 </style>
