@@ -110,11 +110,12 @@
   }
 
   .nav{
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     min-width: 100%;
     font-size: larger;
+    
   }
 
   nuxt-link{

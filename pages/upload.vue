@@ -1,30 +1,31 @@
 <template>
   <div>
-    <div v-if="$store.state.authUser" class="uploadForm">
-      <el-upload :multiple="false" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :show-file-list="false"
-        :before-upload="beforeVideoUpload" :on-progress="uploadProgress" v-if="!(uploading)">
-        <i class="el-icon-upload"></i>
-        <div class="el-upload__text">Drop file here or
-          <em>click to upload</em>
-        </div>
-        <div class="el-upload__tip" slot="tip">.mp4 files with a size less than 10GB</div>
-      </el-upload>
-      <el-card class="box-card" v-if="uploading">
-        <div slot="header" class="clearfix">
-          <span>Uploading video</span>
-        </div>
-        <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage" :status="progressBar.status"></el-progress>
-          <el-form>
-            <el-form-item label="Video name">
-              <el-input v-model="currentVidName" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(currentVidName,0)"></el-input>
-            </el-form-item>
-            <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(currentVidName,0)">Finish upload</el-button>
-            <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(currentVidName,1)">Cancel</el-button>
-        </el-form>
-      </el-card>
+    <h1 class="title breaker">Upload</h1>
+    <el-card  class="uploadForm" v-if="uploading">
+      <div slot="header" class="clearfix">
+        <span>Uploading video</span>
+      </div>
+      <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage" :status="progressBar.status"></el-progress>
+        <el-form>
+          <el-form-item label="Video name">
+            <el-input v-model="currentVidName" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(currentVidName,0)"></el-input>
+          </el-form-item>
+          <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(currentVidName,0)">Finish upload</el-button>
+          <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(currentVidName,1)">Cancel</el-button>
+      </el-form>
+    </el-card>
 
+    <el-card class="uploadCard uploadForm clickableCard" v-if="!(uploading)" v-else>
+        <el-upload :multiple="false" element-loading-text="Uploading..." :thumbnail-mode="true" class="vid-uploader" drag action="/api/upload" :show-file-list="false" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
+          <i class="el-icon-upload"></i>
+          <div class="el-upload__text">Drop file here or
+            <em>click to upload</em>
+          </div>
+          <div class="el-upload__tip" slot="tip">.mp4 files with a size less than 10GB</div>
+        </el-upload>
+      </el-card>
     </div>
-  </div>
+  
 </template>
 
 <script>
@@ -102,9 +103,6 @@ export default {
           duration: 4000
         });
     },
-    preventClose(action, instance, done){
-      console.log("preventing closure ");
-    },
     finishUpload(name,status){
 
       if(status==0){
@@ -178,27 +176,28 @@ export default {
 
 <style>
   .uploadForm{
-    position: absolute;
+    position: relative;
     margin: auto;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
-    height: 60vh;
+    height: 40vh;
     width: 60vw;
   }
 
   .vid-uploader .el-upload {
-    border: 1px dashed #d9d9d9;
-    border-radius: 6px;
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    
   }
   .vid-uploader{
     width: 40%;
     margin: 0 auto;
+  }
+
+  .breaker{
+    margin-bottom:5vh;
   }
 
   .progress{
@@ -207,15 +206,7 @@ export default {
     padding-top:1vh;
   }
   .vid-uploader .el-upload:hover {
-    border-color: #20a0ff;
-  }
-  .vid-uploader-icon {
-    font-size: 28px;
-    color: #8c939d;
-    width: 18vh;
-    height: 18vh;
-    line-height: 178px;
-    text-align: center;
+    border-color: #ffd04b;
   }
   .vid {
     width: 18vw;
