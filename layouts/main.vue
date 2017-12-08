@@ -126,6 +126,7 @@
 <style>
   body{
     font-family: Lato, sans-serif;
+    overflow:scroll;
   }
 
   a:link{

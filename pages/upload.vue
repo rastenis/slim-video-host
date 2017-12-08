@@ -2,25 +2,27 @@
   <div>
     <div v-if="$store.state.authUser" class="uploadForm">
       <el-upload :multiple="false" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :show-file-list="false"
-        :before-upload="beforeVideoUpload" :on-progress="uploadProgress">
+        :before-upload="beforeVideoUpload" :on-progress="uploadProgress" v-if="!(uploading)">
         <i class="el-icon-upload"></i>
         <div class="el-upload__text">Drop file here or
           <em>click to upload</em>
         </div>
         <div class="el-upload__tip" slot="tip">.mp4 files with a size less than 10GB</div>
       </el-upload>
-      <el-dialog title="Uploading video" :visible.sync="uploading" :closeOnClickModal="false" :inputPlaceholder="'Video name'" :beforeClose="preventClose()">
-        <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage"
-          :status="progressBar.status"></el-progress>
-        <el-form>
-          <el-form-item label="Video name">
-            <el-input @keyup.enter.native="finishUpload(currentVidName,0)" v-model="currentVidName"></el-input>
-          </el-form-item>
-          <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(currentVidName,0)">Finish upload</el-button>
-          <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(currentVidName,1)">Cancel</el-button>
+      <el-card class="box-card" v-if="uploading">
+        <div slot="header" class="clearfix">
+          <span>Uploading video</span>
+        </div>
+        <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage" :status="progressBar.status"></el-progress>
+          <el-form>
+            <el-form-item label="Video name">
+              <el-input v-model="currentVidName" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(currentVidName,0)"></el-input>
+            </el-form-item>
+            <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(currentVidName,0)">Finish upload</el-button>
+            <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(currentVidName,1)">Cancel</el-button>
         </el-form>
-        
-      </el-dialog>
+      </el-card>
+
     </div>
   </div>
 </template>
@@ -47,6 +49,9 @@ export default {
         },
         buttonCancel:{
           loading:false,
+          disabled:false
+        },
+        input:{
           disabled:false
         }
       }
@@ -112,9 +117,10 @@ export default {
         this.dialog.buttonConfirm.disabled=true;
       }
 
+      this.dialog.input.disabled=true;
+      
       if(!name && status==0){
         this.$message.error('Please enter a valid name!');
-        //prevent modal close
       }else{
         axios({ 
         url: 'https://cigari.ga/api/finalizeUpload',
@@ -217,7 +223,7 @@ export default {
     display: block;
   }
   template{
-    overflow: hidden;
+    overflow: scroll;
   }
 
 </style>
