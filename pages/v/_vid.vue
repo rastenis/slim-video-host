@@ -81,17 +81,20 @@ export default {
   },
   methods:{
     copyLink(){
+      var outt=this;
       this.$copyText(this.video.link)
       .then(function (e) {
-        console.log(e);
-      }, function (e) {
-        console.log(e);
-      });
-
-      this.$message({
+        outt.$message({
           type: 'success',
           message: 'Copied link!',
           duration:2000
+        });
+      }, function (e) {
+        outt.$message({
+          type: 'error',
+          message: 'Couldn;t copy link.',
+          duration:2000
+        });
       });
       
     }
