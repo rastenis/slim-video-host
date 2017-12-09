@@ -209,7 +209,6 @@ export default {
           type: 'info',
           message: 'Delete canceled'
         });
-
       });
     },
     async requestNewID(index) {
@@ -220,7 +219,6 @@ export default {
       }).then(() => {
         var videoID = this.videos[index].videoID;
         console.log("requesting new id for video: " + videoID + ", index is " + index);
-
         axios({
             url: 'https://cigari.ga/api/newLink',
             method: 'post',

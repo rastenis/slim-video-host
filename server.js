@@ -24,36 +24,37 @@ shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX
 //uzkraunam DB
 db = {};
 db.users = new Datastore({
-    filename: 'db/users',
+    filename: process.env.DB_USERS_PATH,
     autoload: true
 });
 db.codes = new Datastore({
-    filename: 'db/codes',
-    autoload: true
+    filename: process.env.DB_CODES_PATH,
+    autoload: true,
+    corruptAlertThreshold: 0.6 //truputis headway manually pridetiems kodams
 });
 db.videos = new Datastore({
-    filename: 'db/videos',
+    filename: process.env.DB_VIDEOS_PATH,
     autoload: true
 });
 
 //default optionai
 var defaultUserStatus = 0; //1 - admin
-var defaultStorageSpace = 10240; //megabaitais
+var defaultStorageSpace = 10000; //megabaitais
 
 // video storage path
-const storagePath = "static/videos/";
+const storagePath = process.env.FILE_PATH;
 
 
 app.use(helmet());
 app.use(fileUpload({
     limits: {
-        fileSize: 50 * 1024 * 1024
+        fileSize: 10 * 1000 * 1000 * 1000 //10 GB
     },
     safeFileNames: true
 }));
 app.use(bodyParser.json());
 app.use(session({
-    secret: 'super-secret-key',
+    secret: process.env.SESSION_KEY,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -276,7 +277,7 @@ app.post('/api/newLink', function(req, res) {
         //getting new info for the video
 
         var newVideoID = shortid.generate();
-        var newVidLink = "https://cigari.ga/v/" + newVideoID;
+        var newVidLink = process.env.VIDEO_LINK_PRE + newVideoID;
 
         db.videos.update({ username: req.session.authUser.username, videoID: req.body.videoID }, { $set: { videoID: newVideoID, link: newVidLink } }, { upsert: false }, function(err, numAffected, affectedDocs) {
             if (numAffected < 1) {
@@ -453,11 +454,13 @@ app.post('/api/upload', function(req, res) {
         // console.log(util.inspect(req.files.file, { showHidden: false, depth: null }))
 
         var fileSizeInBytes = req.files.file.data.byteLength;
+        console.log(chalk.bgWhite.red("size is " + fileSizeInBytes));
+
         // pasiverciam i megabaitus
-        var fileSizeInMegabytes = fileSizeInBytes / 1024 / 1024;
+        var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
         console.log("size is " + fileSizeInMegabytes + "mb");
 
-        if (fileSizeInMegabytes > 10240) { //hard limitas kad neikeltu didesniu uz 10gb failu
+        if (fileSizeInMegabytes > 10000) { //hard limitas kad neikeltu didesniu uz 10gb failu
             res.status(557).json({
                 error: 'File too big.'
             });
@@ -494,7 +497,7 @@ app.post('/api/upload', function(req, res) {
                 } else {
                     // dedam video i storage
                     var videoID = shortid.generate();
-                    var vidLink = "https://cigari.ga/v/" + videoID;
+                    var vidLink = process.env.VIDEO_LINK_PRE + videoID;
                     console.log(chalk.bgGreen.black("storing video!"));
 
                     db.videos.find({
