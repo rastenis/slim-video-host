@@ -86,8 +86,8 @@
           </el-table-column>
           <el-table-column label="Actions">
             <template slot-scope="scope">
+              <el-button type="warning" size="small" @click.native.prevent="requestNewID(scope.$index)">New link</el-button>                            
               <el-button type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
-              <el-button type="warning" size="small" @click.native.prevent="requestNewID(scope.$index)">New link</el-button>              
             </template>
           </el-table-column>
         </el-table>

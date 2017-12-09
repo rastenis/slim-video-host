@@ -278,7 +278,7 @@ app.post('/api/newLink', function(req, res) {
         var newVideoID = shortid.generate();
         var newVidLink = "https://cigari.ga/v/" + newVideoID;
 
-        db.videos.update({ username: req.session.authUser.username, videoID: req.body.videoID }, { videoID: newVideoID, link: newVidLink }, { upsert: false }, function(err, numAffected, affectedDocs) {
+        db.videos.update({ username: req.session.authUser.username, videoID: req.body.videoID }, { $set: { videoID: newVideoID, link: newVidLink } }, { upsert: false }, function(err, numAffected, affectedDocs) {
             if (numAffected < 1) {
                 returner.error = true;
                 returner.msgType = "error";
@@ -289,7 +289,7 @@ app.post('/api/newLink', function(req, res) {
                 returner.msg = "Link successfully updated!";
             }
 
-            fs.rename(storagePath + req.body.videoID + extension, storagePath + newVideoID + extension, function(err) {
+            fs.rename(storagePath + req.body.videoID + ".mp4", storagePath + newVideoID + ".mp4", function(err) {
                 if (err) throw err;
                 console.log('renaming complete');
             });
