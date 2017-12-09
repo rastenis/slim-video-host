@@ -8,12 +8,18 @@
       </div >
       <div v-else>
         <h1 class="title">{{video.name}}</h1>
-        <div class="sideControls" v-if="$store.state.authUser">
-          <div class="icc">
+        <div class="sideControls">
+          <div class="icc" id="iccTop">
             <i class="fa fa-thumbs-o-up fa-inverse" aria-hidden="true"></i>
             <p class="sidebarCount">{{video.likes}}</p> 
           </div>
-
+          <div class="icc">
+            <i class="fa fa-thumbs-o-up fa-inverse fa-rotate-180" aria-hidden="true"></i>
+            <p class="sidebarCount">{{video.likes}}</p> 
+          </div>
+          <div class="icc">
+            <i class="fa fa-external-link fa-inverse shareNudge" aria-hidden="true"></i>
+          </div>
         </div>
         <div class="vidDiv">
           <video
@@ -106,48 +112,59 @@ export default {
   .sideControls{
     position: absolute;
     left: 0;
-    top:30vh;
+    top:0;
     width:10vw;
     height: 20vh;
     background:transparent;
+    display: block;
     text-align: center;
     font-size:10vh;
-    -webkit-transition-duration: 0.15s;
-    transition-duration: 0.15s;
+    -webkit-transition-duration: 0.2s;
+    transition-duration: 0.2s;
     -webkit-transition-property: color, background-color;
     transition-property: color, background-color;
     cursor: pointer;
   }
 
-  .sideControls:hover {
+  .icc:hover {
     background-color: white;
     color: black;
     opacity:0.95;
   }
-  .icc{
-    position: relative;
-    top: 50%;
-    transform: translateY(-50%);
-    margin: 0 auto;
-    -webkit-transition-duration: 0.2s;
-    transition-duration: 0.2s;
-    -webkit-transition-property: color;
-    transition-property: color;
+
+  .icc:hover .fa{
+    color: black;
+
+  }
+  .icc:hover .sidebarCount {
+    color: black;
+  }
+  
+ 
+  #iccTop{
+    margin-top:20vh;
+  }
+  .shareNudge{
+    margin-top:4vh;
   }
 
-  .sideControls:hover .fa {
-    color: black;
+  .icc{
+    position: relative;
+    margin-top:6vh;
+    -webkit-transition-duration: 0.2s;
+    transition-duration: 0.2s;
+    -webkit-transition-property: color,background-color;
+    transition-property: color,background-color;
+    height: 17vh;
   }
-  .sideControls:hover .sidebarCount {
-    color: black;
-  }
+
   .sidebarCount{
     font-size: 3vh;
     font-family: LatoLight;
     color:white;
     font-weight: bold;
     position: relative;
-    margin-top:-1vh;
+    margin-top:0vh;
   }
   .title{
     color: white;
