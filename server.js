@@ -246,11 +246,13 @@ app.post('/api/upgradeStorage', function(req, res) {
         if (err) {
             console.log(chalk.bgRed.white(err));
             returner.error = 1;
-            returner.errorMsg = "server error :(";
+            returner.msg = "server error :(";
+            returner.msgType = "error";
         }
         if (docs.length == 0) {
             returner.error = 1;
-            returner.errMsg = "No such code exists.";
+            returner.msg = "No such code exists.";
+            returner.msgType = "error";
             console.log("unsuccessfull no code upgrade");
         } else {
             db.users.update({ username: req.body.user.username.toLowerCase() }, { $inc: { totalSpace: docs[0].space } }, {}, function(err, doc) {});
@@ -259,6 +261,7 @@ app.post('/api/upgradeStorage', function(req, res) {
             console.log("successful upgrade");
             returner.error = 0;
             returner.msg = "You have successfully expanded your space limit!";
+            returner.msgType = "success";
         }
         return res.json(returner);
     });
@@ -351,8 +354,8 @@ app.post('/api/finalizeUpload', function(req, res) {
             }
         });
 
-        returner.error = 0;
-        returner.msgType = "error";
+        returner.error = 2;
+        returner.msgType = "info";
         returner.msg = "You have cancelled the upload.";
         return res.json(returner);
     }
@@ -416,6 +419,7 @@ app.post('/api/removeVideo', function(req, res) {
         if (err) {
             console.log(chalk.bgRed.white(err));
             returner.error = 1;
+            returner.msg = "Internal error. Try again.";
         } else {
             db.users.update({
                 username: req.body.user.username
@@ -437,6 +441,9 @@ app.post('/api/removeVideo', function(req, res) {
                     console.log(chalk.bgRed.white(err));
                     returner.error = 1;
                 }
+                returner.msgType = "info";
+                returner.error = 0;
+                returner.msg = "Successfully deleted video!";
                 return res.json(returner);
             });
         }

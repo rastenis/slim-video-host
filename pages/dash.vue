@@ -165,6 +165,11 @@ export default {
   },
   mounted(){
     console.log("created");
+    if (!this.$store.state.authUser) {
+      this.$store.app.router.push("/")
+    } else {
+      this.$store.state.activeTab = '2';
+    }
     this.setUpStats(); 
   },
   methods: {
@@ -189,14 +194,12 @@ export default {
             }
           })
           .then((res) => {
-            if (res.data.error == 0) {
-              console.log("removed video");
-              this.stats.usedSpace-=this.videos[index].size;
               this.$message({
-                type: 'success',
-                message: 'Delete successful'
-              });
-
+                type: res.data.msgType,
+                message: res.data.msg
+              });   
+            if (res.data.error == 0) {
+              this.stats.usedSpace-=this.videos[index].size;
             } else if (res.data.error == 1) {
               console.log("error while deleting video");
             }
@@ -275,36 +278,16 @@ export default {
             }
           })
           .then((res) => {
-            console.log("got respo");
-            if (res.data.error == 0) {             
-              this.$message({
-                type: 'success',
-                message: res.data.msg
-              });
-
-            } else if (res.data.error == 1) {
-              this.$message({
-                type: 'error',
-                message: res.data.errMsg
-              });
-            
-            }
+            console.log("got storage upgrade");
+            this.$message({
+              type: res.data.msgType,
+              message: res.data.msg
+            });
           }).catch(function (e) {
             console.log(e);
           });
-
-        
         });
     }
-  },
-  created: function () {
-    //authUser checkeris
-    if (!this.$store.state.authUser) {
-      this.$store.app.router.push("/")
-    } else {
-      this.$store.state.activeTab = '2';
-    }
-
   },
   layout: 'main'
 }

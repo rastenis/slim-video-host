@@ -14,7 +14,6 @@
           <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(currentVidName,1,false)">Cancel</el-button>
       </el-form>
     </el-card>
-
     <el-card class="uploadCard uploadForm clickableCard" v-else>
         <el-upload ref="uploader" :multiple="false" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :show-file-list="false" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
           <i class="el-icon-upload"></i>
@@ -25,9 +24,7 @@
         </el-upload>
       </el-card>
     </div>
-  
 </template>
-
 <script>
 
 import axios from 'axios'
@@ -116,6 +113,11 @@ export default {
         });
     },
     finishUpload(name,status,specialPass){
+      if(!this.$store.state.authUser){
+        this.$message.error('You are not signed in!');
+        this.$store.app.router.push("/")
+        return false;
+      }
       if( this.progressBar.percentage==100 || specialPass==true){
       
       if(!name && status==0){
@@ -153,10 +155,20 @@ export default {
             this.uploadedNotification(res.data.msg,res.data.msgType);
             this.progressBar.status="";
             this.progressBar.percentage=0;
-          }else if (res.data.error==1){
-            //todo: adapt in backend
-            console.log(res.data.errorMsg,res.data.msgType);
+          }else if (res.data.error==2){
+            this.progressBar.status="";
+            this.progressBar.percentage=0;
+            this.$message({
+                type: res.data.msgType,
+                message: res.data.msg
+            });
+          }else{
+            this.$message({
+                type: res.data.msgType,
+                message: res.data.msg
+            });
           }
+          
         }).catch(function (e) {
           console.log(e);
         });
@@ -176,15 +188,12 @@ export default {
           this.uploading=false;
           location.reload();
         }
-
         this.dialog.input.disabled=true;
-
       }
-       
     }
   
   }, 
-  created:function(){
+  mounted:function(){
   //authUser checkeris
     if(!this.$store.state.authUser){
       this.$store.app.router.push("/")
