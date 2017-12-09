@@ -268,7 +268,7 @@ api.post('/api/newLink', function(req, res) {
     if (!req.session.authUser) {
         res.json({
             error: true,
-            errMsg: "No authentication. Please sign in.",
+            msg: "No authentication. Please sign in.",
             msgType: "error"
         });
     } else {
@@ -282,7 +282,7 @@ api.post('/api/newLink', function(req, res) {
             if (numAffected < 1) {
                 returner.error = true;
                 returner.msgType = "error";
-                returner.errMsg = "Link regeneration failed; No such video.";
+                returner.msg = "Link regeneration failed; No such video.";
             } else {
                 returner.error = false;
                 returner.msgType = "success";
@@ -293,6 +293,9 @@ api.post('/api/newLink', function(req, res) {
                 if (err) throw err;
                 console.log('renaming complete');
             });
+
+            returner.newID = newVideoID;
+            returner.newLink = newVidLink;
 
             return res.json(returner);
         });
