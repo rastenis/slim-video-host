@@ -139,6 +139,10 @@ export default {
   .icc:hover .sidebarCount {
     color: black;
   }
+
+  .icc:hover i{
+    -webkit-text-stroke:2px white;
+  }
   
  
   #iccTop{
@@ -153,9 +157,17 @@ export default {
     margin-top:6vh;
     -webkit-transition-duration: 0.2s;
     transition-duration: 0.2s;
-    -webkit-transition-property: color,background-color;
-    transition-property: color,background-color;
+    -webkit-transition-property: color,background-color,-webkit-text-stroke;
+    transition-property: color,background-color,-webkit-text-stroke;
     height: 17vh;
+  }
+
+  i{
+    -webkit-transition-duration: 0.1s;
+    transition-duration: 0.1s;
+    -webkit-transition-property: -webkit-text-stroke;
+    transition-property: -webkit-text-stroke;
+    -webkit-text-stroke: 2px #191919;
   }
 
   .sidebarCount{
