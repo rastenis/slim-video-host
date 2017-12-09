@@ -5,7 +5,6 @@
           Requested video does not exist. (404)
         </h1>
       </div >
-
       <div v-else class="vidDiv">
         <video
           fluid 
@@ -19,7 +18,6 @@
           <source :src="videoSrc" type="video/mp4"></source>
         </video>
       </div>
-
   </div>
 </template>
 
@@ -36,11 +34,9 @@ export default {
     }
   },
   asyncData (context) {
-    console.log("AKAY");
     var nonExistent = false;
     var src='';
     console.log("requested video ID - "+context.params.vid);
-
 
     return axios({ 
       url: `http://cigari.ga/api/cv/${context.params.vid}`,
@@ -51,13 +47,12 @@ export default {
       }
     })
     .then((res) => {
-      console.log("RES RES RSE RES RSE RERSE");
       if(res.data.error==0){
         src=res.data.src;
         console.log("found video");
       }else{
         nonExistent = true;
-        console.log("doesnt exist");
+        console.log("video doesnt exist");
       }
       return { nonExistent: nonExistent, videoSrc:src,loading:false };
     })
