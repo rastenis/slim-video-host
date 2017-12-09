@@ -101,8 +101,6 @@ app.post('/api/login', function(req, res) {
 //patikra ar yra toks video
 app.get('/api/cv/:id', function(req, res) {
 
-    console.log("check check");
-
     if (!req.params.id) {
         console.log("empty request, probably a refresh");
     } else {
@@ -111,21 +109,20 @@ app.get('/api/cv/:id', function(req, res) {
 
         //check if requested video exists
         if (fs.existsSync(path)) {
-            let vidpath = '/videos/' + req.params.id + '.mp4';
             db.videos.update({
                 videoID: req.params.id
             }, {
                 $inc: {
                     views: 1
                 }
-            }, {}, function() {
-                console.log("added a view to video " + req.params.id);
+            }, { returnUpdatedDocs: true }, function(err, numAffected, affectedDocument, upsert) {
+                console.log("added a view to video " + affectedDocument.videoID);
+                affectedDocument.src = '/videos/' + req.params.id + '.mp4';
                 res.json({
                     error: 0,
-                    src: vidpath
+                    video: affectedDocument
                 });
             });
-
         } else {
             res.json({
                 error: 1
