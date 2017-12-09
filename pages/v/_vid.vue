@@ -1,41 +1,47 @@
 <template>
+
   <div class="mainDiv">
       <div v-if="nonExistent" class="nonExistentText">
         <h1>
           Requested video does not exist. (404)
         </h1>
       </div >
-      <div v-else class="vidDiv">
+      <div v-else>
+        <h1 class="title">{{video.name}}</h1>
+              <div class="vidDiv">
         <video
+          onclick="this.paused ? this.play() : this.pause();"
           fluid 
-          v-if="videoSrc!=''" 
+          v-if="video.src!=''" 
           id="mainPlayer"
-          class="video-js videoDiv"
+          class="videoDiv"
           v-loading="loading" 
           controls
           preload="auto"
           autoplay>
-          <source :src="videoSrc" type="video/mp4"></source>
+          <source :src="video.src" type="video/mp4"></source>
         </video>
       </div>
+      </div>
+
   </div>
 </template>
 
 <script>
 
-import axios from 'axios'
+import axios from 'axios';
 
 export default {
   data () {
     return {
-      videoSrc:'',
+      video:null,
       nonExistent:true,
       loading:true
     }
   },
   asyncData (context) {
     var nonExistent = false;
-    var src='';
+    var video;
     console.log("requested video ID - "+context.params.vid);
 
     return axios({ 
@@ -48,27 +54,19 @@ export default {
     })
     .then((res) => {
       if(res.data.error==0){
-        src=res.data.src;
+        video=res.data.video;
         console.log("found video");
       }else{
         nonExistent = true;
         console.log("video doesnt exist");
       }
-      return { nonExistent: nonExistent, videoSrc:src,loading:false };
+      return { nonExistent: nonExistent, video:video,loading:false };
     })
     .catch((err)=>{
       console.log(err);
     });
   },
-  layout:'video',
-  head: {
-    script: [
-      { src: '//vjs.zencdn.net/5.19/video.min.js' }
-    ],
-    link: [
-      { rel: 'stylesheet', href: '//vjs.zencdn.net/5.19/video-js.min.css' }
-    ]
-  }
+  layout:'video'
 }
 </script>
 
@@ -98,11 +96,16 @@ export default {
   }
 
   .videoDiv{
-    margin: auto; 
     position: relative;
-    top: 50%;
-    transform: translateY(-50%);
-    
+    margin: 0 auto;
+    height: 80%;
+  }
+
+  .title{
+    color: white;
+    text-align: center;
+    font-family: LatoLight;
+    font-weight: 400;
   }
 
   .nonExistentText{
@@ -117,8 +120,11 @@ export default {
   }
 
   .vidDiv{
-    height: 80%;
-    width: 80%;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    top:10vh;
   }
 
 </style>
