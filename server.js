@@ -116,7 +116,6 @@ app.get('/api/cv/:id', function(req, res) {
                     views: 1
                 }
             }, { returnUpdatedDocs: true }, function(err, numAffected, affectedDocument, upsert) {
-                console.log(affectedDocument);
                 console.log("added a view to video " + affectedDocument.videoID);
                 affectedDocument.src = '/videos/' + req.params.id + '.mp4';
                 res.json({

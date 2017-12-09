@@ -18,7 +18,7 @@
             <p class="sidebarCount">{{video.likes}}</p> 
           </div>
           <div class="icc">
-            <i class="fa fa-external-link fa-inverse shareNudge" aria-hidden="true"></i>
+            <i @click="copyLink" class="fa fa-external-link fa-inverse shareNudge" aria-hidden="true"></i>
           </div>
         </div>
         <div class="vidDiv">
@@ -78,6 +78,23 @@ export default {
     .catch((err)=>{
       console.log(err);
     });
+  },
+  methods:{
+    copyLink(){
+      this.$copyText(this.video.link)
+      .then(function (e) {
+        console.log(e);
+      }, function (e) {
+        console.log(e);
+      });
+
+      this.$message({
+          type: 'success',
+          message: 'Copied link!',
+          duration:2000
+      });
+      
+    }
   },
   layout:'video'
 }
