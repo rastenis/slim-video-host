@@ -263,6 +263,41 @@ app.post('/api/upgradeStorage', function(req, res) {
     });
 });
 
+api.post('/api/newLink', function(req, res) {
+    var returner = {};
+    if (!req.session.authUser) {
+        res.json({
+            error: true,
+            errMsg: "No authentication. Please sign in.",
+            msgType: "error"
+        });
+    } else {
+        console.log("user " + req.session.authUser.username + " is requesting a new link");
+        //getting new info for the video
+
+        var newVideoID = shortid.generate();
+        var newVidLink = "https://cigari.ga/v/" + newVideoID;
+
+        db.videos.update({ username: req.session.authUser.username, videoID: req.body.videoID }, { videoID: newVideoID, link: newVidLink }, { upsert: false }, function(err, numAffected, affectedDocs) {
+            if (numAffected < 1) {
+                returner.error = true;
+                returner.msgType = "error";
+                returner.errMsg = "Link regeneration failed; No such video.";
+            } else {
+                returner.error = false;
+                returner.msgType = "success";
+                returner.msg = "Link successfully updated!";
+            }
+
+            fs.rename(storagePath + req.body.videoID + extension, storagePath + newVideoID + extension, function(err) {
+                if (err) throw err;
+                console.log('renaming complete');
+            });
+
+            return res.json(returner);
+        });
+    }
+});
 
 // postas video ikelimo uzbaigimui (cancel or finalize)
 app.post('/api/finalizeUpload', function(req, res) {
