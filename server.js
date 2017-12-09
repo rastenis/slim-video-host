@@ -263,7 +263,7 @@ app.post('/api/upgradeStorage', function(req, res) {
     });
 });
 
-api.post('/api/newLink', function(req, res) {
+app.post('/api/newLink', function(req, res) {
     var returner = {};
     if (!req.session.authUser) {
         res.json({
