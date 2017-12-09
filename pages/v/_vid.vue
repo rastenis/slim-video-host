@@ -8,20 +8,27 @@
       </div >
       <div v-else>
         <h1 class="title">{{video.name}}</h1>
-              <div class="vidDiv">
-        <video
-          onclick="this.paused ? this.play() : this.pause();"
-          fluid 
-          v-if="video.src!=''" 
-          id="mainPlayer"
-          class="videoDiv"
-          v-loading="loading" 
-          controls
-          preload="auto"
-          autoplay>
-          <source :src="video.src" type="video/mp4"></source>
-        </video>
-      </div>
+        <div class="sideControls" v-if="$store.state.authUser">
+          <div class="icc">
+            <i class="fa fa-thumbs-o-up fa-inverse" aria-hidden="true"></i>
+            <p class="sidebarCount">{{video.likes}}</p> 
+          </div>
+
+        </div>
+        <div class="vidDiv">
+          <video
+            onclick="this.paused ? this.play() : this.pause();"
+            fluid 
+            v-if="video.src!=''" 
+            id="mainPlayer"
+            class="videoDiv"
+            v-loading="loading" 
+            controls
+            preload="auto"
+            autoplay>
+            <source :src="video.src" type="video/mp4"></source>
+          </video>
+        </div>
       </div>
 
   </div>
@@ -95,12 +102,53 @@ export default {
     width: 100vw;
   }
 
-  .videoDiv{
-    position: relative;
-    margin: 0 auto;
-    height: 80%;
+
+  .sideControls{
+    position: absolute;
+    left: 0;
+    top:30vh;
+    width:10vw;
+    height: 20vh;
+    background:transparent;
+    text-align: center;
+    font-size:10vh;
+    -webkit-transition-duration: 0.15s;
+    transition-duration: 0.15s;
+    -webkit-transition-property: color, background-color;
+    transition-property: color, background-color;
+    cursor: pointer;
   }
 
+  .sideControls:hover {
+    background-color: white;
+    color: black;
+    opacity:0.95;
+  }
+  .icc{
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0 auto;
+    -webkit-transition-duration: 0.2s;
+    transition-duration: 0.2s;
+    -webkit-transition-property: color;
+    transition-property: color;
+  }
+
+  .sideControls:hover .fa {
+    color: black;
+  }
+  .sideControls:hover .sidebarCount {
+    color: black;
+  }
+  .sidebarCount{
+    font-size: 3vh;
+    font-family: LatoLight;
+    color:white;
+    font-weight: bold;
+    position: relative;
+    margin-top:-1vh;
+  }
   .title{
     color: white;
     text-align: center;
@@ -120,11 +168,17 @@ export default {
   }
 
   .vidDiv{
-    position: absolute;
-    height: 100%;
-    width: 100%;
+    position: relative;
     text-align: center;
-    top:10vh;
+    margin:0 auto;
+    cursor:pointer;
+    width: 70vw;
   }
+
+  .videoDiv{
+    height:80vh;
+  }
+
+  
 
 </style>
