@@ -86,6 +86,7 @@
           </el-table-column>
           <el-table-column label="Actions">
             <template slot-scope="scope">
+              <el-button type="warning" size="small" @click.native.prevent="requestNewID(scope.$index)">New link</el-button>                            
               <el-button type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
             </template>
           </el-table-column>
@@ -209,6 +210,43 @@ export default {
           message: 'Delete canceled'
         });
 
+      });
+    },
+    async requestNewID(index) {
+      this.$confirm('This will invalidate the previous link. Continue?', 'Warning', {
+        confirmButtonText: 'OK',
+        cancelButtonText: 'Cancel',
+        type: 'info'
+      }).then(() => {
+        var videoID = this.videos[index].videoID;
+        console.log("requesting new id for video: " + videoID + ", index is " + index);
+
+        axios({
+            url: 'https://cigari.ga/api/newLink',
+            method: 'post',
+            credentials: 'same-origin',
+            data: {
+              user: this.$store.state.authUser,
+              videoID: videoID
+            }
+          })
+          .then((res) => {
+              this.$message({
+                type: res.data.msgType,
+                message: res.data.msg
+              });
+            if (res.data.error) {
+              console.log("error while asking for new video ID");
+            } else {
+              console.log("Successfully updated. Updating local representation...");
+              this.videos[index].videoID=res.data.newID;
+              this.videos[index].link=res.data.newLink;
+            }
+          }).catch(function (e) {
+            console.log(e);
+          });
+
+      }).catch(() => {
       });
     },
     setUpStats(){
