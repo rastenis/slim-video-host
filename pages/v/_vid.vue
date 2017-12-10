@@ -23,7 +23,7 @@
     </div>
     <div class="vidDiv">
       <video onclick="this.paused ? this.play() : this.pause();" fluid v-if="video.src!=''" id="mainPlayer" class="videoDiv" v-loading="loading"
-        controls preload="auto" autoplay>
+        controls preload="auto" autoplay >
         <source :src="video.src" type="video/mp4"></source>
       </video>
     </div>
@@ -46,7 +46,6 @@ export default {
   asyncData(context) {
     var nonExistent = false;
     var video;
-    console.log("requested video ID - " + context.params.vid);
 
     return axios({
         url: `http://cigari.ga/api/cv/${context.params.vid}`,
@@ -59,10 +58,8 @@ export default {
       .then((res) => {
         if (res.data.error == 0) {
           video = res.data.video;
-          console.log("found video");
         } else {
           nonExistent = true;
-          console.log("video doesnt exist");
         }
         return {
           nonExistent: nonExistent,

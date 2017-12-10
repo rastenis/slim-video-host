@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="$store.state.authUser">
     <h1 class="title breaker">Upload</h1>
     <el-card  class="uploadForm" v-if="uploading">
       <div slot="header" class="clearfix">
@@ -14,7 +14,6 @@
           <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(currentVidName,1,false)">Cancel</el-button>
       </el-form>
     </el-card>
-
     <el-card class="uploadCard uploadForm clickableCard" v-else>
         <el-upload ref="uploader" :multiple="false" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :show-file-list="false" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
           <i class="el-icon-upload"></i>
@@ -25,9 +24,7 @@
         </el-upload>
       </el-card>
     </div>
-  
 </template>
-
 <script>
 
 import axios from 'axios'
@@ -35,6 +32,7 @@ import axios from 'axios'
 // :on-close="finishUpload(currentVidName,1)"
 
 export default {
+  layout:'main',
   data () {
     return {
       uploading:false,
@@ -116,6 +114,11 @@ export default {
         });
     },
     finishUpload(name,status,specialPass){
+      if(!this.$store.state.authUser){
+        this.$message.error('You are not signed in!');
+        this.$store.app.router.push("/")
+        return false;
+      }
       if( this.progressBar.percentage==100 || specialPass==true){
       
       if(!name && status==0){
@@ -153,10 +156,20 @@ export default {
             this.uploadedNotification(res.data.msg,res.data.msgType);
             this.progressBar.status="";
             this.progressBar.percentage=0;
-          }else if (res.data.error==1){
-            //todo: adapt in backend
-            console.log(res.data.errorMsg,res.data.msgType);
+          }else if (res.data.error==2){
+            this.progressBar.status="";
+            this.progressBar.percentage=0;
+            this.$message({
+                type: res.data.msgType,
+                message: res.data.msg
+            });
+          }else{
+            this.$message({
+                type: res.data.msgType,
+                message: res.data.msg
+            });
           }
+          
         }).catch(function (e) {
           console.log(e);
         });
@@ -176,29 +189,34 @@ export default {
           this.uploading=false;
           location.reload();
         }
-
         this.dialog.input.disabled=true;
-
       }
-       
     }
   
   }, 
-  created:function(){
-  //authUser checkeris
-    if(!this.$store.state.authUser){
+  created(){
+    if (!this.$store.state.authUser) {
       this.$store.app.router.push("/")
-    }else{
+    } else {
       this.$store.state.activeTab = '3';
     }
-
-  },
-  layout:'main'
+  }
+  
 }
 </script>
 
 
 <style>
+
+  @font-face {
+    font-family: "LatoLight";
+    src: url("/fonts/LatoLight/Lato-Light.eot"),
+    url("/fonts/LatoLight/Lato-Light.woff") format("woff"),
+    url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
+    font-style: normal;
+    font-weight: normal;
+  }
+
   .uploadForm{
     position: relative;
     margin: auto;
@@ -224,6 +242,12 @@ export default {
     margin-bottom:10vh;
   }
 
+  .title{
+    font-family: LatoLight;
+    font-size: 50px;
+    padding-top:10vh;
+    padding-left:3vw;
+  }
   .progress{
     position: relative;
     width:100%;

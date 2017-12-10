@@ -82,7 +82,10 @@ export default {
         this.formError = null
         this.$message.success("You have successfully created an account!");
       } catch(e) {
-        this.$message.error(e.message);
+        this.$message({
+          type: res.data.msgType,
+          message: res.data.msg
+        });
       }
     },
     submitForm(formName) {
@@ -92,16 +95,22 @@ export default {
           } else {
             console.log('validation error');
             return false;
-          }
+          }   if (!this.$store.state.authUser) {
+      this.$store.app.router.push("/")
+    } else {
+      this.$store.state.activeTab = '2';
+    }
         });
     },
     resetForm(formName) {
         this.$refs[formName].resetFields();
     }
   },
-  created:function(){
+  mounted(){
     if(!this.$store.state.authUser){
       this.$store.state.activeTab = '2';
+    }else{ //if user has an account, push him to dashboard
+      this.$store.app.router.push("/dash")
     }
   },
   layout:'main'
