@@ -80,7 +80,12 @@
         <el-table :data="videos" style="width: 100%">
           <el-table-column prop="name" label="Video">
           </el-table-column>
-          <el-table-column prop="link" label="Link" @click.native="$event.target.select()">
+          <el-table-column label="Link" @click.native="$event.target.select()">
+            <template slot-scope="scope">
+              <el-tooltip :content="currentCopyTooltip">
+                <el-button type="text" @click="copyLink(videos[scope.$index].link)">{{videos[scope.$index].link}}</el-button>
+              </el-tooltip>
+            </template>
           </el-table-column>
           <el-table-column prop="views" label="Views">
           </el-table-column>
@@ -96,6 +101,8 @@
   </div>
 </template>
 
+
+
 <script>
 import axios from 'axios'
 //TODO:  v-for get all video links w/ titles and views into CARDS (if w/ thumbnails) or just LIST ITEMS (w/o thumbnails)
@@ -105,7 +112,8 @@ export default {
     return {
       loadingMore: true,
       videos: [],
-      stats: {}
+      stats: {},
+      currentCopyTooltip:"Click to copy!"
     }
   },
   asyncData(context) {
@@ -172,6 +180,21 @@ export default {
     }
   },
   methods: {
+    copyLink(link){
+      
+      var outt=this;
+      this.$copyText(link)
+      .then(function (e) {
+        outt.currentCopyTooltip="Copied!";
+      }, function (e) {
+        outt.currentCopyTooltip="Couldn't copy :(";
+      });
+
+      setTimeout(() => {
+        this.currentCopyTooltip="Click to copy!";
+      }, 1000);
+      
+    },
     async deleteVideo(index) {
       this.$confirm('This will permanently delete the video. Continue?', 'Warning', {
         confirmButtonText: 'OK',
