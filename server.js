@@ -58,13 +58,13 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 60000
+        maxAge: 6 * 60 * 60 * 1000
     }
 }));
 
 // postas loginui. Reikalingas, kad butu pasiekiama $store.state.authUser
 app.post('/api/login', function(req, res) {
-
+    console.log("LOGGING IN | requester: " + req.body.username);
     db.users.find({
         username: req.body.username.toLowerCase()
     }, function(err, docs) {
@@ -101,13 +101,10 @@ app.post('/api/login', function(req, res) {
 //patikra ar yra toks video
 app.get('/api/cv/:id', function(req, res) {
 
-    console.log("check check");
+    console.log("FETCHING VIDEO | id: " + req.params.id);
 
-    if (!req.params.id) {
-        console.log("empty request, probably a refresh");
-    } else {
+    if (!req.params.id) {} else {
         var path = storagePath + req.params.id + '.mp4';
-        console.log("looking for " + path);
 
         //check if requested video exists
         if (fs.existsSync(path)) {
@@ -119,7 +116,6 @@ app.get('/api/cv/:id', function(req, res) {
                     views: 1
                 }
             }, {}, function() {
-                console.log("added a view to video " + req.params.id);
                 res.json({
                     error: 0,
                     src: vidpath
@@ -224,7 +220,6 @@ app.post('/api/getVideos', function(req, res) {
             console.log(chalk.bgRed.white(err));
             returner.error = 1;
         }
-        console.log("OKE, " + docs[0]);
 
         returner.error = 0;
         returner.videos = docs;
@@ -268,6 +263,8 @@ app.post('/api/upgradeStorage', function(req, res) {
 });
 
 app.post('/api/newLink', function(req, res) {
+    console.log("NEW LINK | requester: " + req.session.authUser.username);
+
     var returner = {};
     if (!req.session.authUser) {
         res.json({
@@ -276,7 +273,6 @@ app.post('/api/newLink', function(req, res) {
             msgType: "error"
         });
     } else {
-        console.log("user " + req.session.authUser.username + " is requesting a new link");
         //getting new info for the video
 
         var newVideoID = shortid.generate();
@@ -295,7 +291,6 @@ app.post('/api/newLink', function(req, res) {
 
             fs.rename(storagePath + req.body.videoID + ".mp4", storagePath + newVideoID + ".mp4", function(err) {
                 if (err) throw err;
-                console.log('renaming complete');
             });
 
             returner.newID = newVideoID;
@@ -309,61 +304,71 @@ app.post('/api/newLink', function(req, res) {
 // postas video ikelimo uzbaigimui (cancel or finalize)
 app.post('/api/finalizeUpload', function(req, res) {
 
+    console.log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username);
     var returner = {};
+    if (!req.session.authUser) {
+        res.json({
+            error: true,
+            msg: "No authentication. Please sign in.",
+            msgType: "error"
+        });
+    } else {
+        if (req.body.video.finalizationStatus == 0) { //video was successfully uploaded and named
+            db.videos.update({
+                confirmed: false,
+                username: req.session.authUser.username.toLowerCase()
+            }, {
+                $set: {
+                    name: req.body.video.name,
+                    confirmed: true
+                }
+            }, {}, function(err) {
+                if (err) {
+                    console.log(chalk.bgRed.white(err));
+                    returner.error = 1;
+                }
 
-    if (req.body.video.finalizationStatus == 0) { //video was successfully uploaded and named
-        console.log("finalized " + req.body.video.name);
-        db.videos.update({
-            confirmed: false,
-            username: req.body.user.username.toLowerCase()
-        }, {
-            $set: {
-                name: req.body.video.name,
-                confirmed: true
-            }
-        }, {}, function(err) {
-            if (err) {
-                console.log(chalk.bgRed.white(err));
-                returner.error = 1;
-            }
+                returner.error = 0;
+                returner.msg = "You successfully uploaded the video.";
+                returner.msgType = "success";
+                return res.json(returner);
+            });
+        } else if (req.body.video.finalizationStatus == 1) { //video was not successfully uploaded (canceled)
+            //non-multi removal (gal ir praverstu multi false check, TODO)
+            console.log(chalk.red("cancelled " + req.body.video.name));
 
-            returner.error = 0;
-            returner.msg = "You successfully uploaded the video.";
-            returner.msgType = "success";
+            db.videos.find({
+                confirmed: false,
+                username: req.session.authUser.username.toLowerCase()
+            }, function(err, docs) {
+                if (docs.length == 0) {
+                    console.log("video hasnt been uploaded yet, not cancelling");
+                } else {
+                    docs.forEach(function(video) {
+                        console.log(chalk.red("removing unconfirmed video " + video.name));
+                        // removing video from both database and storage
+                        db.videos.remove({
+                            videoID: video.videoID
+                        }, function(err, res) {});
+                        fs.unlink(storagePath + video.videoID + ".mp4");
+                    });
+                }
+            });
+
+            returner.error = 2;
+            returner.msgType = "info";
+            returner.msg = "You have cancelled the upload.";
             return res.json(returner);
-        });
-    } else if (req.body.video.finalizationStatus == 1) { //video was not successfully uploaded (canceled)
-        //non-multi removal (gal ir praverstu multi false check, TODO)
-        console.log(chalk.red("cancelled " + req.body.video.name));
-
-        db.videos.find({
-            confirmed: false,
-            username: req.body.user.username.toLowerCase()
-        }, function(err, docs) {
-            if (docs.length == 0) {
-                console.log("video hasnt been uploaded yet, not cancelling");
-            } else {
-                docs.forEach(function(video) {
-                    console.log(chalk.red("removing unconfirmed video " + video.name));
-                    // removing video from both database and storage
-                    db.videos.remove({
-                        videoID: video.videoID
-                    }, function(err, res) {});
-                    fs.unlink(storagePath + video.videoID + ".mp4");
-                });
-            }
-        });
-
-        returner.error = 2;
-        returner.msgType = "info";
-        returner.msg = "You have cancelled the upload.";
-        return res.json(returner);
+        }
     }
+
 
 });
 
 // postas adminu statistikom
 app.post('/api/getAdminStats', function(req, res) {
+
+    console.log("FETCHING ADMIN STATS | requester: " + req.body.user.username);
 
     var returner = {};
     returner.stats = {};
@@ -395,24 +400,17 @@ app.post('/api/getAdminStats', function(req, res) {
                     returner.videos = docs;
                     return res.json(returner);
                 });
-
             });
-
-
         });
     }
-
-
 });
-
-
 
 // postas userio video pasalinimui
 app.post('/api/removeVideo', function(req, res) {
 
-    var returner = {};
-    console.log("requester : " + req.body.user.username + ", video ID : " + req.body.videoID);
+    console.log("REMOVING VIDEO | requester: " + req.session.authUser.username + "video ID : " + req.body.videoID);
 
+    var returner = {};
     db.videos.find({
         videoID: req.body.videoID
     }, function(err, docs) {
@@ -422,7 +420,7 @@ app.post('/api/removeVideo', function(req, res) {
             returner.msg = "Internal error. Try again.";
         } else {
             db.users.update({
-                username: req.body.user.username
+                username: req.session.authUser.username
             }, {
                 $inc: {
                     remainingSpace: Math.abs(docs[0].size)
@@ -461,7 +459,6 @@ app.post('/api/upload', function(req, res) {
         // console.log(util.inspect(req.files.file, { showHidden: false, depth: null }))
 
         var fileSizeInBytes = req.files.file.data.byteLength;
-        console.log(chalk.bgWhite.red("size is " + fileSizeInBytes));
 
         // pasiverciam i megabaitus
         var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
@@ -471,7 +468,6 @@ app.post('/api/upload', function(req, res) {
             res.status(557).json({
                 error: 'File too big.'
             });
-            console.log("file size is fine");
         } else {
             var extension = ".mp4";
             // if (req.files.file.mimetype == "video/avi") {

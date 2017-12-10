@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="$store.state.authUser">
     <h1 class="title breaker">Upload</h1>
     <el-card  class="uploadForm" v-if="uploading">
       <div slot="header" class="clearfix">
@@ -32,6 +32,7 @@ import axios from 'axios'
 // :on-close="finishUpload(currentVidName,1)"
 
 export default {
+  layout:'main',
   data () {
     return {
       uploading:false,
@@ -193,21 +194,29 @@ export default {
     }
   
   }, 
-  mounted:function(){
-  //authUser checkeris
-    if(!this.$store.state.authUser){
+  created(){
+    if (!this.$store.state.authUser) {
       this.$store.app.router.push("/")
-    }else{
+    } else {
       this.$store.state.activeTab = '3';
     }
-
-  },
-  layout:'main'
+  }
+  
 }
 </script>
 
 
 <style>
+
+  @font-face {
+    font-family: "LatoLight";
+    src: url("/fonts/LatoLight/Lato-Light.eot"),
+    url("/fonts/LatoLight/Lato-Light.woff") format("woff"),
+    url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
+    font-style: normal;
+    font-weight: normal;
+  }
+
   .uploadForm{
     position: relative;
     margin: auto;
@@ -233,6 +242,12 @@ export default {
     margin-bottom:10vh;
   }
 
+  .title{
+    font-family: LatoLight;
+    font-size: 50px;
+    padding-top:10vh;
+    padding-left:3vw;
+  }
   .progress{
     position: relative;
     width:100%;

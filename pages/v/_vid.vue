@@ -36,12 +36,8 @@ export default {
     }
   },
   asyncData (context) {
-    console.log("AKAY");
     var nonExistent = false;
     var src='';
-    console.log("requested video ID - "+context.params.vid);
-
-
     return axios({ 
       url: `http://cigari.ga/api/cv/${context.params.vid}`,
       method:'GET',
@@ -51,13 +47,10 @@ export default {
       }
     })
     .then((res) => {
-      console.log("RES RES RSE RES RSE RERSE");
       if(res.data.error==0){
         src=res.data.src;
-        console.log("found video");
       }else{
         nonExistent = true;
-        console.log("doesnt exist");
       }
       return { nonExistent: nonExistent, videoSrc:src,loading:false };
     })

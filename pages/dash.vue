@@ -128,7 +128,6 @@ export default {
                 videos: res.data.videos
               }
             } else if (res.data.error == 1) {
-              console.log("error while fetching admin stats");
             }
           }).catch(function (e) {
             console.log(e);
@@ -159,18 +158,18 @@ export default {
       }
 
     } catch (e) {
-      console.log("skipping");
     }
-
+    
   },
   mounted(){
-    console.log("created");
+    this.setUpStats(); 
+  },
+  created(){
     if (!this.$store.state.authUser) {
       this.$store.app.router.push("/")
     } else {
       this.$store.state.activeTab = '2';
     }
-    this.setUpStats(); 
   },
   methods: {
     async deleteVideo(index) {
@@ -208,10 +207,6 @@ export default {
           });
 
       }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: 'Delete canceled'
-        });
       });
     },
     async requestNewID(index) {
@@ -251,7 +246,6 @@ export default {
       });
     },
     setUpStats(){
-      console.log("setting up stats");
       var totalViews=0;
       this.videos.forEach(element => {
         totalViews+=element.views;
@@ -278,7 +272,6 @@ export default {
             }
           })
           .then((res) => {
-            console.log("got storage upgrade");
             this.$message({
               type: res.data.msgType,
               message: res.data.msg
