@@ -394,7 +394,6 @@ app.post('/api/getAdminStats', function(req, res) {
                         console.log(chalk.bgRed.white(err));
                         returner.error = 1;
                     }
-                    console.log("OKE, " + docs[0]);
 
                     returner.error = 0;
                     returner.videos = docs;

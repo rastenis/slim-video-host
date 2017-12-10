@@ -31,44 +31,68 @@
       <h1>You already have an account!</h1>
     </div>
   </div>
-
 </template>
 
 <script>
 export default {
-  data () {
+  data() {
     return {
-      regForm:{
-        username:'',
-        email:'',
-        pass:'',
-        passconf:'',
-        code:''
+      regForm: {
+        username: '',
+        email: '',
+        pass: '',
+        passconf: '',
+        code: ''
       },
-      hasCode:false,
+      hasCode: false,
       activeIndex: "2",
       activeIndexUnreg: "2",
       formRules: {
-        username: [
-          { required: true, message: 'Please input a valid username', trigger: 'blur' },
-          { min: 5, max: 100, message: 'Length should be 5 to 100', trigger: 'blur' }
+        username: [{
+            required: true,
+            message: 'Please input a valid username',
+            trigger: 'blur'
+          },
+          {
+            min: 5,
+            max: 100,
+            message: 'Length should be 5 to 100',
+            trigger: 'blur'
+          }
         ],
-        email: [
-          { required: true, message: 'Please enter an email address', trigger: 'change' },
-          { type: 'email', message: 'Please enter a valid email address', trigger: 'blur' }
+        email: [{
+            required: true,
+            message: 'Please enter an email address',
+            trigger: 'change'
+          },
+          {
+            type: 'email',
+            message: 'Please enter a valid email address',
+            trigger: 'blur'
+          }
         ],
-        pass: [
-          { required: true, message: 'Please enter a password.', trigger: 'blur' },
-          { min: 8, max: 100, message: 'Length should be 8 to 100', trigger: 'blur' }
+        pass: [{
+            required: true,
+            message: 'Please enter a password.',
+            trigger: 'blur'
+          },
+          {
+            min: 8,
+            max: 100,
+            message: 'Length should be 8 to 100',
+            trigger: 'blur'
+          }
         ],
-        passconf: [
-          { required: true, message: 'Please confirm your password.', trigger: 'blur' }
-        ]
+        passconf: [{
+          required: true,
+          message: 'Please confirm your password.',
+          trigger: 'blur'
+        }]
       }
     }
   },
-  methods:{
-    async register () {
+  methods: {
+    async register() {
       try {
         await this.$store.dispatch('register', {
           username: this.regForm.username,
@@ -81,7 +105,7 @@ export default {
         this.formPassword = ''
         this.formError = null
         this.$message.success("You have successfully created an account!");
-      } catch(e) {
+      } catch (e) {
         this.$message({
           type: res.data.msgType,
           message: res.data.msg
@@ -89,31 +113,32 @@ export default {
       }
     },
     submitForm(formName) {
-        this.$refs[formName].validate((valid) => {
-          if (valid) {
-            this.register();
-          } else {
-            console.log('validation error');
-            return false;
-          }   if (!this.$store.state.authUser) {
-      this.$store.app.router.push("/")
-    } else {
-      this.$store.state.activeTab = '2';
-    }
-        });
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.register();
+        } else {
+          console.log('validation error');
+          return false;
+        }
+        if (!this.$store.state.authUser) {
+          this.$store.app.router.push("/")
+        } else {
+          this.$store.state.activeTab = '2';
+        }
+      });
     },
     resetForm(formName) {
-        this.$refs[formName].resetFields();
+      this.$refs[formName].resetFields();
     }
   },
-  mounted(){
-    if(!this.$store.state.authUser){
+  mounted() {
+    if (!this.$store.state.authUser) {
       this.$store.state.activeTab = '2';
-    }else{ //if user has an account, push him to dashboard
+    } else { //if user has an account, push him to dashboard
       this.$store.app.router.push("/dash")
     }
   },
-  layout:'main'
+  layout: 'main'
 }
 </script>
 

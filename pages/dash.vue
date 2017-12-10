@@ -82,7 +82,7 @@
           </el-table-column>
           <el-table-column label="Link" @click.native="$event.target.select()">
             <template slot-scope="scope">
-              <el-tooltip :content="currentCopyTooltip">
+              <el-tooltip :content="currentCopyTooltip" enterable="false" transition="el-zoom-in-top">
                 <el-button type="text" @click="copyLink(videos[scope.$index].link)">{{videos[scope.$index].link}}</el-button>
               </el-tooltip>
             </template>
@@ -113,7 +113,7 @@ export default {
       loadingMore: true,
       videos: [],
       stats: {},
-      currentCopyTooltip:"Click to copy!"
+      currentCopyTooltip: "Click to copy!"
     }
   },
   asyncData(context) {
@@ -135,8 +135,7 @@ export default {
                 loadingMore: false,
                 videos: res.data.videos
               }
-            } else if (res.data.error == 1) {
-            }
+            } else if (res.data.error == 1) {}
           }).catch(function (e) {
             console.log(e);
           });
@@ -152,7 +151,7 @@ export default {
           })
           .then((res) => {
             console.log("res data is" + res.data);
-            if (res.data.error == 0) {             
+            if (res.data.error == 0) {
               return {
                 videos: res.data.videos,
                 loadingMore: false
@@ -164,15 +163,12 @@ export default {
             console.log(e);
           });
       }
-
-    } catch (e) {
-    }
-    
+    } catch (e) {}
   },
-  mounted(){
-    this.setUpStats(); 
+  mounted() {
+    this.setUpStats();
   },
-  created(){
+  created() {
     if (!this.$store.state.authUser) {
       this.$store.app.router.push("/")
     } else {
@@ -180,20 +176,20 @@ export default {
     }
   },
   methods: {
-    copyLink(link){
-      
-      var outt=this;
+    copyLink(link) {
+
+      var outt = this;
       this.$copyText(link)
-      .then(function (e) {
-        outt.currentCopyTooltip="Copied!";
-      }, function (e) {
-        outt.currentCopyTooltip="Couldn't copy :(";
-      });
+        .then(function (e) {
+          outt.currentCopyTooltip = "Copied!";
+        }, function (e) {
+          outt.currentCopyTooltip = "Couldn't copy :(";
+        });
 
       setTimeout(() => {
-        this.currentCopyTooltip="Click to copy!";
+        this.currentCopyTooltip = "Click to copy!";
       }, 1000);
-      
+
     },
     async deleteVideo(index) {
       this.$confirm('This will permanently delete the video. Continue?', 'Warning', {
@@ -216,12 +212,12 @@ export default {
             }
           })
           .then((res) => {
-              this.$message({
-                type: res.data.msgType,
-                message: res.data.msg
-              });   
+            this.$message({
+              type: res.data.msgType,
+              message: res.data.msg
+            });
             if (res.data.error == 0) {
-              this.stats.usedSpace-=this.videos[index].size;
+              this.stats.usedSpace -= this.videos[index].size;
             } else if (res.data.error == 1) {
               console.log("error while deleting video");
             }
@@ -229,8 +225,7 @@ export default {
             console.log(e);
           });
 
-      }).catch(() => {
-      });
+      }).catch(() => {});
     },
     async requestNewID(index) {
       this.$confirm('This will invalidate the previous link. Continue?', 'Warning', {
@@ -250,48 +245,47 @@ export default {
             }
           })
           .then((res) => {
-              this.$message({
-                type: res.data.msgType,
-                message: res.data.msg
-              });
+            this.$message({
+              type: res.data.msgType,
+              message: res.data.msg
+            });
             if (res.data.error) {
               console.log("error while asking for new video ID");
             } else {
               console.log("Successfully updated. Updating local representation...");
-              this.videos[index].videoID=res.data.newID;
-              this.videos[index].link=res.data.newLink;
+              this.videos[index].videoID = res.data.newID;
+              this.videos[index].link = res.data.newLink;
             }
           }).catch(function (e) {
             console.log(e);
           });
 
-      }).catch(() => {
-      });
+      }).catch(() => {});
     },
-    setUpStats(){
-      var totalViews=0;
+    setUpStats() {
+      var totalViews = 0;
       this.videos.forEach(element => {
-        totalViews+=element.views;
+        totalViews += element.views;
       });
 
-      this.stats.totalViews=totalViews;
-      this.stats.totalSpace=this.$store.state.authUser.totalSpace;
-      this.stats.usedSpace=(this.stats.totalSpace-this.$store.state.authUser.remainingSpace).toFixed(1);
+      this.stats.totalViews = totalViews;
+      this.stats.totalSpace = this.$store.state.authUser.totalSpace;
+      this.stats.usedSpace = (this.stats.totalSpace - this.$store.state.authUser.remainingSpace).toFixed(1);
     },
-    async storageUpgradeInit(){
+    async storageUpgradeInit() {
       this.$prompt('Please input a promotion code', 'Upgrade', {
-          confirmButtonText: 'Apply',
-          cancelButtonText: 'Cancel',
-          inputErrorMessage: 'Invalid code'
-        }).then(value => {
-          //activating the code
-          axios({
+        confirmButtonText: 'Apply',
+        cancelButtonText: 'Cancel',
+        inputErrorMessage: 'Invalid code'
+      }).then(value => {
+        //activating the code
+        axios({
             url: 'https://cigari.ga/api/upgradeStorage',
             method: 'post',
             credentials: 'same-origin',
             data: {
               user: this.$store.state.authUser,
-              code:value.value
+              code: value.value
             }
           })
           .then((res) => {
@@ -302,7 +296,7 @@ export default {
           }).catch(function (e) {
             console.log(e);
           });
-        });
+      });
     }
   },
   layout: 'main'
