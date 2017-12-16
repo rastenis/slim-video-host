@@ -112,14 +112,6 @@ export default {
 </script>
 
 <style scoped>
-
-
-
-
-</style>
-
-<style lang="less" scoped>
-
 .el-button {
   font-weight: bold !important;
   background: rgb(0, 0, 0) !important;
@@ -130,8 +122,9 @@ export default {
   -webkit-transition: .1s;
   transition: .1s;
   transition-property: color, background-color;
-  width: 8vw;
+  width: 21vw;
   height: 8vh;
+  margin-bottom:2vh;  
 }
 
 .el-button:hover,
@@ -141,28 +134,31 @@ export default {
   color: black !important;
   opacity: 0.95 !important;
 }
-
-
-
 </style>
 
 
 
 <style>
+@font-face {
+  font-family: "LatoLight";
+  src: url("/fonts/LatoLight/Lato-Light.eot"), url("/fonts/LatoLight/Lato-Light.woff") format("woff"), url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
+  font-style: normal;
+  font-weight: normal;
+}
 
-.subsituteInput{
+.subsituteInput {
   font-family: LatoRegular !important;
   border-style: solid !important;
   border-width: 5px !important;
   border-color: white !important;
   background: black !important;
   border-radius: 0px !important;
-  color:white !important;
+  color: white !important;
   font-weight: bold;
   padding: 0 4px !important;
   font-size: 4vh !important;
-  height:5vh !important;
-  width:20vw !important;
+  height: 5vh !important;
+  width: 20vw !important;
 }
 
 @font-face {
@@ -177,13 +173,12 @@ a {
 }
 
 .nudge {
-  padding-top: 2vh;
+  margin-top: 10vh;
 }
 
-.topField{
-  margin-top:3vh;
+.topField {
+  margin-top: 3vh;
 }
-
 
 .welcomeText {
   color: white;
@@ -208,16 +203,17 @@ a {
   bottom: 0;
   left: 0;
   opacity: 0.7;
-  height: 30%;
-  width: 40%;
+  height: 35vh;
+  width: 40vw;
   content: center;
-  font-size: 8vh;
+  font-size: 14vh;
   color: white;
   border-style: solid;
   border-color: white;
   border-width: 0.5vw;
   font-family: LatoRegular;
   cursor: pointer;
+  font-weight: bold;
 }
 
 .introLoginForm {
@@ -229,14 +225,13 @@ a {
   bottom: 0;
   left: 0;
   opacity: 0.7;
-  height: 30vh;
+  height: 35vh;
   width: 40vw;
   color: white;
   border-style: solid;
   border-color: white;
   border-width: 0.5vw;
 }
-
 /* Fade */
 
 .hvr-fade {
