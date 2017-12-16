@@ -57,7 +57,8 @@ export default {
         password: ''
       },
       formError: null,
-      showLogin: false
+      showLogin: false,
+      gifTags:['art','illusion','psychedelic','trippy','abstract']
     }
   },
   methods: {
@@ -99,14 +100,14 @@ export default {
       }
     }
   },
-  created: function () {
-    axios.get('//api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag=art')
+  created() {
+    var randomTag = this.gifTags[Math.floor(Math.random()*this.gifTags.length)];
+    axios.get('//api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag='+randomTag)
       .then((res) => {
-        console.log('ok setting shit to ' + res.data.data.image_original_url);
         this.intro.backgroundImage = 'url(' + res.data.data.image_original_url + ')';
       })
+      .catch(e=>{});
   }
-
 }
 </script>
 
