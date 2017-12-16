@@ -8,8 +8,8 @@ module.exports = {
         '~plugins/vue-clipboard2'
     ],
     css: [
-        'element-ui/lib/theme-chalk/index.css'
-        // , '~assets/style/pageTranstions.css'  DOESNT FIND THE FILE FOR SOME REASON
+        'element-ui/lib/theme-chalk/index.css',
+        '~assets/style/pageTransitions.css'
     ],
     modules: [
         '@nuxtjs/font-awesome'
