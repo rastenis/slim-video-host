@@ -78,14 +78,7 @@
     font-style: normal;
     font-weight: normal;
   }
-
-  @font-face {
-    font-family: "Knucklehead";
-    src: url("/fonts/KH/Knucklehead.otf");
-    font-style: normal;
-    font-weight: normal;
-  }
-
+  
   .main {
     position: absolute;
     top: 0;
@@ -126,7 +119,7 @@
 
 <style>
   body{
-    font-family: Lato, sans-serif;
+    font-family: LatoRegular, sans-serif;
     overflow-y:scroll;
   }
 

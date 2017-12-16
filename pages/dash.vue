@@ -353,7 +353,7 @@ export default {
   }
 
   .videoList{
-    padding-top:10vh;
+    padding-top:5vh;
     position: relative;
     margin: auto;
     top: 0;
@@ -405,8 +405,10 @@ export default {
     padding-left:3vw;
   }
 
- 
-
+  .subtitle1{
+    font-family: LatoRegular;
+    padding-top:2vh;
+  }
   .renameIcon{
     cursor: pointer;
     display: none;
