@@ -115,7 +115,7 @@
     left: 0;
     min-width: 100%;
     font-size: larger;
-    
+    z-index: 999;
   }
 
   nuxt-link{
@@ -127,7 +127,11 @@
 <style>
   body{
     font-family: Lato, sans-serif;
-    overflow:scroll;
+    overflow-y:scroll;
+  }
+
+  ::-webkit-scrollbar { 
+    display: none; 
   }
 
   a:link{

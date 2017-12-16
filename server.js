@@ -262,6 +262,7 @@ app.post('/api/upgradeStorage', function(req, res) {
     });
 });
 
+//new link generation
 app.post('/api/newLink', function(req, res) {
     console.log("NEW LINK | requester: " + req.session.authUser.username);
 
@@ -295,6 +296,36 @@ app.post('/api/newLink', function(req, res) {
 
             returner.newID = newVideoID;
             returner.newLink = newVidLink;
+
+            return res.json(returner);
+        });
+    }
+});
+
+// vardo pakeitimas
+app.post('/api/rename', function(req, res) {
+    console.log("RENAME | requester: " + req.session.authUser.username);
+
+    var returner = {};
+    if (!req.session.authUser) {
+        res.json({
+            error: true,
+            msg: "No authentication. Please sign in.",
+            msgType: "error"
+        });
+    } else {
+        //updating the requested video's name
+        db.videos.update({ username: req.session.authUser.username, videoID: req.body.videoID }, { $set: { name: req.body.newName } }, { upsert: false }, function(err, numAffected, affectedDocs) {
+            if (numAffected < 1) {
+                returner.error = true;
+                returner.msgType = "error";
+                returner.msg = "Renaming failed; No such video.";
+            } else {
+                returner.error = false;
+                returner.msgType = "success";
+                returner.msg = "Video successfully renamed!";
+            }
+            returner.newName = req.body.newName;
 
             return res.json(returner);
         });
