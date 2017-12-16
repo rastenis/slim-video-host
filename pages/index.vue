@@ -4,7 +4,7 @@
     </div>
     <a class="hvr-fade introMainButton" @click="activateLogin(true)" v-show="!showLogin">
       <p v-if="!$store.state.authUser" class="nudge">Login</p>
-      <p v-else class="nudge">Welcome back</p>
+      <p v-else class="nudge minif">Welcome back</p>
     </a>
     <div v-show="showLogin" class="introLoginForm">
       <div class="centerHor" v-if="!$store.state.authUser">
@@ -231,6 +231,11 @@ a {
   border-width: 0.5vw;
 }
 /* Fade */
+
+.minif{
+  margin-top:12vh;
+  font-size: 10vh;
+}
 
 .hvr-fade {
   display: inline-block;

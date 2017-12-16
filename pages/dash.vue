@@ -337,7 +337,8 @@ export default {
       });
     }
   },
-  layout: 'main'
+  layout: 'main',
+  transition:'mainTransition'
 }
 </script>
 

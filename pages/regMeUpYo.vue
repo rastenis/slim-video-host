@@ -138,7 +138,8 @@ export default {
       this.$store.app.router.push("/dash")
     }
   },
-  layout: 'main'
+  layout: 'main',
+  transition:'mainTransition'
 }
 </script>
 

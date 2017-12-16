@@ -200,8 +200,8 @@ export default {
     } else {
       this.$store.state.activeTab = '3';
     }
-  }
-
+  },
+  transition:'mainTransition'
 }
 </script>
 
