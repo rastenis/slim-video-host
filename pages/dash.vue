@@ -79,10 +79,16 @@
         <h2 class="subtitle1">Your videos:</h2>
         <el-table :data="videos" style="width: 100%">
           <el-table-column prop="name" label="Video">
+            <template slot-scope="scope">
+              <div class="nameColumn">
+                {{videos[scope.$index].name}}
+                <i class="fa fa-pencil renameIcon" aria-hidden="false" @click="requestNewName(scope.$index)"></i>
+              </div>
+            </template>
           </el-table-column>
           <el-table-column label="Link" @click.native="$event.target.select()">
             <template slot-scope="scope">
-              <el-tooltip :content="currentCopyTooltip" enterable="false" transition="el-zoom-in-top">
+              <el-tooltip :content="currentCopyTooltip" :enterable="false" transition="el-zoom-in-top">
                 <el-button type="text" @click="copyLink(videos[scope.$index].link)">{{videos[scope.$index].link}}</el-button>
               </el-tooltip>
             </template>
@@ -100,7 +106,6 @@
     </div>
   </div>
 </template>
-
 
 
 <script>
@@ -139,7 +144,6 @@ export default {
           }).catch(function (e) {
             console.log(e);
           });
-
       } else {
         return axios({
             url: 'https://cigari.ga/api/getVideos',
@@ -177,7 +181,6 @@ export default {
   },
   methods: {
     copyLink(link) {
-
       var outt = this;
       this.$copyText(link)
         .then(function (e) {
@@ -185,11 +188,9 @@ export default {
         }, function (e) {
           outt.currentCopyTooltip = "Couldn't copy :(";
         });
-
       setTimeout(() => {
         this.currentCopyTooltip = "Click to copy!";
       }, 1000);
-
     },
     async deleteVideo(index) {
       this.$confirm('This will permanently delete the video. Continue?', 'Warning', {
@@ -201,7 +202,6 @@ export default {
         console.log("removing video: " + videoID + ", index is " + index);
         console.log("authuser is " + this.$store.state.authUser);
         this.videos.splice(index, 1);
-
         axios({
             url: 'https://cigari.ga/api/removeVideo',
             method: 'post',
@@ -262,12 +262,44 @@ export default {
 
       }).catch(() => {});
     },
+    async requestNewName(index) {
+      this.$prompt('Input the new name:', 'Rename', {
+        confirmButtonText: 'OK',
+        cancelButtonText: 'Cancel'
+      }).then((value) => {
+        var videoID = this.videos[index].videoID;
+        console.log("requesting new name for video: " + videoID + ", index is " + index+", name is "+value.value);
+        axios({
+            url: 'https://cigari.ga/api/rename',
+            method: 'post',
+            credentials: 'same-origin',
+            data: {
+              user: this.$store.state.authUser,
+              videoID: videoID,
+              newName:value.value
+            }
+          })
+          .then((res) => {
+            this.$message({
+              type: res.data.msgType,
+              message: res.data.msg
+            });
+            if (res.data.error) {
+              console.log("error while asking for new video name");
+            } else {
+              console.log("Successfully updated. Updating local representation...");
+              this.videos[index].name = res.data.newName;
+            }
+          }).catch(function (e) {
+            console.log(e);
+          });
+      }).catch(() => {});
+    },
     setUpStats() {
       var totalViews = 0;
       this.videos.forEach(element => {
         totalViews += element.views;
       });
-
       this.stats.totalViews = totalViews;
       this.stats.totalSpace = this.$store.state.authUser.totalSpace;
       this.stats.usedSpace = (this.stats.totalSpace - this.$store.state.authUser.remainingSpace).toFixed(1);
@@ -367,6 +399,17 @@ export default {
     padding-left:3vw;
   }
 
+ 
+
+  .renameIcon{
+    cursor: pointer;
+    display: none;
+  }
+
+  .nameColumn:hover .renameIcon {
+    display: inline;
+  }
+
   .adminVideoPanel{
     background: #d3dce6;
   }
@@ -400,8 +443,7 @@ export default {
     font-family: LatoLight;
   }
 
-  template{
-    overflow:scroll;
-  }
+  
+
 
 </style>
