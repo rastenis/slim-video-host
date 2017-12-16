@@ -21,7 +21,7 @@
           </el-form-item>
         </el-form>
       </div>
-      <div v-else>
+      <div v-else class="postLogin">
         Welcome back, {{ $store.state.authUser.username }}!
         <p>
           <i>Redirecting you to your dashboard.</i>
@@ -139,11 +139,9 @@ export default {
 
 
 <style>
-@font-face {
-  font-family: "LatoLight";
-  src: url("/fonts/LatoLight/Lato-Light.eot"), url("/fonts/LatoLight/Lato-Light.woff") format("woff"), url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
-  font-style: normal;
-  font-weight: normal;
+.postLogin{
+  margin-top:10vh;
+  text-align:center;
 }
 
 .subsituteInput {
