@@ -92,14 +92,14 @@
     left: 0;
     width: 100%;
     min-height: 100%;
-    background: #EFF2F7;
+    background: #f0f1e7;
   }
 
   .container{
     min-height:100vh;
     max-width: 70vw;
     display: block;
-    background: #E5E9F2;
+    background: #e6e7e8;
     margin-left: auto;
     margin-right: auto;
   }
@@ -135,10 +135,10 @@
   }
 
   a:link{
-    color:#968e00
+    color:#008fbf
   }
   a:visited{
-    color:#7a7300
+    color:#008fbf
   }
 </style>
 

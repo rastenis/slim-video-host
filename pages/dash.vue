@@ -82,15 +82,18 @@
             <template slot-scope="scope">
               <div class="nameColumn">
                 {{videos[scope.$index].name}}
-                <i class="fa fa-pencil renameIcon" aria-hidden="false" @click="requestNewName(scope.$index)"></i>
+                <i class="fa fa-pencil fa-lg renameIcon" aria-hidden="false" @click="requestNewName(scope.$index)"></i>
               </div>
             </template>
           </el-table-column>
           <el-table-column label="Link" @click.native="$event.target.select()">
             <template slot-scope="scope">
-              <el-tooltip :content="currentCopyTooltip" :enterable="false" transition="el-zoom-in-top">
-                <el-button type="text" @click="copyLink(videos[scope.$index].link)">{{videos[scope.$index].link}}</el-button>
-              </el-tooltip>
+              <div class="linkColumn">
+                <a :href="videos[scope.$index].link">{{videos[scope.$index].link}}</a>
+                <el-tooltip :content="currentCopyTooltip" :enterable="false" transition="el-zoom-in-top">
+                  <i class="fa fa-clipboard fa-lg copyIcon" aria-hidden="false" @click="copyLink(videos[scope.$index].link)"></i>
+                </el-tooltip>
+              </div>
             </template>
           </el-table-column>
           <el-table-column prop="views" label="Views">
@@ -180,6 +183,9 @@ export default {
     }
   },
   methods: {
+    redirect(link){
+      this.redirect(link);
+    },
     copyLink(link) {
       var outt = this;
       this.$copyText(link)
@@ -407,6 +413,16 @@ export default {
   }
 
   .nameColumn:hover .renameIcon {
+    display: inline;
+  }
+  
+  .copyIcon{
+    cursor: pointer;
+    display: none;
+    margin-left:1vh;
+  }
+
+  .linkColumn:hover .copyIcon {
     display: inline;
   }
 
