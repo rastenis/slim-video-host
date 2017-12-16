@@ -337,20 +337,13 @@ export default {
       });
     }
   },
-  layout: 'main'
+  layout: 'main',
+  transition:'mainTransition'
 }
 </script>
 
 
 <style>
-  @font-face {
-    font-family: "LatoLight";
-    src: url("/fonts/LatoLight/Lato-Light.eot"),
-    url("/fonts/LatoLight/Lato-Light.woff") format("woff"),
-    url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
-    font-style: normal;
-    font-weight: normal;
-  }
 
   .videoList{
     padding-top:5vh;

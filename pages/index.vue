@@ -1,35 +1,27 @@
 <template>
   <div class="hiddenOverflow">
     <div v-bind:style="intro" ref="introBCG">
-      <style <style scoped>
-        .bl {
-          -webkit-filter: blur(4px);
-          filter: blur(4px);
-        }
-      </style>
     </div>
     <a class="hvr-fade introMainButton" @click="activateLogin(true)" v-show="!showLogin">
       <p v-if="!$store.state.authUser" class="nudge">Login</p>
-      <p v-else class="nudge">Welcome back</p>
+      <p v-else class="nudge minif">Welcome back</p>
     </a>
     <div v-show="showLogin" class="introLoginForm">
       <div class="centerHor" v-if="!$store.state.authUser">
         <el-form v-on:submit.prevent="login" class="formField">
           <p class="error" v-if="formError">{{ formError }}</p>
-          <p>Login</p>
           <el-form-item prop="username">
-            <el-input @keyup.alt.82.native="redirectToRegister()" placeholder="Username" type="text" v-model="form.username" name="username"
-            />
+            <input class="subsituteInput topField " @keyup.alt.82="redirectToRegister" placeholder="Username" type="text" v-model="form.username" name="username"/>
           </el-form-item>
           <el-form-item prop="password">
-            <el-input @keyup.enter.native="login()" placeholder="Password" type="password" v-model="form.password" name="password" />
+            <input class="subsituteInput" @keydown.enter="login" placeholder="Password" type="password" v-model="form.password" name="password" />
           </el-form-item>
           <el-form-item>
             <el-button class="loginButton" type="submit" @click="login">Login</el-button>
           </el-form-item>
         </el-form>
       </div>
-      <div v-else>
+      <div v-else class="postLogin">
         Welcome back, {{ $store.state.authUser.username }}!
         <p>
           <i>Redirecting you to your dashboard.</i>
@@ -65,10 +57,14 @@ export default {
         password: ''
       },
       formError: null,
-      showLogin: false
+      showLogin: false,
+      gifTags:['art','illusion','psychedelic','trippy','abstract']
     }
   },
   methods: {
+    hotkey(event){
+      alert("ASDASD");
+    },
     activateLogin(bool) {
       if (!this.$store.state.authUser) {
         this.showLogin = bool;
@@ -104,19 +100,64 @@ export default {
       }
     }
   },
-  created: function () {
-    axios.get('//api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag=art')
+  created() {
+    var randomTag = this.gifTags[Math.floor(Math.random()*this.gifTags.length)];
+    axios.get('//api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag='+randomTag)
       .then((res) => {
-        console.log('ok setting shit to ' + res.data.data.image_original_url);
         this.intro.backgroundImage = 'url(' + res.data.data.image_original_url + ')';
       })
+      .catch(e=>{});
   }
-
 }
 </script>
 
+<style scoped>
+.el-button {
+  font-weight: bold !important;
+  background: rgb(0, 0, 0) !important;
+  border: 5px solid #ffffff !important;
+  color: #ffffff !important;
+  font-size: 3vh !important;
+  border-radius: 0px !important;
+  -webkit-transition: .1s;
+  transition: .1s;
+  transition-property: color, background-color;
+  width: 21vw;
+  height: 8vh;
+  margin-bottom:2vh;  
+}
+
+.el-button:hover,
+.el-button:focus,
+.el-button:active {
+  background-color: white !important;
+  color: black !important;
+  opacity: 0.95 !important;
+}
+</style>
+
+
 
 <style>
+.postLogin{
+  margin-top:10vh;
+  text-align:center;
+}
+
+.subsituteInput {
+  font-family: LatoRegular !important;
+  border-style: solid !important;
+  border-width: 5px !important;
+  border-color: white !important;
+  background: black !important;
+  border-radius: 0px !important;
+  color: white !important;
+  font-weight: bold;
+  padding: 0 4px !important;
+  font-size: 4vh !important;
+  height: 5vh !important;
+  width: 20vw !important;
+}
 
 @font-face {
   font-family: "LatoRegular";
@@ -130,18 +171,11 @@ a {
 }
 
 .nudge {
-  padding-top: 15px;
+  margin-top: 10vh;
 }
 
-.introButton {
-  border-style: solid;
-  border-width: 3px;
-  border-color: white;
-  font-size: 2em;
-  border-radius: 10px;
-  background-color: transparent;
-  animation-name: loginButtonAnim;
-  animation-duration: 1s;
+.topField {
+  margin-top: 3vh;
 }
 
 .welcomeText {
@@ -167,16 +201,17 @@ a {
   bottom: 0;
   left: 0;
   opacity: 0.7;
-  height: 30%;
-  width: 40%;
+  height: 35vh;
+  width: 40vw;
   content: center;
-  font-size: 8vh;
+  font-size: 14vh;
   color: white;
   border-style: solid;
   border-color: white;
-  border-width: 5px;
+  border-width: 0.5vw;
   font-family: LatoRegular;
   cursor: pointer;
+  font-weight: bold;
 }
 
 .introLoginForm {
@@ -188,33 +223,19 @@ a {
   bottom: 0;
   left: 0;
   opacity: 0.7;
-  height: 30%;
-  width: 40%;
+  height: 35vh;
+  width: 40vw;
   color: white;
   border-style: solid;
   border-color: white;
-  border-width: 5px;
+  border-width: 0.5vw;
 }
-
-.introLoginForm {
-  background: black;
-  position: absolute;
-  margin: auto;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  opacity: 0.7;
-  height: 30%;
-  width: 40%;
-  color: white;
-  border-style: solid;
-  border-color: white;
-  border-width: 5px;
-}
-
-
 /* Fade */
+
+.minif{
+  margin-top:12vh;
+  font-size: 10vh;
+}
 
 .hvr-fade {
   display: inline-block;

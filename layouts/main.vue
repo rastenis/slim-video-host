@@ -70,14 +70,6 @@
 
 <style scoped>
 
-  @font-face {
-    font-family: "LatoRegular";
-    src: url("/fonts/LatoRegular/Lato-Regular.eot"),
-    url("/fonts/LatoRegular/Lato-Regular.woff") format("woff"),
-    url("/fonts/LatoRegular/Lato-Regular.ttf") format("truetype");
-    font-style: normal;
-    font-weight: normal;
-  }
   
   .main {
     position: absolute;
@@ -118,6 +110,22 @@
 
 
 <style>
+
+
+  @font-face {
+    font-family: "LatoRegular";
+    src: url("/fonts/LatoRegular/Lato-Regular.eot"),
+    url("/fonts/LatoRegular/Lato-Regular.woff") format("woff"),
+    url("/fonts/LatoRegular/Lato-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-weight: normal;
+  }
+  @font-face {
+    font-family: "LatoLight";
+    src: url("/fonts/LatoLight/Lato-Light.eot"), url("/fonts/LatoLight/Lato-Light.woff") format("woff"), url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
+    font-style: normal;
+    font-weight: normal;
+  }
   body{
     font-family: LatoRegular, sans-serif;
     overflow-y:scroll;

@@ -1,10 +1,10 @@
-.page-enter-active,
-.page-leave-active {
+.mainTransition-enter-active,
+.mainTransition-leave-active {
     transition: all .25s
 }
 
-.page-enter,
-.page-leave-active {
+.mainTransition-enter,
+.mainTransition-leave-active {
     filter: brightness(200%);
     filter: grayscale(100%);
     opacity: 0;

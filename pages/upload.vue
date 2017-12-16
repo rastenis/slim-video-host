@@ -200,22 +200,13 @@ export default {
     } else {
       this.$store.state.activeTab = '3';
     }
-  }
-
+  },
+  transition:'mainTransition'
 }
 </script>
 
 
 <style>
-
-  @font-face {
-    font-family: "LatoLight";
-    src: url("/fonts/LatoLight/Lato-Light.eot"),
-    url("/fonts/LatoLight/Lato-Light.woff") format("woff"),
-    url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
-    font-style: normal;
-    font-weight: normal;
-  }
 
   .uploadForm{
     position: relative;
