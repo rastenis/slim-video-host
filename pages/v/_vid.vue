@@ -9,13 +9,13 @@
   <div v-else>
     <h1 class="title">{{video.name}}</h1>
     <div class="sideControls" v-if="$store.state.authUser">
-      <div class="icc" id="iccTop">
+      <div class="icc" id="iccTop" @click="like()">
         <i class="fa fa-thumbs-o-up fa-inverse" aria-hidden="true"></i>
-        <p class="sidebarCount">{{video.likes}}</p>
+        <p class="sidebarCount">{{ratings.likes}}</p>
       </div>
-      <div class="icc">
+      <div class="icc" @click="dislike()">
         <i class="fa fa-thumbs-o-up fa-inverse fa-rotate-180" aria-hidden="true"></i>
-        <p class="sidebarCount">{{video.likes}}</p>
+        <p class="sidebarCount">{{ratings.dislikes}}</p>
       </div>
       <div class="icc">
         <i @click="copyLink" class="fa fa-external-link fa-inverse shareNudge" aria-hidden="true"></i>
@@ -77,6 +77,33 @@ export default {
       });
   },
   methods: {
+    action(action){
+      if(action ? userRatings.like : userRatings.disliked){ //like
+        //jau palaikinta/dislaikinta, revertinam
+        
+      }
+      axios({
+        url: 'https://cigari.ga/api/act',
+        method: 'post',
+        credentials: 'same-origin',
+        data: {
+          user: this.$store.state.authUser,
+          videoID: this.video.videoID,
+          action:action
+        }
+      })
+      .then((res) => {
+        if (res.data.error) {
+          console.log("error while performing "+(action==0 ? "dislike" : "like"));
+        } else {
+          console.log("Successfully "+(action==0 ? "disliked" : "liked")+". Updating local representation...");
+          this.ratings.likes++;
+
+        }
+      }).catch(function (e) {
+        console.log(e);
+      });
+    },
     copyLink() {
       var outt = this;
       this.$copyText(this.video.link)
