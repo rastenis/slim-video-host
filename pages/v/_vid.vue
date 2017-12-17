@@ -22,8 +22,7 @@
       </div>
     </div>
     <div class="vidDiv">
-      <video onclick="this.paused ? this.play() : this.pause();" fluid v-if="video.src!=''" id="mainPlayer" class="videoDiv" v-loading="loading"
-        controls preload="auto" autoplay >
+      <video onclick="this.paused ? this.play() : this.pause();" fluid v-if="video.src!=''" id="mainPlayer" class="videoDiv" v-loading="loading" controls preload="auto" autoplay >
         <source :src="video.src" type="video/mp4"></source>
       </video>
     </div>
@@ -40,12 +39,14 @@ export default {
     return {
       video: null,
       nonExistent: true,
-      loading: true
+      loading: true,
+      ratings:null,
+      userRatings:null
     }
   },
   asyncData(context) {
     var nonExistent = false;
-    var video;
+    var video,ratings,userRatings;
 
     return axios({
         url: `http://cigari.ga/api/cv/${context.params.vid}`,
@@ -58,13 +59,17 @@ export default {
       .then((res) => {
         if (res.data.error == 0) {
           video = res.data.video;
+          ratings = res.data.ratings;
+          userRatings=res.data.userRatings;
         } else {
           nonExistent = true;
         }
         return {
           nonExistent: nonExistent,
           video: video,
-          loading: false
+          loading: false,
+          userRatings:userRatings,
+          ratings:ratings
         };
       })
       .catch((err) => {

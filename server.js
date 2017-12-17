@@ -37,6 +37,11 @@ db.videos = new Datastore({
     autoload: true
 });
 
+db.ratings = new Datastore({
+    filename: process.env.DB_RATINGS_PATH,
+    autoload: true
+});
+
 //default optionai
 var defaultUserStatus = 0; //1 - admin
 var defaultStorageSpace = 10000; //megabaitais
@@ -103,25 +108,64 @@ app.get('/api/cv/:id', function(req, res) {
 
     console.log("FETCHING VIDEO | id: " + req.params.id);
 
+    var returner = {};
+    returner.ratings = {};
+    returner.userRatings = {};
+
     if (!req.params.id) {} else {
         var path = storagePath + req.params.id + '.mp4';
 
         //check if requested video exists
         if (fs.existsSync(path)) {
-            db.videos.update({
-                videoID: req.params.id
-            }, {
-                $inc: {
-                    views: 1
-                }
-            }, { returnUpdatedDocs: true }, function(err, numAffected, affectedDocument, upsert) {
-                console.log("added a view to video " + affectedDocument.videoID);
-                affectedDocument.src = '/videos/' + req.params.id + '.mp4';
-                res.json({
-                    error: 0,
-                    video: affectedDocument
+
+            async.waterfall([function(done) {
+                db.videos.update({
+                    videoID: req.params.id
+                }, {
+                    $inc: {
+                        views: 1
+                    }
+                }, { returnUpdatedDocs: true }, function(err, numAffected, affectedDocument, upsert) {
+                    console.log("added a view to video " + affectedDocument.videoID);
+                    affectedDocument.src = '/videos/' + req.params.id + '.mp4';
+                    returner.video = affectedDocument;
+                    returner.error = 0;
+                    done();
                 });
+            }, function(done) {
+                if (req.session.authUser) {
+                    db.ratings.find({
+                        user: req.session.authUser.username
+                    }, {}, function(err, docs) {
+                        returner.userRatings = docs;
+                        done();
+                    });
+                } else { done(); }
+            }, function(done) {
+                db.ratings.count({
+                    action: 1, //like
+                    videoID: returner.video.videoID
+                }, function(err, count) {
+                    returner.ratings.likes = count;
+                    done();
+                });
+            }, function(done) {
+                db.ratings.count({
+                    action: 0, //dislike
+                    videoID: returner.video.videoID
+                }, function(err, count) {
+                    returner.ratings.dislikes = count;
+                    done();
+                });
+            }], function(err) {
+                if (err) {
+                    console.log(err);
+                }
+
+                res.json(returner);
             });
+
+
         } else {
             res.json({
                 error: 1
