@@ -78,9 +78,24 @@ export default {
   },
   methods: {
     action(action){
-      if(action ? userRatings.like : userRatings.disliked){ //like
+      if(action ? userRatings.liked : userRatings.disliked){ //like
         //jau palaikinta/dislaikinta, revertinam
-        
+        if(action==1){
+          this.userRatings.liked=false;
+          this.ratings.likes--;
+        }else if(action==0){
+          this.userRatings.disliked=false;
+          this.ratings.dislikes--;
+        }
+      }else{
+        //normal like/dislike
+        if(action==1){
+          this.userRatings.liked=true;
+          this.ratings.likes++;
+        }else if(action==0){
+          this.userRatings.disliked=true;
+          this.ratings.dislikes++;
+        }
       }
       axios({
         url: 'https://cigari.ga/api/act',
@@ -96,9 +111,7 @@ export default {
         if (res.data.error) {
           console.log("error while performing "+(action==0 ? "dislike" : "like"));
         } else {
-          console.log("Successfully "+(action==0 ? "disliked" : "liked")+". Updating local representation...");
-          this.ratings.likes++;
-
+          console.log("Successfully performed action. Updating local representation...");
         }
       }).catch(function (e) {
         console.log(e);

@@ -137,7 +137,20 @@ app.get('/api/cv/:id', function(req, res) {
                     db.ratings.find({
                         user: req.session.authUser.username
                     }, {}, function(err, docs) {
-                        returner.userRatings = docs;
+                        if (docs.length > 2 || docs.length < 0) {
+                            console.log("RATING ERROR===========");
+                        }
+                        returner.userRatings = {};
+
+                        //assigning likes/dislikes
+                        docs.forEach(doc => {
+                            if (doc.action == 0) //disliked
+                            {
+                                returner.userRatings.disliked = true;
+                            } else if (doc.action == 1) {
+                                returner.userRatings.liked = true;
+                            }
+                        });
                         done();
                     });
                 } else { done(); }
@@ -161,18 +174,69 @@ app.get('/api/cv/:id', function(req, res) {
                 if (err) {
                     console.log(err);
                 }
-
                 res.json(returner);
             });
-
-
         } else {
             res.json({
                 error: 1
             });
         }
     }
+});
 
+app.post('/api/act', function(req, res) {
+
+    if (req.session.authUser) { //ignore unauthorized acts
+        async.waterfall([
+            function(done) {
+                db.ratings.find({
+                    user: req.session.authUser.username
+                }, {}, function(err, docs) {
+                    if (docs.length > 2 || docs.length < 0) {
+                        console.log("RATING ERROR===========");
+                    }
+                    var userRatings = {};
+
+                    //assigning likes/dislikes
+                    docs.forEach(doc => {
+                        if (doc.action == 0) //disliked
+                        {
+                            userRatings.disliked = true;
+                        } else if (doc.action == 1) {
+                            userRatings.liked = true;
+                        }
+                    });
+                    done(null, userRatings);
+                });
+            },
+            function(userRatings, done) {
+                var prep = {};
+                prep.action = req.body.action;
+                prep.revert = false;
+                if (prep.action) { //like
+                    if (userRatings.liked) { //revert
+                        prep.revert = true;
+                        prep.increment = -1;
+                    } else { //just like
+                        prep.increment = 1
+                    }
+
+                } else { //dislike
+                    if (userRatings.disliked) { //revert
+                        prep.revert = true;
+                        prep.increment = -1;
+                    } else { //just dislike
+                        prep.increment = 1;
+                    }
+                }
+            },
+            function(prep, done) {
+
+            }
+        ], function(err) {
+            if (err) { console.log(err); }
+        });
+    }
 });
 
 app.post('/api/register', function(req, res) {
