@@ -184,9 +184,11 @@ app.get('/api/cv/:id', function(req, res) {
     }
 });
 
+// route for video actions (like/dislike)
 app.post('/api/act', function(req, res) {
-
-    if (req.session.authUser) { //ignore unauthorized acts
+    //ignore unauthorized acts
+    if (req.session.authUser) {
+        console.log("ACT | requester: " + req.session.authUser.username);
         async.waterfall([
             function(done) {
                 db.ratings.find({
@@ -220,7 +222,6 @@ app.post('/api/act', function(req, res) {
                     } else { //just like
                         prep.increment = 1
                     }
-
                 } else { //dislike
                     if (userRatings.disliked) { //revert
                         prep.revert = true;
@@ -229,9 +230,22 @@ app.post('/api/act', function(req, res) {
                         prep.increment = 1;
                     }
                 }
-            },
-            function(prep, done) {
-
+                //updating rating DB
+                if (prep.revert) {
+                    db.ratings.remove({ username: req.session.authUser.username, videoID: req.body.videoID, action: prep.action }, {}, function(err) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        done();
+                    });
+                } else {
+                    db.ratings.insert({ username: req.session.authUser.username, videoID: req.body.videoID, action: prep.action }, function(err) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        done();
+                    });
+                }
             }
         ], function(err) {
             if (err) { console.log(err); }

@@ -9,11 +9,11 @@
   <div v-else>
     <h1 class="title">{{video.name}}</h1>
     <div class="sideControls" v-if="$store.state.authUser">
-      <div class="icc" id="iccTop" @click="like()">
+      <div class="icc" id="iccTop" @click="action(1)">
         <i class="fa fa-thumbs-o-up fa-inverse" aria-hidden="true"></i>
         <p class="sidebarCount">{{ratings.likes}}</p>
       </div>
-      <div class="icc" @click="dislike()">
+      <div class="icc" @click="action(0)">
         <i class="fa fa-thumbs-o-up fa-inverse fa-rotate-180" aria-hidden="true"></i>
         <p class="sidebarCount">{{ratings.dislikes}}</p>
       </div>
@@ -47,7 +47,6 @@ export default {
   asyncData(context) {
     var nonExistent = false;
     var video,ratings,userRatings;
-
     return axios({
         url: `http://cigari.ga/api/cv/${context.params.vid}`,
         method: 'GET',
@@ -78,7 +77,7 @@ export default {
   },
   methods: {
     action(action){
-      if(action ? userRatings.liked : userRatings.disliked){ //like
+      if(action ? this.userRatings.liked : this.userRatings.disliked){ //like
         //jau palaikinta/dislaikinta, revertinam
         if(action==1){
           this.userRatings.liked=false;
