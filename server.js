@@ -192,12 +192,15 @@ app.post('/api/act', function(req, res) {
         async.waterfall([
             function(done) {
                 db.ratings.find({
-                    user: req.session.authUser.username
-                }, {}, function(err, docs) {
+                    username: req.session.authUser.username,
+                    videoID: req.body.videoID
+                }, function(err, docs) {
                     if (docs.length > 2 || docs.length < 0) {
                         console.log("RATING ERROR===========");
                     }
                     var userRatings = {};
+                    userRatings.liked = false;
+                    userRatings.disliked = false;
 
                     //assigning likes/dislikes
                     docs.forEach(doc => {
@@ -212,6 +215,7 @@ app.post('/api/act', function(req, res) {
                 });
             },
             function(userRatings, done) {
+                console.log(userRatings.liked);
                 var prep = {};
                 prep.action = req.body.action;
                 prep.revert = false;
@@ -230,6 +234,7 @@ app.post('/api/act', function(req, res) {
                         prep.increment = 1;
                     }
                 }
+                console.log("revert is " + prep.revert);
                 //updating rating DB
                 if (prep.revert) {
                     db.ratings.remove({ username: req.session.authUser.username, videoID: req.body.videoID, action: prep.action }, {}, function(err) {
