@@ -133,14 +133,16 @@ app.get('/api/cv/:id', function(req, res) {
                     done();
                 });
             }, function(done) {
-                if (req.session.authUser) {
+                if (req.body.user) {
                     db.ratings.find({
-                        user: req.session.authUser.username
+                        username: req.body.user.username,
+                        videoID: req.params.id
                     }, {}, function(err, docs) {
                         if (docs.length > 2 || docs.length < 0) {
                             console.log("RATING ERROR===========");
                         }
-                        returner.userRatings = {};
+                        returner.userRatings.liked = false;
+                        returner.userRatings.disliked = false;
 
                         //assigning likes/dislikes
                         docs.forEach(doc => {
@@ -151,9 +153,13 @@ app.get('/api/cv/:id', function(req, res) {
                                 returner.userRatings.liked = true;
                             }
                         });
+
                         done();
                     });
-                } else { done(); }
+                } else {
+                    console.log("NO USER LEEEE");;
+                    done();
+                }
             }, function(done) {
                 db.ratings.count({
                     action: 1, //like

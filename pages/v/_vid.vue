@@ -48,11 +48,12 @@ export default {
     var nonExistent = false;
     var video,ratings,userRatings;
     return axios({
-        url: `http://cigari.ga/api/cv/${context.params.vid}`,
-        method: 'GET',
+        url: `https://cigari.ga/api/cv/${context.params.vid}`,
+        method: 'get',
         credentials: 'same-origin',
         data: {
-          id: context.params.vid
+          id: context.params.vid,
+          user: context.app.store.state.authUser 
         }
       })
       .then((res) => {
