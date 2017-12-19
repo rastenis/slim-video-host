@@ -10,11 +10,25 @@
     <h1 class="title">{{video.name}}</h1>
     <div class="sideControls" v-if="$store.state.authUser">
       <div class="icc" id="iccTop" @click="action(1)">
-        <i class="fa fa-thumbs-o-up fa-inverse" aria-hidden="true"></i>
+        <transition name="el-zoom-in-bottom">
+          <i v-show="userRatings.liked" class="fa fa-thumbs-up fa-inverse fa-stack-1x" aria-hidden="true"></i>      
+        </transition>
+        <transition name="el-zoom-in-top">
+          <i v-show="!userRatings.liked" class="fa fa-thumbs-o-up fa-inverse fa-stack-1x iccTopBreaker" aria-hidden="true"></i>
+        </transition>
         <p class="sidebarCount">{{ratings.likes}}</p>
       </div>
       <div class="icc" @click="action(0)">
-        <i class="fa fa-thumbs-o-up fa-inverse fa-rotate-180" aria-hidden="true"></i>
+        <transition name="el-zoom-in-bottom">
+          <div v-show="userRatings.disliked">
+            <i class="fa fa-thumbs-up fa-inverse fa-rotate-180 fa-stack-1x" aria-hidden="true"></i>      
+          </div> 
+        </transition>
+        <transition name="el-zoom-in-top">
+          <div v-show="!userRatings.disliked">
+            <i class="fa fa-thumbs-o-up fa-inverse fa-rotate-180 fa-stack-1x iccTopBreaker" aria-hidden="true"></i>            
+          </div>
+        </transition>
         <p class="sidebarCount">{{ratings.dislikes}}</p>
       </div>
       <div class="icc">
@@ -199,6 +213,11 @@ template {
   margin-top: 20vh;
 }
 
+.iccTopBreaker{
+  margin-top: 0.5vh;
+  
+}
+
 .shareNudge {
   margin-top: 4vh;
 }
@@ -222,12 +241,15 @@ i {
 }
 
 .sidebarCount {
-  font-size: 3vh;
+  font-size: 4vh;
   font-family: LatoLight;
   color: white;
   font-weight: bold;
-  position: relative;
-  margin-top: 0vh;
+  position: absolute; 
+  margin-top:3vh;
+  bottom:0;
+  left: 50%;
+  transform: translate(-50%, 70%);
 }
 
 .title {
