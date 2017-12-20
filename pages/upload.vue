@@ -142,7 +142,7 @@ export default {
               if (status == 0) {
                 this.dialog.buttonConfirm.loading = false;
                 this.dialog.buttonCancel.disabled = false;
-                this.dialog.buttonConfirm.disabled = true;
+                this.dialog.buttonConfirm.disabled = false;
               } else {
                 this.dialog.buttonCancel.loading = false;
                 this.dialog.buttonConfirm.disabled = false;
