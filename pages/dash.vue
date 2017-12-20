@@ -60,7 +60,6 @@
             </template>
           </el-table-column>
         </el-table>
-    
         </div>
     </div>
     <div v-else>
@@ -216,6 +215,8 @@ export default {
     if(!this.$store.state.authUser.status==1){
       console.log("messing w/ some stats");
       this.setUpStats();
+    }else{
+      this.setUpAdminStats();
     }
   },
   created() {
@@ -352,6 +353,12 @@ export default {
       this.stats.totalViews = totalViews;
       this.stats.totalSpace = this.$store.state.authUser.totalSpace;
       this.stats.usedSpace = (this.stats.totalSpace - this.$store.state.authUser.remainingSpace).toFixed(1);
+    },
+    setUpAdminStats() {
+      this.stats.uploadDates=[];
+      this.videos.forEach(video => {
+        this.stats.uploadDates.push(video.uploadDate);
+      });
     },
     async storageUpgradeInit() {
       this.$prompt('Please input a promotion code', 'Upgrade', {
