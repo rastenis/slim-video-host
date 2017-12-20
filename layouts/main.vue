@@ -5,6 +5,14 @@
       <el-menu-item index="2" class="pRight">Register</el-menu-item>
     </el-menu>
 
+    <el-menu v-else-if="$store.state.authUser.userStatus==1" class="nav" mode="horizontal" background-color="#545c64" text-color="#fff" active-text-color="#ffd04b" :default-active="$store.state.activeTab" @select="handleSelect">
+      <el-menu-item index="1">
+         <nuxt-link to="/" >Intro</nuxt-link>
+      </el-menu-item>
+      <el-menu-item index="2">Admin Panel</el-menu-item>
+      <el-menu-item index="4" class="pRight">Logout</el-menu-item>
+    </el-menu>
+
     <el-menu v-else class="nav" mode="horizontal" background-color="#545c64" text-color="#fff" active-text-color="#ffd04b" :default-active="$store.state.activeTab" @select="handleSelect">
       <el-menu-item index="1">
          <nuxt-link to="/" >Intro</nuxt-link>

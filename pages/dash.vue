@@ -212,7 +212,7 @@ export default {
     } catch (e) {}
   },
   mounted() {
-    if(!this.$store.state.authUser.status==1){
+    if(!this.$store.state.authUser.userStatus==1){
       console.log("messing w/ some stats");
       this.setUpStats();
     }else{
