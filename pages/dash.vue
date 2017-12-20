@@ -98,6 +98,13 @@
           </el-table-column>
           <el-table-column prop="views" label="Views">
           </el-table-column>
+          <el-table-column label="Ratings">
+            <template slot-scope="scope" class="ratingColumn">
+              <i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>      
+              {{videos[scope.$index].likes}} | {{videos[scope.$index].dislikes}}
+              <i class="fa fa-thumbs-up fa-rotate-180" style="color:red;" aria-hidden="true"></i>     
+            </template>
+          </el-table-column>
           <el-table-column label="Actions">
             <template slot-scope="scope">
               <el-button type="warning" size="small" @click.native.prevent="requestNewID(scope.$index)">New link</el-button>                            
@@ -355,6 +362,10 @@ export default {
     left: 0;
     height: 80%;
     width: 90%;
+  }
+
+  .ratingColumn{
+    display: inline-block;
   }
   
   .videoCard{

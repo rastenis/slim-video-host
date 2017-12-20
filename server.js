@@ -353,10 +353,37 @@ app.post('/api/getVideos', function(req, res) {
             console.log(chalk.bgRed.white(err));
             returner.error = 1;
         }
+        docs.forEach(function(i, index) {
 
-        returner.error = 0;
-        returner.videos = docs;
-        return res.json(returner);
+            async.waterfall([
+                function(done) {
+                    db.ratings.count({ videoID: docs[index].videoID, action: 1 }, function(err, count) {
+                        docs[index].likes = count;
+                        done();
+                    });
+                },
+                function(done) {
+                    db.ratings.count({ videoID: docs[index].videoID, action: 0 }, function(err, count) {
+                        docs[index].dislikes = count;
+                        done();
+                    });
+                }
+            ], function(err) {
+                if (err) {
+                    console.log(err);
+                }
+                if (index == (docs.length - 1)) {
+                    returner.error = 0;
+                    returner.videos = docs;
+                    console.log("RETURNINGGG at index " + index);
+                    return res.json(returner);
+                }
+            });
+
+
+        });
+
+
     });
 });
 
