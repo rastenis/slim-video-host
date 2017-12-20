@@ -565,21 +565,30 @@ app.post('/api/getAdminStats', function(req, res) {
     returner.stats = {};
 
     if (req.body.user.userStatus == 1) {
-        db.users.count({}, function(err, count) {
-            if (err) {
-                console.log(chalk.bgRed.white(err));
-                returner.error = 1;
-            }
-            returner.stats.userCount = count;
 
-            db.videos.count({}, function(err, count) {
-                if (err) {
-                    console.log(chalk.bgRed.white(err));
-                    returner.error = 1;
-                }
+        async.waterfall([
+            function(done) {
+                db.users.count({}, function(err, count) {
+                    if (err) {
+                        console.log(chalk.bgRed.white(err));
+                        returner.error = 1;
+                    }
+                    returner.stats.userCount = count;
+                    done();
+                });
+            },
+            function(params) {
+                db.videos.count({}, function(err, count) {
+                    if (err) {
+                        console.log(chalk.bgRed.white(err));
+                        returner.error = 1;
+                    }
 
-                returner.stats.videoCount = count;
-
+                    returner.stats.videoCount = count;
+                    done();
+                });
+            },
+            function(done) {
                 db.videos.find({}, function(err, docs) {
                     if (err) {
                         console.log(chalk.bgRed.white(err));
@@ -588,10 +597,17 @@ app.post('/api/getAdminStats', function(req, res) {
 
                     returner.error = 0;
                     returner.videos = docs;
-                    return res.json(returner);
+                    done();
                 });
-            });
+            }
+        ], function(err) {
+            if (err) {
+                console.log(chalk.bgRed.white(err));
+                returner.error = 1;
+            }
+            return res.json(returner);
         });
+
     }
 });
 
