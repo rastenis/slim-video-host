@@ -37,6 +37,11 @@ db.videos = new Datastore({
     autoload: true
 });
 
+db.ratings = new Datastore({
+    filename: process.env.DB_RATINGS_PATH,
+    autoload: true
+});
+
 //default optionai
 var defaultUserStatus = 0; //1 - admin
 var defaultStorageSpace = 10000; //megabaitais
@@ -103,24 +108,79 @@ app.get('/api/cv/:id', function(req, res) {
 
     console.log("FETCHING VIDEO | id: " + req.params.id);
 
+    var returner = {};
+    returner.ratings = {};
+    returner.userRatings = {};
+
     if (!req.params.id) {} else {
         var path = storagePath + req.params.id + '.mp4';
 
         //check if requested video exists
         if (fs.existsSync(path)) {
-            db.videos.update({
-                videoID: req.params.id
-            }, {
-                $inc: {
-                    views: 1
-                }
-            }, { returnUpdatedDocs: true }, function(err, numAffected, affectedDocument, upsert) {
-                console.log("added a view to video " + affectedDocument.videoID);
-                affectedDocument.src = '/videos/' + req.params.id + '.mp4';
-                res.json({
-                    error: 0,
-                    video: affectedDocument
+
+            async.waterfall([function(done) {
+                db.videos.update({
+                    videoID: req.params.id
+                }, {
+                    $inc: {
+                        views: 1
+                    }
+                }, { returnUpdatedDocs: true }, function(err, numAffected, affectedDocument, upsert) {
+                    console.log("added a view to video " + affectedDocument.videoID);
+                    affectedDocument.src = '/videos/' + req.params.id + '.mp4';
+                    returner.video = affectedDocument;
+                    returner.error = 0;
+                    done();
                 });
+            }, function(done) {
+                if (req.body.user) {
+                    db.ratings.find({
+                        username: req.body.user.username,
+                        videoID: req.params.id
+                    }, {}, function(err, docs) {
+                        if (docs.length > 2 || docs.length < 0) {
+                            console.log("RATING ERROR===========");
+                        }
+                        returner.userRatings.liked = false;
+                        returner.userRatings.disliked = false;
+
+                        //assigning likes/dislikes
+                        docs.forEach(doc => {
+                            if (doc.action == 0) //disliked
+                            {
+                                returner.userRatings.disliked = true;
+                            } else if (doc.action == 1) {
+                                returner.userRatings.liked = true;
+                            }
+                        });
+
+                        done();
+                    });
+                } else {
+                    console.log("NO USER LEEEE");;
+                    done();
+                }
+            }, function(done) {
+                db.ratings.count({
+                    action: 1, //like
+                    videoID: returner.video.videoID
+                }, function(err, count) {
+                    returner.ratings.likes = count;
+                    done();
+                });
+            }, function(done) {
+                db.ratings.count({
+                    action: 0, //dislike
+                    videoID: returner.video.videoID
+                }, function(err, count) {
+                    returner.ratings.dislikes = count;
+                    done();
+                });
+            }], function(err) {
+                if (err) {
+                    console.log(err);
+                }
+                res.json(returner);
             });
         } else {
             res.json({
@@ -128,7 +188,80 @@ app.get('/api/cv/:id', function(req, res) {
             });
         }
     }
+});
 
+// route for video actions (like/dislike)
+app.post('/api/act', function(req, res) {
+    //ignore unauthorized acts
+    if (req.session.authUser) {
+        console.log("ACT | requester: " + req.session.authUser.username);
+        async.waterfall([
+            function(done) {
+                db.ratings.find({
+                    username: req.session.authUser.username,
+                    videoID: req.body.videoID
+                }, function(err, docs) {
+                    if (docs.length > 2 || docs.length < 0) {
+                        console.log("RATING ERROR===========");
+                    }
+                    var userRatings = {};
+                    userRatings.liked = false;
+                    userRatings.disliked = false;
+
+                    //assigning likes/dislikes
+                    docs.forEach(doc => {
+                        if (doc.action == 0) //disliked
+                        {
+                            userRatings.disliked = true;
+                        } else if (doc.action == 1) {
+                            userRatings.liked = true;
+                        }
+                    });
+                    done(null, userRatings);
+                });
+            },
+            function(userRatings, done) {
+                console.log(userRatings.liked);
+                var prep = {};
+                prep.action = req.body.action;
+                prep.revert = false;
+                if (prep.action) { //like
+                    if (userRatings.liked) { //revert
+                        prep.revert = true;
+                        prep.increment = -1;
+                    } else { //just like
+                        prep.increment = 1
+                    }
+                } else { //dislike
+                    if (userRatings.disliked) { //revert
+                        prep.revert = true;
+                        prep.increment = -1;
+                    } else { //just dislike
+                        prep.increment = 1;
+                    }
+                }
+                console.log("revert is " + prep.revert);
+                //updating rating DB
+                if (prep.revert) {
+                    db.ratings.remove({ username: req.session.authUser.username, videoID: req.body.videoID, action: prep.action }, {}, function(err) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        done();
+                    });
+                } else {
+                    db.ratings.insert({ username: req.session.authUser.username, videoID: req.body.videoID, action: prep.action }, function(err) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        done();
+                    });
+                }
+            }
+        ], function(err) {
+            if (err) { console.log(err); }
+        });
+    }
 });
 
 app.post('/api/register', function(req, res) {
@@ -220,10 +353,37 @@ app.post('/api/getVideos', function(req, res) {
             console.log(chalk.bgRed.white(err));
             returner.error = 1;
         }
+        docs.forEach(function(i, index) {
 
-        returner.error = 0;
-        returner.videos = docs;
-        return res.json(returner);
+            async.waterfall([
+                function(done) {
+                    db.ratings.count({ videoID: docs[index].videoID, action: 1 }, function(err, count) {
+                        docs[index].likes = count;
+                        done();
+                    });
+                },
+                function(done) {
+                    db.ratings.count({ videoID: docs[index].videoID, action: 0 }, function(err, count) {
+                        docs[index].dislikes = count;
+                        done();
+                    });
+                }
+            ], function(err) {
+                if (err) {
+                    console.log(err);
+                }
+                if (index == (docs.length - 1)) {
+                    returner.error = 0;
+                    returner.videos = docs;
+                    console.log("RETURNINGGG at index " + index);
+                    return res.json(returner);
+                }
+            });
+
+
+        });
+
+
     });
 });
 

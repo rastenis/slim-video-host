@@ -9,21 +9,34 @@
   <div v-else>
     <h1 class="title">{{video.name}}</h1>
     <div class="sideControls" v-if="$store.state.authUser">
-      <div class="icc" id="iccTop">
-        <i class="fa fa-thumbs-o-up fa-inverse" aria-hidden="true"></i>
-        <p class="sidebarCount">{{video.likes}}</p>
+      <div class="icc" id="iccTop" @click="action(1)">
+        <transition name="el-zoom-in-bottom">
+          <i v-show="userRatings.liked" class="fa fa-thumbs-up fa-inverse fa-stack-1x" aria-hidden="true"></i>      
+        </transition>
+        <transition name="el-zoom-in-top">
+          <i v-show="!userRatings.liked" class="fa fa-thumbs-o-up fa-inverse fa-stack-1x iccTopBreaker" aria-hidden="true"></i>
+        </transition>
+        <p class="sidebarCount">{{ratings.likes}}</p>
       </div>
-      <div class="icc">
-        <i class="fa fa-thumbs-o-up fa-inverse fa-rotate-180" aria-hidden="true"></i>
-        <p class="sidebarCount">{{video.likes}}</p>
+      <div class="icc" @click="action(0)">
+        <transition name="el-zoom-in-bottom">
+          <div v-show="userRatings.disliked">
+            <i class="fa fa-thumbs-up fa-inverse fa-rotate-180 fa-stack-1x" aria-hidden="true"></i>      
+          </div> 
+        </transition>
+        <transition name="el-zoom-in-top">
+          <div v-show="!userRatings.disliked">
+            <i class="fa fa-thumbs-o-up fa-inverse fa-rotate-180 fa-stack-1x iccTopBreaker" aria-hidden="true"></i>            
+          </div>
+        </transition>
+        <p class="sidebarCount">{{ratings.dislikes}}</p>
       </div>
       <div class="icc">
         <i @click="copyLink" class="fa fa-external-link fa-inverse shareNudge" aria-hidden="true"></i>
       </div>
     </div>
     <div class="vidDiv">
-      <video onclick="this.paused ? this.play() : this.pause();" fluid v-if="video.src!=''" id="mainPlayer" class="videoDiv" v-loading="loading"
-        controls preload="auto" autoplay >
+      <video onclick="this.paused ? this.play() : this.pause();" fluid v-if="video.src!=''" id="mainPlayer" class="videoDiv" v-loading="loading" controls preload="auto" autoplay >
         <source :src="video.src" type="video/mp4"></source>
       </video>
     </div>
@@ -40,31 +53,37 @@ export default {
     return {
       video: null,
       nonExistent: true,
-      loading: true
+      loading: true,
+      ratings:null,
+      userRatings:null
     }
   },
   asyncData(context) {
     var nonExistent = false;
-    var video;
-
+    var video,ratings,userRatings;
     return axios({
-        url: `http://cigari.ga/api/cv/${context.params.vid}`,
-        method: 'GET',
+        url: `https://cigari.ga/api/cv/${context.params.vid}`,
+        method: 'get',
         credentials: 'same-origin',
         data: {
-          id: context.params.vid
+          id: context.params.vid,
+          user: context.app.store.state.authUser 
         }
       })
       .then((res) => {
         if (res.data.error == 0) {
           video = res.data.video;
+          ratings = res.data.ratings;
+          userRatings=res.data.userRatings;
         } else {
           nonExistent = true;
         }
         return {
           nonExistent: nonExistent,
           video: video,
-          loading: false
+          loading: false,
+          userRatings:userRatings,
+          ratings:ratings
         };
       })
       .catch((err) => {
@@ -72,6 +91,46 @@ export default {
       });
   },
   methods: {
+    action(action){
+      if(action ? this.userRatings.liked : this.userRatings.disliked){ //like
+        //jau palaikinta/dislaikinta, revertinam
+        if(action==1){
+          this.userRatings.liked=false;
+          this.ratings.likes--;
+        }else if(action==0){
+          this.userRatings.disliked=false;
+          this.ratings.dislikes--;
+        }
+      }else{
+        //normal like/dislike
+        if(action==1){
+          this.userRatings.liked=true;
+          this.ratings.likes++;
+        }else if(action==0){
+          this.userRatings.disliked=true;
+          this.ratings.dislikes++;
+        }
+      }
+      axios({
+        url: 'https://cigari.ga/api/act',
+        method: 'post',
+        credentials: 'same-origin',
+        data: {
+          user: this.$store.state.authUser,
+          videoID: this.video.videoID,
+          action:action
+        }
+      })
+      .then((res) => {
+        if (res.data.error) {
+          console.log("error while performing "+(action==0 ? "dislike" : "like"));
+        } else {
+          console.log("Successfully performed action. Updating local representation...");
+        }
+      }).catch(function (e) {
+        console.log(e);
+      });
+    },
     copyLink() {
       var outt = this;
       this.$copyText(this.video.link)
@@ -154,6 +213,11 @@ template {
   margin-top: 20vh;
 }
 
+.iccTopBreaker{
+  margin-top: 0.5vh;
+  
+}
+
 .shareNudge {
   margin-top: 4vh;
 }
@@ -177,12 +241,15 @@ i {
 }
 
 .sidebarCount {
-  font-size: 3vh;
+  font-size: 4vh;
   font-family: LatoLight;
   color: white;
   font-weight: bold;
-  position: relative;
-  margin-top: 0vh;
+  position: absolute; 
+  margin-top:3vh;
+  bottom:0;
+  left: 50%;
+  transform: translate(-50%, 70%);
 }
 
 .title {
