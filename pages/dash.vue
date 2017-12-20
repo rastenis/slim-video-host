@@ -1,33 +1,66 @@
 <template>
   <div v-if="$store.state.authUser">
-    <h1 class="title">Dashboard</h1>
+    <h1 class="title">{{($store.state.authUser.userStatus==1 ? "Admin panel" : "Dashboard")}}</h1>
     <div v-if="$store.state.authUser.userStatus==1" class="pads">
-      <el-row :gutter="20">
-        <el-col class="adminVideoPanel panel" :span="12">
-          <p class="adminPanelText">All Videos</p>
-          <el-collapse>
-            <el-collapse-item title="Expand videos" name="1">
-              <el-table :data="videos" style="width: 100%">
-                <el-table-column prop="name" label="Video">
-                </el-table-column>
-                <el-table-column prop="link" label="Link" @click.native="$event.target.select()">
-                </el-table-column>
-                <el-table-column prop="views" label="Views">
-                </el-table-column>
-                <el-table-column label="Actions">
-                </el-table-column>
-              </el-table>
-            </el-collapse-item>
-          </el-collapse>
-        </el-col>
-        <el-col class="adminStatsPanel panel" :span="12">
-          <p class="adminPanelText">Stats</p>
-          <div class="stats">
-            <p>Total users registered: {{stats.userCount}}</p>
-            <p>Total videos uploaded: {{stats.videoCount}}</p>
-          </div>
-        </el-col>
-      </el-row>
+      <div>
+        <el-row :gutter="20">
+          <el-col class="" :span="12">
+            <el-card class="box-card ">
+              <div slot="header" class="clearfix">
+                <span class="headerOfStatCard">Uploaded videos</span>
+              </div>
+              <div class="text item">
+                Total views: {{stats.totalViews}}
+              </div>
+              <div class="text item">
+                Active videos: {{videos.length}}
+              </div>
+            </el-card>
+          </el-col>
+          <el-col class="" :span="12">
+            <el-card class="box-card">
+              <div slot="header" class="clearfix">
+                <span class="headerOfStatCard">Statistics</span>
+              </div>
+              <div class="text item">
+                Total users registered: {{stats.userCount}}
+              </div>
+              <div class="text item">
+                Total videos uploaded: {{stats.videoCount}}
+              </div>
+              <div class="text item">
+                Max storage space: {{stats.totalSpaceA*0.000001}} MB
+              </div>
+              <div class="text item">
+                Space used: {{stats.usedSpaceA.toFixed(1)}} / {{stats.totalSpaceA*0.000001}} MB
+              </div>
+            </el-card>
+          </el-col>
+        </el-row>
+        <el-table :data="videos" style="width: 100%; margin-top:4vh;">
+          <el-table-column prop="name" label="Video">
+            <template slot-scope="scope">
+              <div class="nameColumn">
+                {{videos[scope.$index].name}}
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="Link">
+            <template slot-scope="scope">
+              <div class="linkColumn">
+                <a :href="videos[scope.$index].link">{{videos[scope.$index].link}}</a>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="views" label="Views">
+          </el-table-column>
+          <el-table-column label="Actions">
+            <template slot-scope="scope">
+              <el-button disabled type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        </div>
     </div>
     <div v-else>
       <div v-if="videos.length==0" class="centeredUploadVideoSuggestion">
@@ -38,43 +71,42 @@
       </div>
       <div class="videoList" v-else>
         <div class="cards">
-        <el-card class="box-card" id="statCard">
-          <div slot="header" class="clearfix">
-            <span class="headerOfStatCard">Video stats</span>
-          </div>
-          <div class="text item">
-            Total views: {{stats.totalViews}}
-          </div>
-          <div class="text item">
-            Active videos: {{videos.length}}
-          </div>
-        </el-card>
-        <el-card class="box-card" id="statCard">
-          <div slot="header" class="clearfix">
-            <span class="headerOfStatCard">Storage</span>
-          </div>
-          <div class="text item">
-            Total storage space: {{stats.totalSpace}} MB
-          </div>
-          <div class="text item">
-            Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
-          </div>
-          <div class="text item">
-            <el-button type="text" @click="storageUpgradeInit">Apply for an upgrade</el-button>
-          </div>
-        </el-card>
-                
-          <el-card class="box-card" id="statCard">
-          <div slot="header" class="clearfix">
-            <span class="headerOfStatCard">Your stats</span>
-          </div>
-          <div class="text item">
-            Total views: {{stats.totalViews}}
-          </div>
-          <div class="text item">
-            Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
-          </div>
-        </el-card>
+          <el-card class="box-card statCard" >
+            <div slot="header" class="clearfix">
+              <span class="headerOfStatCard">Video stats</span>
+            </div>
+            <div class="text item">
+              Total views: {{stats.totalViews}}
+            </div>
+            <div class="text item">
+              Active videos: {{videos.length}}
+            </div>
+          </el-card>
+          <el-card class="box-card statCard">
+            <div slot="header" class="clearfix">
+              <span class="headerOfStatCard">Storage</span>
+            </div>
+            <div class="text item">
+              Total storage space: {{stats.totalSpace}} MB
+            </div>
+            <div class="text item">
+              Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
+            </div>
+            <div class="text item">
+              <el-button type="text" @click="storageUpgradeInit">Apply for an upgrade</el-button>
+            </div>
+          </el-card>
+          <el-card class="box-card statCard" >
+            <div slot="header" class="clearfix">
+              <span class="headerOfStatCard">Your stats</span>
+            </div>
+            <div class="text item">
+              Total views: {{stats.totalViews}}
+            </div>
+            <div class="text item">
+              Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
+            </div>
+          </el-card>
         </div>
         <h2 class="subtitle1">Your videos:</h2>
         <el-table :data="videos" style="width: 100%">
@@ -180,7 +212,12 @@ export default {
     } catch (e) {}
   },
   mounted() {
-    this.setUpStats();
+    if(!this.$store.state.authUser.userStatus==1){
+      console.log("messing w/ some stats");
+      this.setUpStats();
+    }else{
+      this.setUpAdminStats();
+    }
   },
   created() {
     if (!this.$store.state.authUser) {
@@ -317,6 +354,12 @@ export default {
       this.stats.totalSpace = this.$store.state.authUser.totalSpace;
       this.stats.usedSpace = (this.stats.totalSpace - this.$store.state.authUser.remainingSpace).toFixed(1);
     },
+    setUpAdminStats() {
+      this.stats.uploadDates=[];
+      this.videos.forEach(video => {
+        this.stats.uploadDates.push(video.uploadDate);
+      });
+    },
     async storageUpgradeInit() {
       this.$prompt('Please input a promotion code', 'Upgrade', {
         confirmButtonText: 'Apply',
@@ -379,10 +422,16 @@ export default {
     font-size:3vh;
   }
 
-  #statCard{
+  .statCard{
     width:19vw;
     margin-right:3vw;
   }
+
+  .adminStatCard{
+    width:35vw;
+    margin-right:3vw;
+  }
+
 
   .cards{
     display: flex;

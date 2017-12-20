@@ -353,35 +353,39 @@ app.post('/api/getVideos', function(req, res) {
             console.log(chalk.bgRed.white(err));
             returner.error = 1;
         }
-        docs.forEach(function(i, index) {
+        if (docs.length > 0) {
+            docs.forEach(function(i, index) {
+                async.waterfall([
+                    function(done) {
+                        db.ratings.count({ videoID: docs[index].videoID, action: 1 }, function(err, count) {
+                            docs[index].likes = count;
+                            done();
+                        });
+                    },
+                    function(done) {
+                        db.ratings.count({ videoID: docs[index].videoID, action: 0 }, function(err, count) {
+                            docs[index].dislikes = count;
+                            done();
+                        });
+                    }
+                ], function(err) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    if (index == (docs.length - 1)) {
+                        returner.error = 0;
+                        returner.videos = docs;
+                        console.log("RETURNINGGG at index " + index);
+                        return res.json(returner);
+                    }
+                });
 
-            async.waterfall([
-                function(done) {
-                    db.ratings.count({ videoID: docs[index].videoID, action: 1 }, function(err, count) {
-                        docs[index].likes = count;
-                        done();
-                    });
-                },
-                function(done) {
-                    db.ratings.count({ videoID: docs[index].videoID, action: 0 }, function(err, count) {
-                        docs[index].dislikes = count;
-                        done();
-                    });
-                }
-            ], function(err) {
-                if (err) {
-                    console.log(err);
-                }
-                if (index == (docs.length - 1)) {
-                    returner.error = 0;
-                    returner.videos = docs;
-                    console.log("RETURNINGGG at index " + index);
-                    return res.json(returner);
-                }
+
             });
+        } else {
+            return res.json(null);
+        }
 
-
-        });
 
 
     });
@@ -511,7 +515,8 @@ app.post('/api/finalizeUpload', function(req, res) {
             }, {
                 $set: {
                     name: req.body.video.name,
-                    confirmed: true
+                    confirmed: true,
+                    uploadDate: new Date()
                 }
             }, {}, function(err) {
                 if (err) {
@@ -565,33 +570,59 @@ app.post('/api/getAdminStats', function(req, res) {
     returner.stats = {};
 
     if (req.body.user.userStatus == 1) {
-        db.users.count({}, function(err, count) {
-            if (err) {
-                console.log(chalk.bgRed.white(err));
-                returner.error = 1;
-            }
-            returner.stats.userCount = count;
 
-            db.videos.count({}, function(err, count) {
-                if (err) {
-                    console.log(chalk.bgRed.white(err));
-                    returner.error = 1;
-                }
+        async.waterfall([
+            function(done) {
+                db.users.count({}, function(err, count) {
+                    if (err) {
+                        console.log(chalk.bgRed.white(err));
+                        returner.error = 1;
+                    }
+                    returner.stats.userCount = count;
+                    done();
+                });
+            },
+            function(done) {
+                db.videos.count({}, function(err, count) {
+                    if (err) {
+                        console.log(chalk.bgRed.white(err));
+                        returner.error = 1;
+                    }
 
-                returner.stats.videoCount = count;
-
+                    returner.stats.videoCount = count;
+                    done();
+                });
+            },
+            function(done) {
                 db.videos.find({}, function(err, docs) {
                     if (err) {
                         console.log(chalk.bgRed.white(err));
                         returner.error = 1;
                     }
 
+                    var totalViews = 0,
+                        usedSpace = 0;
+                    docs.forEach(video => {
+                        totalViews += video.views;
+                        usedSpace += Math.abs(video.size);
+                    });
+
                     returner.error = 0;
+                    returner.stats.totalViews = totalViews;
+                    returner.stats.totalSpaceA = process.env.TOTAL_SPACE;
+                    returner.stats.usedSpaceA = usedSpace;
                     returner.videos = docs;
-                    return res.json(returner);
+                    done();
                 });
-            });
+            }
+        ], function(err) {
+            if (err) {
+                console.log(chalk.bgRed.white(err));
+                returner.error = 1;
+            }
+            return res.json(returner);
         });
+
     }
 });
 
