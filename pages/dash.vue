@@ -1,11 +1,11 @@
 <template>
   <div v-if="$store.state.authUser">
-    <h1 class="title">Dashboard</h1>
+    <h1 class="title">{{($store.state.authUser.userStatus==1 ? "Admin panel" : "Dashboard")}}</h1>
     <div v-if="$store.state.authUser.userStatus==1" class="pads">
       <div>
         <el-row :gutter="20">
-          <el-col class="panel" :span="12">
-            <el-card class="box-card adminStatCard">
+          <el-col class="" :span="12">
+            <el-card class="box-card ">
               <div slot="header" class="clearfix">
                 <span class="headerOfStatCard">Uploaded videos</span>
               </div>
@@ -17,8 +17,8 @@
               </div>
             </el-card>
           </el-col>
-          <el-col class="panel" :span="12">
-            <el-card class="box-card adminStatCard">
+          <el-col class="" :span="12">
+            <el-card class="box-card">
               <div slot="header" class="clearfix">
                 <span class="headerOfStatCard">Statistics</span>
               </div>
@@ -29,17 +29,37 @@
                 Total videos uploaded: {{stats.videoCount}}
               </div>
               <div class="text item">
-                Total allowed storage space: {{stats.totalSpace}} MB
+                Max storage space: {{stats.totalSpaceA*0.000001}} MB
               </div>
               <div class="text item">
-                Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
-              </div>
-              <div class="text item">
-                <el-button type="text" @click="storageUpgradeInit">Apply for an upgrade</el-button>
+                Space used: {{stats.usedSpaceA.toFixed(1)}} / {{stats.totalSpaceA*0.000001}} MB
               </div>
             </el-card>
           </el-col>
         </el-row>
+        <el-table :data="videos" style="width: 100%; margin-top:4vh;">
+          <el-table-column prop="name" label="Video">
+            <template slot-scope="scope">
+              <div class="nameColumn">
+                {{videos[scope.$index].name}}
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="Link">
+            <template slot-scope="scope">
+              <div class="linkColumn">
+                <a :href="videos[scope.$index].link">{{videos[scope.$index].link}}</a>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="views" label="Views">
+          </el-table-column>
+          <el-table-column label="Actions">
+            <template slot-scope="scope">
+              <el-button disabled type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
     
         </div>
     </div>
@@ -193,7 +213,10 @@ export default {
     } catch (e) {}
   },
   mounted() {
-    this.setUpStats();
+    if(!this.$store.state.authUser.status==1){
+      console.log("messing w/ some stats");
+      this.setUpStats();
+    }
   },
   created() {
     if (!this.$store.state.authUser) {

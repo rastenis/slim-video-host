@@ -577,7 +577,7 @@ app.post('/api/getAdminStats', function(req, res) {
                     done();
                 });
             },
-            function(params) {
+            function(done) {
                 db.videos.count({}, function(err, count) {
                     if (err) {
                         console.log(chalk.bgRed.white(err));
@@ -595,7 +595,17 @@ app.post('/api/getAdminStats', function(req, res) {
                         returner.error = 1;
                     }
 
+                    var totalViews = 0,
+                        usedSpace = 0;
+                    docs.forEach(video => {
+                        totalViews += video.views;
+                        usedSpace += Math.abs(video.size);
+                    });
+
                     returner.error = 0;
+                    returner.stats.totalViews = totalViews;
+                    returner.stats.totalSpaceA = process.env.TOTAL_SPACE;
+                    returner.stats.usedSpaceA = usedSpace;
                     returner.videos = docs;
                     done();
                 });
