@@ -17,6 +17,7 @@ const fileUpload = require('express-fileupload');
 const fs = require("fs");
 const util = require('util');
 const helmet = require('helmet');
+const du = require('du');
 
 //isemu - ir _ is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
@@ -266,9 +267,20 @@ app.post('/api/act', function(req, res) {
 
 app.post('/api/register', function(req, res) {
 
-    db.users.find({
-        username: req.body.username.toLowerCase()
-    }, function(err, docs) {
+    async.waterfall([function(done) {
+        var enoughSpace = true;
+        db.users.find({
+            username: req.body.username.toLowerCase()
+        }, function(err, docs) {
+            du('static/videos', function(err, size) {
+                console.log('The size of the video folder is:', size, 'bytes')
+                if (size >= process.env.TOTAL_SPACE) {
+                    enoughSpace = false;
+                }
+                done(null, docs, enoughSpace);
+            })
+        });
+    }, function(docs, enoughSpace, done) {
 
         //checkai del duplicate usernames
         if (docs.length != 0) { //rado useri su tokiu paciu username
@@ -277,31 +289,35 @@ app.post('/api/register', function(req, res) {
                 error: 'An account with that username already exists.'
             });
             //TODO: add handle for this in vuex
+        } else if (!enoughSpace) {
+            console.log(chalk.bgRed("Failed account creation (TOTAL_SPACE exceeded)"));
+            res.status(401).json({
+                error: 'The server cannot accept new registratios at this moment.'
+            });
         } else { //ok, dedam i DB ir prikabinam prie session kad nereiktu loginintis
             var storageSpace = defaultStorageSpace;
             var userStatus = defaultUserStatus;
-            console.log(chalk.bgRed(chalk.bgCyanBright("no duplicate account!")));
+            console.log(chalk.bgRed(chalk.bgCyanBright.black("no duplicate account! proceeding with the creation of the account.")));
 
             async.waterfall([
-                function(callback) { //tikrinimas ar yra atitinkanciu privelegiju kodu
+                function(done) { //tikrinimas ar yra atitinkanciu privelegiju kodu
                     db.codes.find({
                         code: req.body.code
                     }, function(err, docs) {
                         if (docs.length == 0) { //rado useri su tokiu paciu username
                             //no matching code, go on
-                            callback(null, null);
+                            done(null, null);
                         } else {
                             //got a matching code!
                             //TODO?: remove code from DB after activation maybe or maybe not
-                            callback(null, docs[0]);
+                            done(null, docs[0]);
                         }
                     });
                 },
-                function(code, callback) {
+                function(code, done) {
                     if (code !== null) { //got code
                         //TODO: code logic, padidint duomenu kieki OR statusa pakeist
                     }
-
                     db.users.find({}, function(err, docs) {
                         var userCount = 0;
                         docs.forEach(function(doc) {
@@ -329,13 +345,16 @@ app.post('/api/register', function(req, res) {
                             return res.json(doc);
                         });
                     });
-
                 }
             ], function(err, res) {
                 if (err) { //catchas jei pareitu koks unexpected error
                     console.log(chalk.bgRed.white(err));
                 }
             });
+        }
+    }], function(err) {
+        if (err) {
+            console.log(err);
         }
     });
 });
