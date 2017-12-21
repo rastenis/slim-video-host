@@ -1,10 +1,10 @@
-var Datastore = require('nedb');
-var chalk = require('chalk');
-var prompt = require('prompt-sync')();
+const Datastore = require('nedb');
+const chalk = require('chalk');
+const prompt = require('prompt-sync')();
 
 db = {};
 db.codes = new Datastore({
-    filename: 'db/codes',
+    filename: __dirname + '/../db/codes',
     autoload: true
 });
 

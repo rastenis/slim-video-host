@@ -54,7 +54,7 @@ const storagePath = process.env.FILE_PATH;
 app.use(helmet());
 app.use(fileUpload({
     limits: {
-        fileSize: 10 * 1000 * 1000 * 1000 //10 GB
+        fileSize: 100 * 1000 * 1000 * 1000 //100 GB
     },
     safeFileNames: true
 }));
@@ -761,7 +761,7 @@ app.post('/api/upload', function(req, res) {
         var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
         console.log("size is " + fileSizeInMegabytes + "mb");
 
-        if (fileSizeInMegabytes > 10000) { //hard limitas kad neikeltu didesniu uz 10gb failu
+        if (fileSizeInMegabytes > 100000) { //hard limitas kad neikeltu didesniu uz 100gb failu
             res.status(557).json({
                 error: 'File too big.'
             });
