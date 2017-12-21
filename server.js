@@ -126,7 +126,9 @@ app.get('/api/cv/:id', function(req, res) {
                     $inc: {
                         views: 1
                     }
-                }, { returnUpdatedDocs: true }, function(err, numAffected, affectedDocument, upsert) {
+                }, {
+                    returnUpdatedDocs: true
+                }, function(err, numAffected, affectedDocument, upsert) {
                     console.log("added a view to video " + affectedDocument.videoID);
                     affectedDocument.src = '/videos/' + req.params.id + '.mp4';
                     returner.video = affectedDocument;
@@ -244,14 +246,22 @@ app.post('/api/act', function(req, res) {
                 console.log("revert is " + prep.revert);
                 //updating rating DB
                 if (prep.revert) {
-                    db.ratings.remove({ username: req.session.authUser.username, videoID: req.body.videoID, action: prep.action }, {}, function(err) {
+                    db.ratings.remove({
+                        username: req.session.authUser.username,
+                        videoID: req.body.videoID,
+                        action: prep.action
+                    }, {}, function(err) {
                         if (err) {
                             console.log(err);
                         }
                         done();
                     });
                 } else {
-                    db.ratings.insert({ username: req.session.authUser.username, videoID: req.body.videoID, action: prep.action }, function(err) {
+                    db.ratings.insert({
+                        username: req.session.authUser.username,
+                        videoID: req.body.videoID,
+                        action: prep.action
+                    }, function(err) {
                         if (err) {
                             console.log(err);
                         }
@@ -260,7 +270,9 @@ app.post('/api/act', function(req, res) {
                 }
             }
         ], function(err) {
-            if (err) { console.log(err); }
+            if (err) {
+                console.log(err);
+            }
         });
     }
 });
@@ -376,13 +388,19 @@ app.post('/api/getVideos', function(req, res) {
             docs.forEach(function(i, index) {
                 async.waterfall([
                     function(done) {
-                        db.ratings.count({ videoID: docs[index].videoID, action: 1 }, function(err, count) {
+                        db.ratings.count({
+                            videoID: docs[index].videoID,
+                            action: 1
+                        }, function(err, count) {
                             docs[index].likes = count;
                             done();
                         });
                     },
                     function(done) {
-                        db.ratings.count({ videoID: docs[index].videoID, action: 0 }, function(err, count) {
+                        db.ratings.count({
+                            videoID: docs[index].videoID,
+                            action: 0
+                        }, function(err, count) {
                             docs[index].dislikes = count;
                             done();
                         });
@@ -398,15 +416,10 @@ app.post('/api/getVideos', function(req, res) {
                         return res.json(returner);
                     }
                 });
-
-
             });
         } else {
             return res.json(null);
         }
-
-
-
     });
 });
 
@@ -433,8 +446,20 @@ app.post('/api/upgradeStorage', function(req, res) {
             returner.msgType = "error";
             console.log("unsuccessfull no code upgrade");
         } else {
-            db.users.update({ username: req.body.user.username.toLowerCase() }, { $inc: { totalSpace: docs[0].space } }, {}, function(err, doc) {});
-            db.codes.update({ code: req.body.code }, { $set: { active: false } }, {}, function(err, doc) {});
+            db.users.update({
+                username: req.body.user.username.toLowerCase()
+            }, {
+                $inc: {
+                    totalSpace: docs[0].space
+                }
+            }, {}, function(err, doc) {});
+            db.codes.update({
+                code: req.body.code
+            }, {
+                $set: {
+                    active: false
+                }
+            }, {}, function(err, doc) {});
 
             console.log("successful upgrade");
             returner.error = 0;
@@ -462,7 +487,17 @@ app.post('/api/newLink', function(req, res) {
         var newVideoID = shortid.generate();
         var newVidLink = process.env.VIDEO_LINK_PRE + newVideoID;
 
-        db.videos.update({ username: req.session.authUser.username, videoID: req.body.videoID }, { $set: { videoID: newVideoID, link: newVidLink } }, { upsert: false }, function(err, numAffected, affectedDocs) {
+        db.videos.update({
+            username: req.session.authUser.username,
+            videoID: req.body.videoID
+        }, {
+            $set: {
+                videoID: newVideoID,
+                link: newVidLink
+            }
+        }, {
+            upsert: false
+        }, function(err, numAffected, affectedDocs) {
             if (numAffected < 1) {
                 returner.error = true;
                 returner.msgType = "error";
@@ -498,7 +533,16 @@ app.post('/api/rename', function(req, res) {
         });
     } else {
         //updating the requested video's name
-        db.videos.update({ username: req.session.authUser.username, videoID: req.body.videoID }, { $set: { name: req.body.newName } }, { upsert: false }, function(err, numAffected, affectedDocs) {
+        db.videos.update({
+            username: req.session.authUser.username,
+            videoID: req.body.videoID
+        }, {
+            $set: {
+                name: req.body.newName
+            }
+        }, {
+            upsert: false
+        }, function(err, numAffected, affectedDocs) {
             if (numAffected < 1) {
                 returner.error = true;
                 returner.msgType = "error";
