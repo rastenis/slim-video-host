@@ -1,12 +1,14 @@
 const Datastore = require('nedb');
 const chalk = require('chalk');
-const prompt = require('prompt-sync')();
+const prompt = require('prompt-sync')({sigint:true});
 
-db = {};
+var db = {};
 db.codes = new Datastore({
-    filename: __dirname + '/../db/codes',
-    autoload: true
+    filename: '../db/codes',
+    autoload: true,
+    corruptAlertThreshold: 0.5 //added for testing
 });
+
 
 mainLoop: while (true) {
     console.log(chalk.bgCyan.black("========CODE MANAGER========"));
