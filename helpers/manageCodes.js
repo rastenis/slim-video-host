@@ -1,6 +1,6 @@
 const Datastore = require('nedb');
 const chalk = require('chalk');
-const prompt = require('prompt-sync')({sigint:true});
+const prompt = require('prompt-sync')({});
 
 var db = {};
 db.codes = new Datastore({
@@ -56,7 +56,7 @@ mainLoop: while (true) {
             console.log(chalk.green("DONE!"));
             break;
         case "":
-            console.log(chalk.green("BYE!"));
+            console.log("finishing up....");
             break mainLoop;
             break;
         default:
@@ -64,4 +64,8 @@ mainLoop: while (true) {
     }
 }
 
-process.exit(0);
+setTimeout(() => {
+    console.log(chalk.green("BYE!"));
+    process.exit(0);
+
+}, 1000);
