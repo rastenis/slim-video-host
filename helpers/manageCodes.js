@@ -4,7 +4,7 @@ const prompt = require('prompt-sync')({});
 
 var db = {};
 db.codes = new Datastore({
-    filename: '../db/codes',
+    filename: 'db/codes',
     autoload: true,
     corruptAlertThreshold: 0.5 //added for testing
 });
