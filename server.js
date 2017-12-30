@@ -54,7 +54,7 @@ const storagePath = process.env.FILE_PATH;
 app.use(helmet());
 app.use(fileUpload({
     limits: {
-        fileSize: 10 * 1000 * 1000 * 1000 //10 GB
+        fileSize: 100 * 1000 * 1000 * 1000 //100 GB
     },
     safeFileNames: true
 }));
@@ -314,21 +314,34 @@ app.post('/api/register', function(req, res) {
             async.waterfall([
                 function(done) { //tikrinimas ar yra atitinkanciu privelegiju kodu
                     db.codes.find({
-                        code: req.body.code
+                        code: req.body.code,
+                        active: true,
+                        type: "reg"
                     }, function(err, docs) {
                         if (docs.length == 0) { //rado useri su tokiu paciu username
                             //no matching code, go on
                             done(null, null);
                         } else {
                             //got a matching code!
-                            //TODO?: remove code from DB after activation maybe or maybe not
+
+                            // settinu 'active' flag i false by default
+                            db.codes.update({ code: req.body.code }, { $set: { active: false } }, {}, function(err) {
+                                if (err) {
+                                    console.log(err);
+                                }
+                            });
                             done(null, docs[0]);
                         }
                     });
                 },
                 function(code, done) {
-                    if (code !== null) { //got code
-                        //TODO: code logic, padidint duomenu kieki OR statusa pakeist
+                    // adding code benefits
+                    if (code !== null) { // got code
+                        if (code.benefit == 0) { // daugiau base space
+                            storageSpace = code.space;
+                        } else if (code.benefit == 1) { //grant admin status
+                            userStatus = 1;
+                        }
                     }
                     db.users.find({}, function(err, docs) {
                         var userCount = 0;
@@ -336,7 +349,7 @@ app.post('/api/register', function(req, res) {
                             userCount++;
                         });
 
-                        if (userCount == 0) { //ADMINAS DAR NEPRISIREGISTRAVES; settinam admin flag to false
+                        if (userCount == 0) { //ADMINAS DAR NEPRISIREGISTRAVES; settinam admin flag to true
                             userStatus = 1
                         } else {
                             userStatus = 0;
@@ -748,7 +761,7 @@ app.post('/api/upload', function(req, res) {
         var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
         console.log("size is " + fileSizeInMegabytes + "mb");
 
-        if (fileSizeInMegabytes > 10000) { //hard limitas kad neikeltu didesniu uz 10gb failu
+        if (fileSizeInMegabytes > 100000) { //hard limitas kad neikeltu didesniu uz 100gb failu
             res.status(557).json({
                 error: 'File too big.'
             });
