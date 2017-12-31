@@ -5,7 +5,7 @@
     "main": "server.js",
     "scripts": {
         "dev": "node src/server.js",
-        "codes": "node helpers/manageCodes.js",
+        "codes": "node src/helpers/manageCodes.js",
         "build": "nuxt build",
         "start": "cross-env NODE_ENV=production node server.js"
     },
