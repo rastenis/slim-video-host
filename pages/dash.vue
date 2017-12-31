@@ -118,7 +118,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="Link" @click.native="$event.target.select()">
+          <el-table-column label="Link" @click.native="$event.target.select()" width="250">
             <template slot-scope="scope">
               <div class="linkColumn">
                 <a :href="videos[scope.$index].link">{{videos[scope.$index].link}}</a>
