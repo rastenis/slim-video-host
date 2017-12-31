@@ -50,7 +50,6 @@ var defaultStorageSpace = 10000; //megabaitais
 // video storage path
 const storagePath = process.env.FILE_PATH;
 
-
 app.use(helmet());
 app.use(fileUpload({
     limits: {
@@ -743,6 +742,54 @@ app.post('/api/removeVideo', function(req, res) {
             });
         }
     });
+});
+
+app.post('/api/removeVideoBulk', function(req, res) {
+    if (!req.session.authUser) {
+        res.json({
+            msgType = "error",
+            error = 1,
+            msg = "You are not auhorized to do that action!"
+        });
+    } else {
+        var returner = {};
+        req.body.selection.forEach(selection => {
+            db.videos.find({
+                videoID: selection.videoID
+            }, function(err, docs) {
+                if (err) {
+                    console.log(chalk.bgRed.white(err));
+                    returner.error = 1;
+                    returner.msg = "Internal error. Try again.";
+                } else {
+                    db.users.update({
+                        username: req.session.authUser.username
+                    }, {
+                        $inc: {
+                            remainingSpace: Math.abs(docs[0].size)
+                        }
+                    }, {}, function() {
+                        //pridejom atgal storage space useriui
+
+                        //taip pat ir istrinam pati video is storage
+                        fs.unlink(storagePath + selection.videoID + ".mp4");
+                    });
+
+                    db.videos.remove({
+                        videoID: selection.videoID
+                    }, function(err, docs) {
+                        if (err) {
+                            console.log(chalk.bgRed.white(err));
+                            returner.error = 1;
+                        }
+                        //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
+                        //return errors from foreach async operations.
+
+                    });
+                }
+            });
+        });
+    }
 });
 
 // postas video ikelimui
