@@ -37,7 +37,7 @@
             </el-card>
           </el-col>
         </el-row>
-        <el-table :data="videos" style="width: 100%; margin-top:4vh;" @selection-change="handleSelectionChange">
+        <el-table :data="videos" style="width: 100%; margin-top:4vh;">
           <el-table-column prop="name" label="Video">
             <template slot-scope="scope">
               <div class="nameColumn">
@@ -109,7 +109,7 @@
           </el-card>
         </div>
         <h2 class="subtitle1">Your videos:</h2>
-        <el-table :data="videos" style="width: 100%">
+        <el-table :data="videos" style="width: 100%" @selection-change="handleSelectionChange">
           <el-table-column
             type="selection"
             width="40">
@@ -143,11 +143,16 @@
           </el-table-column>
           <el-table-column label="Actions">
             <template slot-scope="scope">
-              <el-button type="warning" size="small" @click.native.prevent="requestNewID(scope.$index)">New link</el-button>                            
-              <el-button type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
+              <el-button :disabled="multipleSelection.length!=0" type="warning" size="small" @click.native.prevent="requestNewID(scope.$index)">New link</el-button>                            
+              <el-button :disabled="multipleSelection.length!=0" type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
             </template>
           </el-table-column>
         </el-table>
+        <el-card v-if="multipleSelection.length!=0" class="multiSelectActions">
+              <el-button type="warning" size="medium" @click.native.prevent="requestNewID_Bulk(scope.$index)">New links for selected</el-button>                            
+              <el-button type="danger" size="medium" @click.native.prevent="deleteVideo_Bulk(scope.$index)">Remove selected</el-button>
+        </el-card>
+
       </div>
     </div>
   </div>
@@ -232,7 +237,14 @@ export default {
     }
   },
   methods: {
+    deleteVideo_Bulk(){
+
+    },
+    requestNewID_Bulk(){
+
+    },
     handleSelectionChange(val){
+      console.log(val);
       this.multipleSelection = val;
     },
     redirect(link){
@@ -403,6 +415,11 @@ export default {
 
 <style>
 
+  .multiSelectActions{
+    margin-top:vh;
+    height:10vh;
+    margin-bottom:5vh;
+  }
   .videoList{
     padding-top:5vh;
     position: relative;
