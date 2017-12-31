@@ -22,7 +22,6 @@ const du = require('du');
 //isemu - ir _ is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
 
-
 //uzkraunam DB
 db = {};
 db.users = new Datastore({
