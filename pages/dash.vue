@@ -237,11 +237,72 @@ export default {
     }
   },
   methods: {
-    deleteVideo_Bulk(){
+    deleteVideo_Bulk(selects){
+    this.$confirm('This will permanently delete the selected videos. Continue?', 'Warning', {
+            confirmButtonText: 'OK',
+            cancelButtonText: 'Cancel',
+            type: 'warning'
+          }).then(() => {
+            this.multipleSelection.forEach(selection => {
+              this.videos.splice(selection.index, 1);
+            });
+            this.multipleSelection=[];
+            axios({
+                url: 'https://cigari.ga/api/removeVideoBulk',
+                method: 'post',
+                credentials: 'same-origin',
+                data: {
+                  user: this.$store.state.authUser,
+                  selection:this.multipleSelection
+                }
+              })
+              .then((res) => {
+                this.$message({
+                  type: res.data.msgType,
+                  message: res.data.msg
+                });
+                if (res.data.error == 0) {
+                  this.stats.usedSpace -= this.videos[index].size;
+                } else if (res.data.error == 1) {
+                  console.log("error while bulk deleting videos");
+                }
+              }).catch(function (e) {
+                console.log(e);
+              });
 
+          }).catch(() => {});
     },
     requestNewID_Bulk(){
+    this.$confirm('This will generate new links for all selected videos. Continue?', 'Warning', {
+            confirmButtonText: 'OK',
+            cancelButtonText: 'Cancel',
+            type: 'warning'
+          }).then(() => {
+            this.multipleSelection=[];
+            axios({
+                url: 'https://cigari.ga/api/newLinkBulk',
+                method: 'post',
+                credentials: 'same-origin',
+                data: {
+                  user: this.$store.state.authUser,
+                  selection:this.multipleSelection
+                }
+              })
+              .then((res) => {
+                this.$message({
+                  type: res.data.msgType,
+                  message: res.data.msg
+                });
+                if (res.data.error == 0) {
+                  //TODO: update local representation 
+                } else if (res.data.error == 1) {
+                  console.log("error while bulk requesting new ids");
+                }
+              }).catch(function (e) {
+                console.log(e);
+              });
 
+          }).catch(() => {});
     },
     handleSelectionChange(val){
       console.log(val);
