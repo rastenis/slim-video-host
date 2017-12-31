@@ -9,7 +9,7 @@ module.exports = {
     ],
     css: [
         'element-ui/lib/theme-chalk/index.css',
-        '~assets/style/pageTransitions.css'
+        '~static/style/pageTransitions.css'
     ],
     modules: [
         '@nuxtjs/font-awesome'
