@@ -37,7 +37,7 @@
             </el-card>
           </el-col>
         </el-row>
-        <el-table :data="videos" style="width: 100%; margin-top:4vh;">
+        <el-table :data="videos" style="width: 100%; margin-top:4vh;" @selection-change="handleSelectionChange">
           <el-table-column prop="name" label="Video">
             <template slot-scope="scope">
               <div class="nameColumn">
@@ -110,6 +110,10 @@
         </div>
         <h2 class="subtitle1">Your videos:</h2>
         <el-table :data="videos" style="width: 100%">
+          <el-table-column
+            type="selection"
+            width="40">
+          </el-table-column>
           <el-table-column prop="name" label="Video">
             <template slot-scope="scope">
               <div class="nameColumn">
@@ -128,7 +132,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="views" label="Views">
+          <el-table-column prop="views" label="Views" width="100">
           </el-table-column>
           <el-table-column label="Ratings">
             <template slot-scope="scope" class="ratingColumn">
@@ -160,7 +164,8 @@ export default {
       loadingMore: true,
       videos: [],
       stats: {},
-      currentCopyTooltip: "Click to copy!"
+      currentCopyTooltip: "Click to copy!",
+      multipleSelection: []
     }
   },
   asyncData(context) {
@@ -227,6 +232,9 @@ export default {
     }
   },
   methods: {
+    handleSelectionChange(val){
+      this.multipleSelection = val;
+    },
     redirect(link){
       this.redirect(link);
     },
