@@ -484,56 +484,7 @@ app.post('/api/upgradeStorage', function(req, res) {
 
 //new link generation
 app.post('/api/newLink', function(req, res) {
-    console.log("NEW LINK | requester: " + req.session.authUser.username);
-
-    var returner = {};
-    if (!req.session.authUser) {
-        res.json({
-            error: true,
-            msg: "No authentication. Please sign in.",
-            msgType: "error"
-        });
-    } else {
-        //getting new info for the video
-
-        var newVideoID = shortid.generate();
-        var newVidLink = process.env.VIDEO_LINK_PRE + newVideoID;
-
-        db.videos.update({
-            username: req.session.authUser.username,
-            videoID: req.body.videoID
-        }, {
-            $set: {
-                videoID: newVideoID,
-                link: newVidLink
-            }
-        }, {
-            upsert: false
-        }, function(err, numAffected, affectedDocs) {
-            if (numAffected < 1) {
-                returner.error = true;
-                returner.msgType = "error";
-                returner.msg = "Link regeneration failed; No such video.";
-            } else {
-                returner.error = false;
-                returner.msgType = "success";
-                returner.msg = "Link successfully updated!";
-            }
-
-            fs.rename(storagePath + req.body.videoID + ".mp4", storagePath + newVideoID + ".mp4", function(err) {
-                if (err) throw err;
-            });
-
-            returner.newID = newVideoID;
-            returner.newLink = newVidLink;
-
-            return res.json(returner);
-        });
-    }
-});
-
-app.post('/api/newLinkBulk', function(req, res) {
-    console.log("NEW LINK BULK | requester: " + req.session.authUser.username);
+    console.log("NEW LINKS | requester: " + req.session.authUser.username);
 
     var returner = {};
     returner.error = false;
