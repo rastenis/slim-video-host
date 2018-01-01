@@ -701,50 +701,8 @@ app.post('/api/getAdminStats', function(req, res) {
     }
 });
 
-// postas userio video pasalinimui
+
 app.post('/api/removeVideo', function(req, res) {
-
-    console.log("REMOVING VIDEO | requester: " + req.session.authUser.username + "video ID : " + req.body.videoID);
-
-    var returner = {};
-    db.videos.find({
-        videoID: req.body.videoID
-    }, function(err, docs) {
-        if (err) {
-            console.log(chalk.bgRed.white(err));
-            returner.error = 1;
-            returner.msg = "Internal error. Try again.";
-        } else {
-            db.users.update({
-                username: req.session.authUser.username
-            }, {
-                $inc: {
-                    remainingSpace: Math.abs(docs[0].size)
-                }
-            }, {}, function() {
-                //pridejom atgal storage space useriui
-
-                //taip pat ir istrinam pati video is storage
-                fs.unlink(storagePath + req.body.videoID + ".mp4");
-            });
-
-            db.videos.remove({
-                videoID: req.body.videoID
-            }, function(err, docs) {
-                if (err) {
-                    console.log(chalk.bgRed.white(err));
-                    returner.error = 1;
-                }
-                returner.msgType = "info";
-                returner.error = 0;
-                returner.msg = "Successfully deleted video!";
-                return res.json(returner);
-            });
-        }
-    });
-});
-
-app.post('/api/removeVideoBulk', function(req, res) {
     if (!req.session.authUser) {
         res.json({
             msgType: "error",
@@ -752,13 +710,12 @@ app.post('/api/removeVideoBulk', function(req, res) {
             msg: "You are not auhorized to do that action!"
         });
     } else {
-        console.log("BULK DELETE |");
+        console.log("BULK DELETE | " + "requester: " + req.session.authUser.username);
         console.log(req.body.multipleSelection);
         var returner = {};
         var opCount = 0;
         returner.error = 0;
         req.body.multipleSelection.forEach(selection => {
-            console.log("selection up");
             db.videos.find({
                 videoID: selection.videoID
             }, function(err, docs) {

@@ -127,7 +127,7 @@
               <div class="linkColumn">
                 <a :href="videos[scope.$index].link">{{videos[scope.$index].link}}</a>
                 <el-tooltip :content="currentCopyTooltip" :enterable="false" transition="el-zoom-in-top">
-                  <i class="fa fa-clipboard fa-lg copyIcon" aria-hidden="false" @click="copyLink(videos[scope.$index].link)"></i>
+                  <i class="fa fa-clipboard fa-lg copyIcon" aria-hidden="false" @click="copyLink([videos[scope.$index].link])"></i>
                 </el-tooltip>
               </div>
             </template>
@@ -144,7 +144,7 @@
           <el-table-column label="Actions">
             <template slot-scope="scope">
               <el-button :disabled="multipleSelection.length!=0" type="warning" size="small" @click.native.prevent="requestNewID(scope.$index)">New link</el-button>                            
-              <el-button :disabled="multipleSelection.length!=0" type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
+              <el-button :disabled="multipleSelection.length!=0" type="danger" size="small" @click.native.prevent="deleteVideo_Bulk(videos[scope.$index])">Remove</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -237,7 +237,7 @@ export default {
     }
   },
   methods: {
-    async deleteVideo_Bulk(selects){
+    async deleteVideo(selects){
       this.$confirm('This will permanently delete the selected videos. Continue?', 'Warning', {
               confirmButtonText: 'OK',
               cancelButtonText: 'Cancel',
@@ -245,7 +245,7 @@ export default {
             }).then(() => {
               console.log(selects);
               axios({
-                  url: 'https://cigari.ga/api/removeVideoBulk',
+                  url: 'https://cigari.ga/api/removeVideo',
                   method: 'post',
                   credentials: 'same-origin',
                   data: {
@@ -323,41 +323,6 @@ export default {
       setTimeout(() => {
         this.currentCopyTooltip = "Click to copy!";
       }, 1000);
-    },
-    async deleteVideo(index) {
-      this.$confirm('This will permanently delete the video. Continue?', 'Warning', {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
-        type: 'warning'
-      }).then(() => {
-        var videoID = this.videos[index].videoID;
-        console.log("removing video: " + videoID + ", index is " + index);
-        console.log("authuser is " + this.$store.state.authUser);
-        this.videos.splice(index, 1);
-        axios({
-            url: 'https://cigari.ga/api/removeVideo',
-            method: 'post',
-            credentials: 'same-origin',
-            data: {
-              user: this.$store.state.authUser,
-              videoID: videoID
-            }
-          })
-          .then((res) => {
-            this.$message({
-              type: res.data.msgType,
-              message: res.data.msg
-            });
-            if (res.data.error == 0) {
-              this.stats.usedSpace -= this.videos[index].size;
-            } else if (res.data.error == 1) {
-              console.log("error while deleting video");
-            }
-          }).catch(function (e) {
-            console.log(e);
-          });
-
-      }).catch(() => {});
     },
     async requestNewID(index) {
       this.$confirm('This will invalidate the previous link. Continue?', 'Warning', {
