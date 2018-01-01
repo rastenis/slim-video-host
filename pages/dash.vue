@@ -296,7 +296,7 @@ export default {
                     this.multipleSelection=[];
                     //TODO: update local representation 
                     this.videos.forEach((video,index) => {
-                      req.data.newData.forEach(newVideo => {
+                      res.data.newData.forEach(newVideo => {
                         if(newVideo.videoID==video.videoID){ //update local
                           this.videos[index].videoID=newVideo.newVideoID;
                           this.videos[index].link=newVideo.newLink;
