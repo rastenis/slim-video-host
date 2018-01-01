@@ -720,12 +720,12 @@ app.post('/api/removeVideo', function(req, res) {
             msg: "You are not auhorized to do that action!"
         });
     } else {
-        console.log("BULK DELETE | " + "requester: " + req.session.authUser.username);
-        console.log(req.body.multipleSelection);
+        console.log("VIDEO DELETION | " + "requester: " + req.session.authUser.username);
         var returner = {};
+        returner.selection = req.body.selection;
         var opCount = 0;
         returner.error = 0;
-        req.body.multipleSelection.forEach(selection => {
+        req.body.selection.forEach(selection => {
             db.videos.find({
                 videoID: selection.videoID
             }, function(err, docs) {
@@ -737,13 +737,11 @@ app.post('/api/removeVideo', function(req, res) {
                     db.users.update({
                         username: req.session.authUser.username
                     }, {
-                        $inc: {
+                        $inc: { //pridedamas atgal storage space useriui
                             remainingSpace: Math.abs(docs[0].size)
                         }
                     }, {}, function() {
-                        //pridejom atgal storage space useriui
-
-                        //taip pat ir istrinam pati video is storage
+                        //taip pat ir istrinamas pats video is storage
                         fs.unlink(storagePath + selection.videoID + ".mp4");
                     });
 
@@ -757,7 +755,7 @@ app.post('/api/removeVideo', function(req, res) {
                             res.json(returner);
                         }
 
-                        if (opCount == req.body.multipleSelection.length - 1) {
+                        if (opCount == req.body.selection.length - 1) {
                             returner.msgType = "info";
                             returner.error = 0;
                             returner.msg = "Successfully deleted video!";

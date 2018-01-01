@@ -250,11 +250,11 @@ export default {
                   credentials: 'same-origin',
                   data: {
                     user: this.$store.state.authUser,
-                    multipleSelection:selects
+                    selection:selects
                   }
                 })
                 .then((res) => {
-                  this.multipleSelection.forEach(selection => {
+                  res.data.selection.forEach(selection => {
                     this.videos.splice(selection.index, 1);
                   });
                   this.$message({
