@@ -50,7 +50,6 @@ var defaultStorageSpace = 10000; //megabaitais
 // video storage path
 const storagePath = process.env.FILE_PATH;
 
-
 app.use(helmet());
 app.use(fileUpload({
     limits: {
@@ -485,9 +484,11 @@ app.post('/api/upgradeStorage', function(req, res) {
 
 //new link generation
 app.post('/api/newLink', function(req, res) {
-    console.log("NEW LINK | requester: " + req.session.authUser.username);
+    console.log("NEW LINKS | requester: " + req.session.authUser.username);
 
     var returner = {};
+    returner.error = false;
+    var opCount = 0;
     if (!req.session.authUser) {
         res.json({
             error: true,
@@ -495,41 +496,49 @@ app.post('/api/newLink', function(req, res) {
             msgType: "error"
         });
     } else {
-        //getting new info for the video
+        returner.newData = req.body.selection;
+        req.body.selection.forEach((sel, index) => {
+            var newVideoID = shortid.generate();
+            var newVidLink = process.env.VIDEO_LINK_PRE + newVideoID;
 
-        var newVideoID = shortid.generate();
-        var newVidLink = process.env.VIDEO_LINK_PRE + newVideoID;
+            db.videos.update({
+                username: req.session.authUser.username,
+                videoID: sel.videoID
+            }, {
+                $set: {
+                    videoID: newVideoID,
+                    link: newVidLink
+                }
+            }, {
+                upsert: false
+            }, function(err, numAffected, affectedDocs) {
+                if (numAffected < 1) {
+                    returner.error = true;
+                    returner.msgType = "error";
+                    returner.msg = "Link regeneration failed.";
+                }
 
-        db.videos.update({
-            username: req.session.authUser.username,
-            videoID: req.body.videoID
-        }, {
-            $set: {
-                videoID: newVideoID,
-                link: newVidLink
-            }
-        }, {
-            upsert: false
-        }, function(err, numAffected, affectedDocs) {
-            if (numAffected < 1) {
-                returner.error = true;
-                returner.msgType = "error";
-                returner.msg = "Link regeneration failed; No such video.";
-            } else {
-                returner.error = false;
-                returner.msgType = "success";
-                returner.msg = "Link successfully updated!";
-            }
+                fs.rename(storagePath + sel.videoID + ".mp4", storagePath + newVideoID + ".mp4", function(err) {
+                    if (err) throw err;
+                });
 
-            fs.rename(storagePath + req.body.videoID + ".mp4", storagePath + newVideoID + ".mp4", function(err) {
-                if (err) throw err;
+                returner.newData[index].newVideoID = newVideoID;
+                returner.newData[index].newLink = newVidLink;
+
+                if (opCount == req.body.selection.length - 1) {
+                    if (!returner.error) {
+                        returner.msgType = "success";
+                        returner.msg = "Links successfully updated!";
+                    }
+
+                    return res.json(returner);
+                } else {
+                    opCount++;
+                }
+
             });
-
-            returner.newID = newVideoID;
-            returner.newLink = newVidLink;
-
-            return res.json(returner);
         });
+
     }
 });
 
@@ -702,47 +711,66 @@ app.post('/api/getAdminStats', function(req, res) {
     }
 });
 
-// postas userio video pasalinimui
+
 app.post('/api/removeVideo', function(req, res) {
-
-    console.log("REMOVING VIDEO | requester: " + req.session.authUser.username + "video ID : " + req.body.videoID);
-
-    var returner = {};
-    db.videos.find({
-        videoID: req.body.videoID
-    }, function(err, docs) {
-        if (err) {
-            console.log(chalk.bgRed.white(err));
-            returner.error = 1;
-            returner.msg = "Internal error. Try again.";
-        } else {
-            db.users.update({
-                username: req.session.authUser.username
-            }, {
-                $inc: {
-                    remainingSpace: Math.abs(docs[0].size)
-                }
-            }, {}, function() {
-                //pridejom atgal storage space useriui
-
-                //taip pat ir istrinam pati video is storage
-                fs.unlink(storagePath + req.body.videoID + ".mp4");
-            });
-
-            db.videos.remove({
-                videoID: req.body.videoID
+    if (!req.session.authUser) {
+        res.json({
+            msgType: "error",
+            error: 1,
+            msg: "You are not auhorized to do that action!"
+        });
+    } else {
+        console.log("VIDEO DELETION | " + "requester: " + req.session.authUser.username);
+        var returner = {};
+        returner.selection = req.body.selection;
+        var opCount = 0;
+        returner.error = 0;
+        req.body.selection.forEach(selection => {
+            db.videos.find({
+                videoID: selection.videoID
             }, function(err, docs) {
                 if (err) {
                     console.log(chalk.bgRed.white(err));
                     returner.error = 1;
+                    returner.msg = "Internal error. Try again.";
+                } else {
+                    db.users.update({
+                        username: req.session.authUser.username
+                    }, {
+                        $inc: { //pridedamas atgal storage space useriui
+                            remainingSpace: Math.abs(docs[0].size)
+                        }
+                    }, {}, function() {
+                        //taip pat ir istrinamas pats video is storage
+                        fs.unlink(storagePath + selection.videoID + ".mp4");
+                    });
+
+                    db.videos.remove({
+                        videoID: selection.videoID
+                    }, function(err, docs) {
+                        if (err) {
+                            console.log(chalk.bgRed.white(err));
+                            returner.error = 1;
+                            returner.msg = "Internal error. Try again.";
+                            res.json(returner);
+                        }
+
+                        if (opCount == req.body.selection.length - 1) {
+                            returner.msgType = "info";
+                            returner.error = 0;
+                            returner.msg = "Successfully deleted video!";
+                            res.json(returner);
+                        } else {
+                            opCount++;
+                        }
+                        //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
+                        //return errors from foreach async operations.
+
+                    });
                 }
-                returner.msgType = "info";
-                returner.error = 0;
-                returner.msg = "Successfully deleted video!";
-                return res.json(returner);
             });
-        }
-    });
+        });
+    }
 });
 
 // postas video ikelimui

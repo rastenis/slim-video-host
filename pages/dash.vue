@@ -109,7 +109,11 @@
           </el-card>
         </div>
         <h2 class="subtitle1">Your videos:</h2>
-        <el-table :data="videos" style="width: 100%">
+        <el-table :data="videos" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
+          <el-table-column
+            type="selection"
+            width="40">
+          </el-table-column>
           <el-table-column prop="name" label="Video">
             <template slot-scope="scope">
               <div class="nameColumn">
@@ -128,7 +132,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="views" label="Views">
+          <el-table-column prop="views" label="Views" width="100">
           </el-table-column>
           <el-table-column label="Ratings">
             <template slot-scope="scope" class="ratingColumn">
@@ -139,11 +143,16 @@
           </el-table-column>
           <el-table-column label="Actions">
             <template slot-scope="scope">
-              <el-button type="warning" size="small" @click.native.prevent="requestNewID(scope.$index)">New link</el-button>                            
-              <el-button type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
+              <el-button :disabled="multipleSelection.length!=0" type="warning" size="small" @click.native.prevent="requestNewID([videos[scope.$index]])">New link</el-button>                            
+              <el-button :disabled="multipleSelection.length!=0" type="danger" size="small" @click.native.prevent="deleteVideo([videos[scope.$index]])">Remove</el-button>
             </template>
           </el-table-column>
         </el-table>
+        <el-card v-if="multipleSelection.length!=0" class="multiSelectActions">
+              <el-button type="warning" size="medium" @click.native.prevent="requestNewID(multipleSelection)">New links for selected</el-button>                            
+              <el-button type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
+        </el-card>
+
       </div>
     </div>
   </div>
@@ -160,7 +169,8 @@ export default {
       loadingMore: true,
       videos: [],
       stats: {},
-      currentCopyTooltip: "Click to copy!"
+      currentCopyTooltip: "Click to copy!",
+      multipleSelection: []
     }
   },
   asyncData(context) {
@@ -227,6 +237,86 @@ export default {
     }
   },
   methods: {
+    async deleteVideo(selects){
+      this.$confirm('This will permanently delete the selected videos. Continue?', 'Warning', {
+              confirmButtonText: 'OK',
+              cancelButtonText: 'Cancel',
+              type: 'warning'
+            }).then(() => {
+              console.log(selects);
+              axios({
+                  url: 'https://cigari.ga/api/removeVideo',
+                  method: 'post',
+                  credentials: 'same-origin',
+                  data: {
+                    user: this.$store.state.authUser,
+                    selection:selects
+                  }
+                })
+                .then((res) => {
+                  res.data.selection.forEach(selection => {
+                    this.videos.splice(selection.index, 1);
+                  });
+                  this.$message({
+                    type: res.data.msgType,
+                    message: res.data.msg
+                  });
+                  if (res.data.error == 0) {
+                    this.stats.usedSpace -= this.videos[index].size;
+                  } else if (res.data.error == 1) {
+                    console.log("error while bulk deleting videos");
+                  }
+                }).catch(function (e) {
+                  console.log(e);
+                });
+
+            }).catch(() => {});
+    },
+    async requestNewID(selection){
+      this.$confirm('This will generate new links for all selected videos. Continue?', 'Warning', {
+              confirmButtonText: 'OK',
+              cancelButtonText: 'Cancel',
+              type: 'warning'
+            }).then(() => {
+              axios({
+                  url: 'https://cigari.ga/api/newLink',
+                  method: 'post',
+                  credentials: 'same-origin',
+                  data: {
+                    user: this.$store.state.authUser,
+                    selection:selection
+                  }
+                })
+                .then((res) => {
+                  this.$message({
+                    type: res.data.msgType,
+                    message: res.data.msg
+                  });
+                  if (res.data.error == 0) {
+                    this.multipleSelection=[];
+                    //TODO: update local representation 
+                    this.videos.forEach((video,index) => {
+                      res.data.newData.forEach(newVideo => {
+                        if(newVideo.videoID==video.videoID){ //update local
+                          this.videos[index].videoID=newVideo.newVideoID;
+                          this.videos[index].link=newVideo.newLink;
+                        }
+                      });
+                    });
+                  } else if (res.data.error == 1) {
+                    console.log("error while bulk requesting new ids");
+                  }
+                }).catch(function (e) {
+                  console.log(e);
+                }); 
+
+            }).catch(() => {});
+    },
+    handleSelectionChange(val){
+      this.multipleSelection = val;
+      console.log(this.multipleSelection);
+      
+    },
     redirect(link){
       this.redirect(link);
     },
@@ -241,76 +331,6 @@ export default {
       setTimeout(() => {
         this.currentCopyTooltip = "Click to copy!";
       }, 1000);
-    },
-    async deleteVideo(index) {
-      this.$confirm('This will permanently delete the video. Continue?', 'Warning', {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
-        type: 'warning'
-      }).then(() => {
-        var videoID = this.videos[index].videoID;
-        console.log("removing video: " + videoID + ", index is " + index);
-        console.log("authuser is " + this.$store.state.authUser);
-        this.videos.splice(index, 1);
-        axios({
-            url: 'https://cigari.ga/api/removeVideo',
-            method: 'post',
-            credentials: 'same-origin',
-            data: {
-              user: this.$store.state.authUser,
-              videoID: videoID
-            }
-          })
-          .then((res) => {
-            this.$message({
-              type: res.data.msgType,
-              message: res.data.msg
-            });
-            if (res.data.error == 0) {
-              this.stats.usedSpace -= this.videos[index].size;
-            } else if (res.data.error == 1) {
-              console.log("error while deleting video");
-            }
-          }).catch(function (e) {
-            console.log(e);
-          });
-
-      }).catch(() => {});
-    },
-    async requestNewID(index) {
-      this.$confirm('This will invalidate the previous link. Continue?', 'Warning', {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
-        type: 'info'
-      }).then(() => {
-        var videoID = this.videos[index].videoID;
-        console.log("requesting new id for video: " + videoID + ", index is " + index);
-        axios({
-            url: 'https://cigari.ga/api/newLink',
-            method: 'post',
-            credentials: 'same-origin',
-            data: {
-              user: this.$store.state.authUser,
-              videoID: videoID
-            }
-          })
-          .then((res) => {
-            this.$message({
-              type: res.data.msgType,
-              message: res.data.msg
-            });
-            if (res.data.error) {
-              console.log("error while asking for new video ID");
-            } else {
-              console.log("Successfully updated. Updating local representation...");
-              this.videos[index].videoID = res.data.newID;
-              this.videos[index].link = res.data.newLink;
-            }
-          }).catch(function (e) {
-            console.log(e);
-          });
-
-      }).catch(() => {});
     },
     async requestNewName(index) {
       this.$prompt('Input the new name:', 'Rename', {
@@ -395,6 +415,11 @@ export default {
 
 <style>
 
+  .multiSelectActions{
+    margin-top:vh;
+    height:10vh;
+    margin-bottom:5vh;
+  }
   .videoList{
     padding-top:5vh;
     position: relative;
