@@ -278,7 +278,6 @@ export default {
               cancelButtonText: 'Cancel',
               type: 'warning'
             }).then(() => {
-              this.multipleSelection=[];
               axios({
                   url: 'https://cigari.ga/api/newLinkBulk',
                   method: 'post',
@@ -295,6 +294,7 @@ export default {
                   });
                   if (res.data.error == 0) {
                     //TODO: update local representation 
+                    
                   } else if (res.data.error == 1) {
                     console.log("error while bulk requesting new ids");
                   }

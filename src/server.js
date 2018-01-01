@@ -532,6 +532,64 @@ app.post('/api/newLink', function(req, res) {
     }
 });
 
+app.post('/api/newLinkBulk', function(req, res) {
+    console.log("NEW LINK BULK | requester: " + req.session.authUser.username);
+
+    var returner = {};
+    var opCount = 0;
+    if (!req.session.authUser) {
+        res.json({
+            error: true,
+            msg: "No authentication. Please sign in.",
+            msgType: "error"
+        });
+    } else {
+        returner.newData = req.body.selection;
+        req.body.selection.forEach(sel => {
+            var newVideoID = shortid.generate();
+            var newVidLink = process.env.VIDEO_LINK_PRE + newVideoID;
+
+            db.videos.update({
+                username: req.session.authUser.username,
+                videoID: req.body.videoID
+            }, {
+                $set: {
+                    videoID: newVideoID,
+                    link: newVidLink
+                }
+            }, {
+                upsert: false
+            }, function(err, numAffected, affectedDocs) {
+                if (numAffected < 1) {
+                    returner.error = true;
+                    returner.msgType = "error";
+                    returner.msg = "Link regeneration failed.";
+                    return res.json(returner);
+                }
+
+                fs.rename(storagePath + req.body.videoID + ".mp4", storagePath + newVideoID + ".mp4", function(err) {
+                    if (err) throw err;
+                });
+
+                returner.newData[index].newVideoID = newVideoID;
+                returner.newData[index].newLink = newVidLink;
+
+                if (opCount == req.body.selection.length - 1) {
+                    returner.error = false;
+                    returner.msgType = "success";
+                    returner.msg = "Links successfully updated!";
+                    return res.json(returner);
+                } else {
+                    opCount++;
+                }
+
+                return res.json(returner);
+            });
+        });
+
+    }
+});
+
 // vardo pakeitimas
 app.post('/api/rename', function(req, res) {
     console.log("RENAME | requester: " + req.session.authUser.username);
