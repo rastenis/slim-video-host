@@ -149,8 +149,8 @@
           </el-table-column>
         </el-table>
         <el-card v-if="multipleSelection.length!=0" class="multiSelectActions">
-              <el-button type="warning" size="medium" @click.native.prevent="requestNewID_Bulk(scope.$index)">New links for selected</el-button>                            
-              <el-button type="danger" size="medium" @click.native.prevent="deleteVideo_Bulk(scope.$index)">Remove selected</el-button>
+              <el-button type="warning" size="medium" @click.native.prevent="requestNewID_Bulk(multipleSelection)">New links for selected</el-button>                            
+              <el-button type="danger" size="medium" @click.native.prevent="deleteVideo_Bulk(multipleSelection)">Remove selected</el-button>
         </el-card>
 
       </div>
@@ -237,72 +237,73 @@ export default {
     }
   },
   methods: {
-    deleteVideo_Bulk(selects){
-    this.$confirm('This will permanently delete the selected videos. Continue?', 'Warning', {
-            confirmButtonText: 'OK',
-            cancelButtonText: 'Cancel',
-            type: 'warning'
-          }).then(() => {
-            this.multipleSelection.forEach(selection => {
-              this.videos.splice(selection.index, 1);
-            });
-            this.multipleSelection=[];
-            axios({
-                url: 'https://cigari.ga/api/removeVideoBulk',
-                method: 'post',
-                credentials: 'same-origin',
-                data: {
-                  user: this.$store.state.authUser,
-                  selection:this.multipleSelection
-                }
-              })
-              .then((res) => {
-                this.$message({
-                  type: res.data.msgType,
-                  message: res.data.msg
-                });
-                if (res.data.error == 0) {
-                  this.stats.usedSpace -= this.videos[index].size;
-                } else if (res.data.error == 1) {
-                  console.log("error while bulk deleting videos");
-                }
-              }).catch(function (e) {
-                console.log(e);
+    async deleteVideo_Bulk(selects){
+      this.$confirm('This will permanently delete the selected videos. Continue?', 'Warning', {
+              confirmButtonText: 'OK',
+              cancelButtonText: 'Cancel',
+              type: 'warning'
+            }).then(() => {
+              var sel=selects;
+              this.multipleSelection.forEach(selection => {
+                this.videos.splice(selection.index, 1);
               });
+              console.log(sel);
+              axios({
+                  url: 'https://cigari.ga/api/removeVideoBulk',
+                  method: 'post',
+                  credentials: 'same-origin',
+                  data: {
+                    user: this.$store.state.authUser,
+                    multipleSelection:sel
+                  }
+                })
+                .then((res) => {
+                  this.$message({
+                    type: res.data.msgType,
+                    message: res.data.msg
+                  });
+                  if (res.data.error == 0) {
+                    this.stats.usedSpace -= this.videos[index].size;
+                  } else if (res.data.error == 1) {
+                    console.log("error while bulk deleting videos");
+                  }
+                }).catch(function (e) {
+                  console.log(e);
+                });
 
-          }).catch(() => {});
+            }).catch(() => {});
     },
-    requestNewID_Bulk(){
-    this.$confirm('This will generate new links for all selected videos. Continue?', 'Warning', {
-            confirmButtonText: 'OK',
-            cancelButtonText: 'Cancel',
-            type: 'warning'
-          }).then(() => {
-            this.multipleSelection=[];
-            axios({
-                url: 'https://cigari.ga/api/newLinkBulk',
-                method: 'post',
-                credentials: 'same-origin',
-                data: {
-                  user: this.$store.state.authUser,
-                  selection:this.multipleSelection
-                }
-              })
-              .then((res) => {
-                this.$message({
-                  type: res.data.msgType,
-                  message: res.data.msg
+    async requestNewID_Bulk(){
+      this.$confirm('This will generate new links for all selected videos. Continue?', 'Warning', {
+              confirmButtonText: 'OK',
+              cancelButtonText: 'Cancel',
+              type: 'warning'
+            }).then(() => {
+              this.multipleSelection=[];
+              axios({
+                  url: 'https://cigari.ga/api/newLinkBulk',
+                  method: 'post',
+                  credentials: 'same-origin',
+                  data: {
+                    user: this.$store.state.authUser,
+                    selection:this.multipleSelection
+                  }
+                })
+                .then((res) => {
+                  this.$message({
+                    type: res.data.msgType,
+                    message: res.data.msg
+                  });
+                  if (res.data.error == 0) {
+                    //TODO: update local representation 
+                  } else if (res.data.error == 1) {
+                    console.log("error while bulk requesting new ids");
+                  }
+                }).catch(function (e) {
+                  console.log(e);
                 });
-                if (res.data.error == 0) {
-                  //TODO: update local representation 
-                } else if (res.data.error == 1) {
-                  console.log("error while bulk requesting new ids");
-                }
-              }).catch(function (e) {
-                console.log(e);
-              });
 
-          }).catch(() => {});
+            }).catch(() => {});
     },
     handleSelectionChange(val){
       console.log(val);

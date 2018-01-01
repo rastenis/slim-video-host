@@ -747,13 +747,18 @@ app.post('/api/removeVideo', function(req, res) {
 app.post('/api/removeVideoBulk', function(req, res) {
     if (!req.session.authUser) {
         res.json({
-            msgType = "error",
-            error = 1,
-            msg = "You are not auhorized to do that action!"
+            msgType: "error",
+            error: 1,
+            msg: "You are not auhorized to do that action!"
         });
     } else {
+        console.log("BULK DELETE |");
+        console.log(req.body.multipleSelection);
         var returner = {};
-        req.body.selection.forEach(selection => {
+        var opCount = 0;
+        returner.error = 0;
+        req.body.multipleSelection.forEach(selection => {
+            console.log("selection up");
             db.videos.find({
                 videoID: selection.videoID
             }, function(err, docs) {
@@ -781,6 +786,17 @@ app.post('/api/removeVideoBulk', function(req, res) {
                         if (err) {
                             console.log(chalk.bgRed.white(err));
                             returner.error = 1;
+                            returner.msg = "Internal error. Try again.";
+                            res.json(returner);
+                        }
+
+                        if (opCount == req.body.multipleSelection.length) {
+                            returner.msgType = "info";
+                            returner.error = 0;
+                            returner.msg = "Successfully deleted video!";
+                            res.json(returner);
+                        } else {
+                            opCount++;
                         }
                         //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
                         //return errors from foreach async operations.
