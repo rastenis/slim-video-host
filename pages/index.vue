@@ -20,6 +20,7 @@
             <el-button class="loginButton" type="submit" @click="login">Login</el-button>
           </el-form-item>
         </el-form>
+        <a type="text" @click="$store.app.router.push('/reset')" style="margin-top:5vh;">Forgot your password?</a>
       </div>
       <div v-else class="postLogin">
         Welcome back, {{ $store.state.authUser.username }}!
