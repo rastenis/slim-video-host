@@ -64,10 +64,12 @@
     </div>
     <div v-else>
       <div v-if="videos.length==0" class="centeredUploadVideoSuggestion">
-        <p>You don't have any videos yet!</p>
-        <el-button @click="$store.app.router.push('/upload'); this.$store.state.activeTab = '3';">
-          Upload a video
-        </el-button>
+        <el-card>
+          <p>You don't have any videos yet!</p>
+          <el-button @click="$store.app.router.push('/upload'); this.$store.state.activeTab = '3';">
+            Upload a video
+          </el-button>
+        </el-card>
       </div>
       <div class="videoList" v-else>
         <div class="cards">
