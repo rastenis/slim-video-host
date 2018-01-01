@@ -60,7 +60,7 @@
             </template>
           </el-table-column>
         </el-table>
-        </div>
+      </div>
     </div>
     <div v-else>
       <div v-if="videos.length==0" class="centeredUploadVideoSuggestion">
@@ -73,7 +73,7 @@
       </div>
       <div class="videoList" v-else>
         <div class="cards">
-          <el-card class="box-card statCard" >
+          <el-card class="box-card statCard">
             <div slot="header" class="clearfix">
               <span class="headerOfStatCard">Video stats</span>
             </div>
@@ -98,7 +98,7 @@
               <el-button type="text" @click="storageUpgradeInit">Apply for an upgrade</el-button>
             </div>
           </el-card>
-          <el-card class="box-card statCard" >
+          <el-card class="box-card statCard">
             <div slot="header" class="clearfix">
               <span class="headerOfStatCard">Your stats</span>
             </div>
@@ -112,9 +112,7 @@
         </div>
         <h2 class="subtitle1">Your videos:</h2>
         <el-table :data="videos" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
-          <el-table-column
-            type="selection"
-            width="40">
+          <el-table-column type="selection" width="40">
           </el-table-column>
           <el-table-column prop="name" label="Video">
             <template slot-scope="scope">
@@ -138,23 +136,22 @@
           </el-table-column>
           <el-table-column label="Ratings">
             <template slot-scope="scope" class="ratingColumn">
-              <i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>      
+              <i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>
               {{videos[scope.$index].likes}} | {{videos[scope.$index].dislikes}}
-              <i class="fa fa-thumbs-up fa-rotate-180" style="color:red;" aria-hidden="true"></i>     
+              <i class="fa fa-thumbs-up fa-rotate-180" style="color:red;" aria-hidden="true"></i>
             </template>
           </el-table-column>
           <el-table-column label="Actions">
             <template slot-scope="scope">
-              <el-button :disabled="multipleSelection.length!=0" type="warning" size="small" @click.native.prevent="requestNewID([videos[scope.$index]])">New link</el-button>                            
+              <el-button :disabled="multipleSelection.length!=0" type="warning" size="small" @click.native.prevent="requestNewID([videos[scope.$index]])">New link</el-button>
               <el-button :disabled="multipleSelection.length!=0" type="danger" size="small" @click.native.prevent="deleteVideo([videos[scope.$index]])">Remove</el-button>
             </template>
           </el-table-column>
         </el-table>
         <el-card v-if="multipleSelection.length!=0" class="multiSelectActions">
-              <el-button type="warning" size="medium" @click.native.prevent="requestNewID(multipleSelection)">New links for selected</el-button>                            
-              <el-button type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
+          <el-button type="warning" size="medium" @click.native.prevent="requestNewID(multipleSelection)">New links for selected</el-button>
+          <el-button type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
         </el-card>
-
       </div>
     </div>
   </div>
@@ -163,8 +160,6 @@
 
 <script>
 import axios from 'axios'
-//TODO:  v-for get all video links w/ titles and views into CARDS (if w/ thumbnails) or just LIST ITEMS (w/o thumbnails)
-
 export default {
   data() {
     return {
@@ -224,10 +219,10 @@ export default {
     } catch (e) {}
   },
   mounted() {
-    if(!this.$store.state.authUser.userStatus==1){
+    if (!this.$store.state.authUser.userStatus == 1) {
       console.log("messing w/ some stats");
       this.setUpStats();
-    }else{
+    } else {
       this.setUpAdminStats();
     }
   },
@@ -239,87 +234,87 @@ export default {
     }
   },
   methods: {
-    async deleteVideo(selects){
+    async deleteVideo(selects) {
       this.$confirm('This will permanently delete the selected videos. Continue?', 'Warning', {
-              confirmButtonText: 'OK',
-              cancelButtonText: 'Cancel',
-              type: 'warning'
-            }).then(() => {
-              console.log(selects);
-              axios({
-                  url: 'https://cigari.ga/api/removeVideo',
-                  method: 'post',
-                  credentials: 'same-origin',
-                  data: {
-                    user: this.$store.state.authUser,
-                    selection:selects
-                  }
-                })
-                .then((res) => {
-                  res.data.selection.forEach(selection => {
-                    this.videos.splice(selection.index, 1);
-                  });
-                  this.$message({
-                    type: res.data.msgType,
-                    message: res.data.msg
-                  });
-                  if (res.data.error == 0) {
-                    this.stats.usedSpace -= this.videos[index].size;
-                  } else if (res.data.error == 1) {
-                    console.log("error while bulk deleting videos");
-                  }
-                }).catch(function (e) {
-                  console.log(e);
-                });
+        confirmButtonText: 'OK',
+        cancelButtonText: 'Cancel',
+        type: 'warning'
+      }).then(() => {
+        console.log(selects);
+        axios({
+            url: 'https://cigari.ga/api/removeVideo',
+            method: 'post',
+            credentials: 'same-origin',
+            data: {
+              user: this.$store.state.authUser,
+              selection: selects
+            }
+          })
+          .then((res) => {
+            res.data.selection.forEach(selection => {
+              this.videos.splice(selection.index, 1);
+            });
+            this.$message({
+              type: res.data.msgType,
+              message: res.data.msg
+            });
+            if (res.data.error == 0) {
+              this.stats.usedSpace -= this.videos[index].size;
+            } else if (res.data.error == 1) {
+              console.log("error while bulk deleting videos");
+            }
+          }).catch(function (e) {
+            console.log(e);
+          });
 
-            }).catch(() => {});
+      }).catch(() => {});
     },
-    async requestNewID(selection){
+    async requestNewID(selection) {
       this.$confirm('This will generate new links for all selected videos. Continue?', 'Warning', {
-              confirmButtonText: 'OK',
-              cancelButtonText: 'Cancel',
-              type: 'warning'
-            }).then(() => {
-              axios({
-                  url: 'https://cigari.ga/api/newLink',
-                  method: 'post',
-                  credentials: 'same-origin',
-                  data: {
-                    user: this.$store.state.authUser,
-                    selection:selection
+        confirmButtonText: 'OK',
+        cancelButtonText: 'Cancel',
+        type: 'warning'
+      }).then(() => {
+        axios({
+            url: 'https://cigari.ga/api/newLink',
+            method: 'post',
+            credentials: 'same-origin',
+            data: {
+              user: this.$store.state.authUser,
+              selection: selection
+            }
+          })
+          .then((res) => {
+            this.$message({
+              type: res.data.msgType,
+              message: res.data.msg
+            });
+            if (res.data.error == 0) {
+              this.multipleSelection = [];
+              //TODO: update local representation 
+              this.videos.forEach((video, index) => {
+                res.data.newData.forEach(newVideo => {
+                  if (newVideo.videoID == video.videoID) { //update local
+                    this.videos[index].videoID = newVideo.newVideoID;
+                    this.videos[index].link = newVideo.newLink;
                   }
-                })
-                .then((res) => {
-                  this.$message({
-                    type: res.data.msgType,
-                    message: res.data.msg
-                  });
-                  if (res.data.error == 0) {
-                    this.multipleSelection=[];
-                    //TODO: update local representation 
-                    this.videos.forEach((video,index) => {
-                      res.data.newData.forEach(newVideo => {
-                        if(newVideo.videoID==video.videoID){ //update local
-                          this.videos[index].videoID=newVideo.newVideoID;
-                          this.videos[index].link=newVideo.newLink;
-                        }
-                      });
-                    });
-                  } else if (res.data.error == 1) {
-                    console.log("error while bulk requesting new ids");
-                  }
-                }).catch(function (e) {
-                  console.log(e);
-                }); 
+                });
+              });
+            } else if (res.data.error == 1) {
+              console.log("error while bulk requesting new ids");
+            }
+          }).catch(function (e) {
+            console.log(e);
+          });
 
-            }).catch(() => {});
+      }).catch(() => {});
     },
-    handleSelectionChange(val){
+    handleSelectionChange(val) {
       this.multipleSelection = val;
       console.log(this.multipleSelection);
-      
+
     },
-    redirect(link){
+    redirect(link) {
       this.redirect(link);
     },
     copyLink(link) {
@@ -340,7 +335,7 @@ export default {
         cancelButtonText: 'Cancel'
       }).then((value) => {
         var videoID = this.videos[index].videoID;
-        console.log("requesting new name for video: " + videoID + ", index is " + index+", name is "+value.value);
+        console.log("requesting new name for video: " + videoID + ", index is " + index + ", name is " + value.value);
         axios({
             url: 'https://cigari.ga/api/rename',
             method: 'post',
@@ -348,7 +343,7 @@ export default {
             data: {
               user: this.$store.state.authUser,
               videoID: videoID,
-              newName:value.value
+              newName: value.value
             }
           })
           .then((res) => {
@@ -377,7 +372,7 @@ export default {
       this.stats.usedSpace = (this.stats.totalSpace - this.$store.state.authUser.remainingSpace).toFixed(1);
     },
     setUpAdminStats() {
-      this.stats.uploadDates=[];
+      this.stats.uploadDates = [];
       this.videos.forEach(video => {
         this.stats.uploadDates.push(video.uploadDate);
       });
@@ -410,13 +405,11 @@ export default {
     }
   },
   layout: 'main',
-  transition:'mainTransition'
+  transition: 'mainTransition'
 }
 </script>
 
-
 <style>
-
   .multiSelectActions{
     margin-top:vh;
     height:10vh;
@@ -540,8 +533,4 @@ export default {
     padding: 1vh;
     font-family: LatoLight;
   }
-
-  
-
-
 </style>
