@@ -293,8 +293,16 @@ export default {
                     message: res.data.msg
                   });
                   if (res.data.error == 0) {
+                    this.multipleSelection=[];
                     //TODO: update local representation 
-                    
+                    this.videos.forEach((video,index) => {
+                      req.data.newData.forEach(newVideo => {
+                        if(newVideo.videoID==video.videoID){ //update local
+                          this.videos[index].videoID=newVideo.newVideoID;
+                          this.videos[index].link=newVideo.newLink;
+                        }
+                      });
+                    });
                   } else if (res.data.error == 1) {
                     console.log("error while bulk requesting new ids");
                   }

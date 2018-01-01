@@ -536,6 +536,7 @@ app.post('/api/newLinkBulk', function(req, res) {
     console.log("NEW LINK BULK | requester: " + req.session.authUser.username);
 
     var returner = {};
+    returner.error = false;
     var opCount = 0;
     if (!req.session.authUser) {
         res.json({
@@ -545,13 +546,13 @@ app.post('/api/newLinkBulk', function(req, res) {
         });
     } else {
         returner.newData = req.body.selection;
-        req.body.selection.forEach(sel => {
+        req.body.selection.forEach((sel, index) => {
             var newVideoID = shortid.generate();
             var newVidLink = process.env.VIDEO_LINK_PRE + newVideoID;
 
             db.videos.update({
                 username: req.session.authUser.username,
-                videoID: req.body.videoID
+                videoID: sel.videoID
             }, {
                 $set: {
                     videoID: newVideoID,
@@ -564,10 +565,9 @@ app.post('/api/newLinkBulk', function(req, res) {
                     returner.error = true;
                     returner.msgType = "error";
                     returner.msg = "Link regeneration failed.";
-                    return res.json(returner);
                 }
 
-                fs.rename(storagePath + req.body.videoID + ".mp4", storagePath + newVideoID + ".mp4", function(err) {
+                fs.rename(storagePath + sel.videoID + ".mp4", storagePath + newVideoID + ".mp4", function(err) {
                     if (err) throw err;
                 });
 
@@ -575,15 +575,16 @@ app.post('/api/newLinkBulk', function(req, res) {
                 returner.newData[index].newLink = newVidLink;
 
                 if (opCount == req.body.selection.length - 1) {
-                    returner.error = false;
-                    returner.msgType = "success";
-                    returner.msg = "Links successfully updated!";
+                    if (!returner.error) {
+                        returner.msgType = "success";
+                        returner.msg = "Links successfully updated!";
+                    }
+
                     return res.json(returner);
                 } else {
                     opCount++;
                 }
 
-                return res.json(returner);
             });
         });
 
