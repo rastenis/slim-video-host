@@ -790,7 +790,7 @@ app.post('/api/removeVideoBulk', function(req, res) {
                             res.json(returner);
                         }
 
-                        if (opCount == req.body.multipleSelection.length) {
+                        if (opCount == req.body.multipleSelection.length - 1) {
                             returner.msgType = "info";
                             returner.error = 0;
                             returner.msg = "Successfully deleted video!";

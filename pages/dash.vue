@@ -109,7 +109,7 @@
           </el-card>
         </div>
         <h2 class="subtitle1">Your videos:</h2>
-        <el-table :data="videos" style="width: 100%" @selection-change="handleSelectionChange">
+        <el-table :data="videos" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
           <el-table-column
             type="selection"
             width="40">
@@ -243,21 +243,20 @@ export default {
               cancelButtonText: 'Cancel',
               type: 'warning'
             }).then(() => {
-              var sel=selects;
-              this.multipleSelection.forEach(selection => {
-                this.videos.splice(selection.index, 1);
-              });
-              console.log(sel);
+              console.log(selects);
               axios({
                   url: 'https://cigari.ga/api/removeVideoBulk',
                   method: 'post',
                   credentials: 'same-origin',
                   data: {
                     user: this.$store.state.authUser,
-                    multipleSelection:sel
+                    multipleSelection:selects
                   }
                 })
                 .then((res) => {
+                  this.multipleSelection.forEach(selection => {
+                    this.videos.splice(selection.index, 1);
+                  });
                   this.$message({
                     type: res.data.msgType,
                     message: res.data.msg
@@ -301,13 +300,14 @@ export default {
                   }
                 }).catch(function (e) {
                   console.log(e);
-                });
+                }); 
 
             }).catch(() => {});
     },
     handleSelectionChange(val){
-      console.log(val);
       this.multipleSelection = val;
+      console.log(this.multipleSelection);
+      
     },
     redirect(link){
       this.redirect(link);
