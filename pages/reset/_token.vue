@@ -61,12 +61,11 @@ export default {
             method: 'get',
             credentials: 'same-origin',
             data: {
-              token: context.params.token,
-              user: context.app.store.state.authUser 
+              token: context.params.token
             }
           })
           .then((res) => {
-            if (res.data.error == 0) {
+            if (res.token.valid) {
               token.valid=true;
               token.token=context.params.token;
             }
@@ -90,7 +89,8 @@ export default {
             method: 'post',
             credentials: 'same-origin',
             data: {
-              email:email
+              newPass:newPass,
+              token:this.token.token
             }
           }
           ).then(res=>{

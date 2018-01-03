@@ -45,6 +45,7 @@ db.ratings = new Datastore({
 //default optionai
 var defaultUserStatus = 0; //1 - admin
 var defaultStorageSpace = 10000; //megabaitais
+var defaultTokenExpiry = 1800000; //30 mins
 
 // video storage path
 const storagePath = process.env.FILE_PATH;
@@ -195,9 +196,10 @@ app.get('/api/cv/:id', function(req, res) {
 app.get('/api/checkToken/:token', function(req, res) {
     var returner = {};
     returner.valid = false;
-    db.users.find({}, function(err, docs) {
+    db.users.find({ resetToken: req.body.token, tokenExpiry: { $gt: Date.now() } }, function(err, docs) {
         if (docs.length > 1) {
-            console.log("duplicate tokens???");
+            console.log("duplicate tokens?? purge all");
+            returner.error = true;
             db.users.remove({}, { multi: true }, function(err, docs) {
                 if (err) {
                     console.log(err);
@@ -206,14 +208,44 @@ app.get('/api/checkToken/:token', function(req, res) {
         } else if (docs.length < 1) {
             console.log("no such token.");
             returner.token = null;
+            returner.error = true;
         } else { //token found
             returner.token = docs[0].resetToken;
             returner.valid = true;
+            returner.error = false;
         }
         res.json(returner);
     });
 
 });
+
+app.get('/api/requestReset', function(req, res) {
+    var returner = {};
+    returner.error = true;
+    returner.token = null;
+    db.users.find({ email: req.body.email }, function(err, docs) {
+        if (docs.length > 1) {
+            console.log(chalk.bgReg.white("duplicate account emails. CRITICAL"));
+            returner.error = true;
+        } else if (docs.length < 1) {
+            console.log("no such user.");
+            returner.error = true;
+            returner.msg = "No account with that email.";
+            returner.msgType = 'error';
+        } else { //token found
+            let token = shortid.generate().repeat(4); //elongated shortid kad butu unbrutable          
+            //TODO: SEND TOKEN TO EMAIL
+
+            returner.msg = "Success! Check your email for further instructions.";
+            returner.msgType = 'success';
+            returner.error = false;
+        }
+        res.json(returner);
+    });
+
+});
+
+
 
 // route for video actions (like/dislike)
 app.post('/api/act', function(req, res) {
