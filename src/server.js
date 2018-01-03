@@ -37,7 +37,6 @@ db.videos = new Datastore({
     filename: process.env.DB_VIDEOS_PATH,
     autoload: true
 });
-
 db.ratings = new Datastore({
     filename: process.env.DB_RATINGS_PATH,
     autoload: true
@@ -190,6 +189,30 @@ app.get('/api/cv/:id', function(req, res) {
             });
         }
     }
+});
+
+
+app.get('/api/checkToken/:token', function(req, res) {
+    var returner = {};
+    returner.valid = false;
+    db.users.find({}, function(err, docs) {
+        if (docs.length > 1) {
+            console.log("duplicate tokens???");
+            db.users.remove({}, { multi: true }, function(err, docs) {
+                if (err) {
+                    console.log(err);
+                }
+            });
+        } else if (docs.length < 1) {
+            console.log("no such token.");
+            returner.token = null;
+        } else { //token found
+            returner.token = docs[0].resetToken;
+            returner.valid = true;
+        }
+        res.json(returner);
+    });
+
 });
 
 // route for video actions (like/dislike)

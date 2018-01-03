@@ -58,7 +58,7 @@ export default {
       };
       return axios({
             url: `https://cigari.ga/api/checkToken/${context.params.token}`,
-            method: 'post',
+            method: 'get',
             credentials: 'same-origin',
             data: {
               token: context.params.token,
