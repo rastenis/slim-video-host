@@ -2,11 +2,14 @@
   <div>
     <div class='ResetForm' v-if="!$store.state.authUser && token.valid">
       <el-form :model="resetForm" label-width="100px" ref="resetForm" :rules="formRulesReset">
-        <el-form-item label="Email" prop="email">
-          <el-input v-model="resetForm.email"></el-input>
+        <el-form-item label="New password" prop="pass">
+          <el-input v-model="resetForm.pass"></el-input>
+        </el-form-item>
+        <el-form-item label="Confirm new password" prop="passconf">
+          <el-input v-model="resetForm.passconf"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button @click="askForToken">Reset password</el-button>
+          <el-button @click="reset">Reset password</el-button>
         </el-form-item>
       </el-form> 
     </div>
@@ -81,19 +84,20 @@ export default {
     }
   },
   methods: {
-    async askForToken() {
-      this.$refs["tokenReqForm"].validate((valid) => {
+    async reset() {
+      this.$refs["resetForm"].validate((valid) => {
         if (valid) {
           axios({
             url: 'https://cigari.ga/api/requestReset',
             method: 'post',
             credentials: 'same-origin',
             data: {
-              newPass:newPass,
+              newPass:this.resetForm.pass,
               token:this.token.token
             }
           }
           ).then(res=>{
+            resetForm("resetForm");
             this.$message({
               type:res.data.msgType,
               msg:res.data.msg
