@@ -1,7 +1,8 @@
 <template>
   <div>
+    <h1 class="title">Password reset</h1>
     <div class='ResetForm' v-if="!$store.state.authUser">
-      <el-form :model="resetForm" label-width="100px" ref="tokenReqForm" :rules="formRules">
+      <el-form label-position="top" :model="resetForm" label-width="100px" ref="tokenReqForm" :rules="formRules">
         <el-form-item label="Email" prop="email">
           <el-input v-model="resetForm.email"></el-input>
         </el-form-item>
@@ -92,5 +93,16 @@ export default {
     left: 0;
     height: 50%;
     width: 40%;
+  }
+
+  .title{
+    font-family: LatoLight;
+    font-size: 6vh;
+    padding-top:10vh;
+    padding-left:3vw;
+  }
+
+   .formText{
+    color:#707070;
   }
 </style>

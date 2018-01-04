@@ -1,23 +1,22 @@
 <template>
   <div>
-    <div class='ResetForm' v-if="token.valid">
-      <el-form :model="resetForm" label-width="100px" ref="resetForm" :rules="formRulesReset">
-        <p class="formText">New Password</p>
-        <el-form-item prop="pass">
-          <el-input v-model="resetForm.pass"></el-input>
+    <h1 class="title">Password reset</h1>
+    <el-card class='ResetForm' v-if="token.valid">
+      <el-form :model="resetForm" label-position="top" label-width="100px" ref="resetForm" :rules="formRulesReset">
+        <el-form-item prop="pass" label="New password:">
+          <el-input v-model="resetForm.pass" ></el-input>
         </el-form-item>
-        <p class="formText">Confirm New Password</p>        
-        <el-form-item prop="passconf">
+        <el-form-item prop="passconf" label="Confirm new password:">
           <el-input v-model="resetForm.passconf"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button @click="reset">Reset password</el-button>
         </el-form-item>
       </el-form> 
-    </div>
-    <div v-else>
-      <h1>No such token/The token has expired.</h1>
-    </div>
+    </el-card>
+    <el-card v-else>
+      <h3>No such token/The token has expired.</h3>
+    </el-card>
   </div>
 </template>
 
@@ -148,4 +147,12 @@ export default {
   .formText{
     color:#707070;
   }
+
+  .title{
+    font-family: LatoLight;
+    font-size: 6vh;
+    padding-top:10vh;
+    padding-left:3vw;
+  }
+
 </style>
