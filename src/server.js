@@ -18,6 +18,8 @@ const fs = require("fs");
 const util = require('util');
 const helmet = require('helmet');
 const du = require('du');
+const nodemailer = require('nodemailer');
+
 
 //isemu - ir _ is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
@@ -232,20 +234,49 @@ app.get('/api/requestReset', function(req, res) {
             returner.error = true;
             returner.msg = "No account with that email.";
             returner.msgType = 'error';
+            res.json(returner);
         } else { //token found
-            let token = shortid.generate().repeat(4); //elongated shortid kad butu unbrutable          
+            let token = shortid.generate().repeat(4); //elongated shortid kad butu unbrutable     
+            console.log("generated token is " + token);
             //TODO: SEND TOKEN TO EMAIL
 
-            returner.msg = "Success! Check your email for further instructions.";
-            returner.msgType = 'success';
-            returner.error = false;
+            var nmlTrans = nodemailer.createTransport({
+                service: 'Gmail',
+                auth: {
+                    user: process.env.MAIL_UN,
+                    pass: process.env.MAIL_PASS
+                }
+            });
+
+            var mailOptions = {
+                to: user.email,
+                from: 'merchseries.referals@gmail.com',
+                subject: 'Password Reset',
+                text: 'You are receiving this because a password reset for your account was requested.\n\n' +
+                    'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
+                    'http://' + req.headers.host + '/reset/' + token + '\n\n' +
+                    'If you did not request this, please ignore this email and your password will remain unchanged.\n\n' +
+                    'Sincerely,\n' +
+                    'Scharkee-v team.'
+            };
+            nmlTrans.sendMail(mailOptions, function(err) {
+                if (err) {
+                    console.log(err);
+                }
+            });
+
+            //store token
+            db.users.update({ email: req.body.email }, { $set: { resetToken: token, tokenExpiry: Date.now() + defaultTokenExpiry } }, { upsert: false }, function(err, docs) {
+                returner.msg = "Success! Check your email for further instructions.";
+                returner.msgType = 'success';
+                returner.error = false;
+                res.json(returner);
+            });
+
         }
-        res.json(returner);
     });
 
 });
-
-
 
 // route for video actions (like/dislike)
 app.post('/api/act', function(req, res) {
