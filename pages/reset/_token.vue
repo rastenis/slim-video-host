@@ -27,9 +27,9 @@ export default {
         pass: '',
         passconf: ''
       },
-      token:{
-        valid:false,
-        token:null
+      token: {
+        valid: false,
+        token: null
       },
       formRules: {
         formRulesReset: {
@@ -51,35 +51,36 @@ export default {
             trigger: 'blur'
           }]
         }
+      }
     }
   },
   asyncData(context) {
-    if(context.params.token!=""){
-      var token={
-        valid:false,
-        token:null
+    if (context.params.token != "") {
+      var token = {
+        valid: false,
+        token: null
       };
       return axios({
-            url: `https://cigari.ga/api/checkToken/${context.params.token}`,
-            method: 'get',
-            credentials: 'same-origin',
-            data: {
-              token: context.params.token
-            }
-          })
-          .then((res) => {
-            if (res.token.valid) {
-              token.valid=true;
-              token.token=context.params.token;
-            }
-            return {
-              token:token
-            };
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-    }else{
+          url: `https://cigari.ga/api/checkToken/${context.params.token}`,
+          method: 'get',
+          credentials: 'same-origin',
+          data: {
+            token: context.params.token
+          }
+        })
+        .then((res) => {
+          if (res.token.valid) {
+            token.valid = true;
+            token.token = context.params.token;
+          }
+          return {
+            token: token
+          };
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    } else {
       context.router.push("/");
     }
   },
@@ -92,17 +93,16 @@ export default {
             method: 'post',
             credentials: 'same-origin',
             data: {
-              newPass:this.resetForm.pass,
-              token:this.token.token
+              newPass: this.resetForm.pass,
+              token: this.token.token
             }
-          }
-          ).then(res=>{
+          }).then(res => {
             resetForm("resetForm");
             this.$message({
-              type:res.data.msgType,
-              msg:res.data.msg
+              type: res.data.msgType,
+              msg: res.data.msg
             });
-          }).catch(e=>{
+          }).catch(e => {
             console.log(e);
           });
         } else {
@@ -123,7 +123,7 @@ export default {
     }
   },
   layout: 'main',
-  transition:'mainTransition'
+  transition: 'mainTransition'
 }
 </script>
 
