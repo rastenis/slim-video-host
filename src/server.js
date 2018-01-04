@@ -19,7 +19,7 @@ const util = require('util');
 const helmet = require('helmet');
 const du = require('du');
 const nodemailer = require('nodemailer');
-
+const crypto = require('crypto');
 
 //isemu - ir _ is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
@@ -198,7 +198,8 @@ app.get('/api/cv/:id', function(req, res) {
 app.get('/api/checkToken/:token', function(req, res) {
     var returner = {};
     returner.valid = false;
-    db.users.find({ resetToken: req.body.token, tokenExpiry: { $gt: Date.now() } }, function(err, docs) {
+    console.log("checking for token " + req.params.token);
+    db.users.find({ resetToken: req.params.token, tokenExpiry: { $gt: Date.now() } }, function(err, docs) {
         if (docs.length > 1) {
             console.log("duplicate tokens?? purge all");
             returner.error = true;
@@ -212,6 +213,7 @@ app.get('/api/checkToken/:token', function(req, res) {
             returner.token = null;
             returner.error = true;
         } else { //token found
+            console.log("found token!");
             returner.token = docs[0].resetToken;
             returner.valid = true;
             returner.error = false;
@@ -221,14 +223,15 @@ app.get('/api/checkToken/:token', function(req, res) {
 
 });
 
-app.get('/api/requestReset', function(req, res) {
+app.post('/api/requestReset', function(req, res) {
+    console.log("reset request");
     var returner = {};
     returner.error = true;
     returner.token = null;
-    console.log("reset request");
+    console.log(req.body.email);
     db.users.find({ email: req.body.email }, function(err, docs) {
         if (docs.length > 1) {
-            console.log(chalk.bgReg.white("duplicate account emails. CRITICAL"));
+            console.log(chalk.bgRed.white("duplicate account emails. CRITICAL"));
             returner.error = true;
         } else if (docs.length < 1) {
             console.log("no such user.");
@@ -237,7 +240,7 @@ app.get('/api/requestReset', function(req, res) {
             returner.msgType = 'error';
             res.json(returner);
         } else { //token found
-            let token = shortid.generate().repeat(4); //elongated shortid kad butu unbrutable     
+            let token = crypto.randomBytes(23).toString('hex');
             console.log("generated token is " + token);
             //TODO: SEND TOKEN TO EMAIL
 

@@ -17,6 +17,9 @@
 </template>
 
 <script>
+
+import axios from 'axios';
+
 export default {
   data() {
     return {
@@ -42,12 +45,13 @@ export default {
     async askForToken() {
       this.$refs["tokenReqForm"].validate((valid) => {
         if (valid) {
+          console.log(this.resetForm.email);
           axios({
             url: 'https://cigari.ga/api/requestReset',
             method: 'post',
             credentials: 'same-origin',
             data: {
-              email:email
+              email:this.resetForm.email
             }
           }
           ).then(res=>{
@@ -63,9 +67,6 @@ export default {
           return false;
         }
       });
-    },
-    resetForm(formName) {
-      this.$refs[formName].resetFields();
     }
   },
   mounted() {

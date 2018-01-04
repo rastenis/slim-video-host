@@ -1,11 +1,13 @@
 <template>
   <div>
-    <div class='ResetForm' v-if="!$store.state.authUser && token.valid">
+    <div class='ResetForm' v-if="token.valid">
       <el-form :model="resetForm" label-width="100px" ref="resetForm" :rules="formRulesReset">
-        <el-form-item label="New password" prop="pass">
+        <p class="formText">New Password</p>
+        <el-form-item prop="pass">
           <el-input v-model="resetForm.pass"></el-input>
         </el-form-item>
-        <el-form-item label="Confirm new password" prop="passconf">
+        <p class="formText">Confirm New Password</p>        
+        <el-form-item prop="passconf">
           <el-input v-model="resetForm.passconf"></el-input>
         </el-form-item>
         <el-form-item>
@@ -14,7 +16,7 @@
       </el-form> 
     </div>
     <div v-else>
-      <h1>You already have an account!</h1>
+      <h1>No such token/The token has expired.</h1>
     </div>
   </div>
 </template>
@@ -34,7 +36,6 @@ export default {
         valid: false,
         token: null
       },
-      formRules: {
         formRulesReset: {
           pass: [{
               required: true,
@@ -53,7 +54,6 @@ export default {
             message: 'Please confirm your password.',
             trigger: 'blur'
           }]
-        }
       }
     }
   },
@@ -63,6 +63,7 @@ export default {
         valid: false,
         token: null
       };
+      console.log("checking token "+context.params.token);
       return axios({
           url: `https://cigari.ga/api/checkToken/${context.params.token}`,
           method: 'get',
@@ -72,9 +73,10 @@ export default {
           }
         })
         .then((res) => {
-          if (res.token.valid) {
+          if (res.data.valid) {
             token.valid = true;
             token.token = context.params.token;
+            console.log("set valid and token "+token.token);
           }
           return {
             token: token
@@ -92,7 +94,7 @@ export default {
       this.$refs["resetForm"].validate((valid) => {
         if (valid) {
           axios({
-            url: 'https://cigari.ga/api/requestReset',
+            url: 'https://cigari.ga/api/resetPassword',
             method: 'post',
             credentials: 'same-origin',
             data: {
@@ -100,7 +102,7 @@ export default {
               token: this.token.token
             }
           }).then(res => {
-            resetForm("resetForm");
+            resetform("resetForm");
             this.$message({
               type: res.data.msgType,
               msg: res.data.msg
@@ -114,7 +116,7 @@ export default {
         }
       });
     },
-    resetForm(formName) {
+    resetform(formName) {
       this.$refs[formName].resetFields();
     }
   },
@@ -141,5 +143,9 @@ export default {
     left: 0;
     height: 50%;
     width: 40%;
+  }
+
+  .formText{
+    color:#707070;
   }
 </style>
