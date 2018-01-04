@@ -21,9 +21,7 @@ export default {
   data() {
     return {
       resetForm: {
-        email: '',
-        pass: '',
-        passconf: ''
+        email: ''
       },
       formRules: {
         email: [{
@@ -37,25 +35,6 @@ export default {
             trigger: 'blur'
           }
         ]
-      },
-      formRulesReset: {
-        pass: [{
-            required: true,
-            message: 'Please enter a password.',
-            trigger: 'blur'
-          },
-          {
-            min: 8,
-            max: 100,
-            message: 'Length should be 8 to 100',
-            trigger: 'blur'
-          }
-        ],
-        passconf: [{
-          required: true,
-          message: 'Please confirm your password.',
-          trigger: 'blur'
-        }]
       }
     }
   },
