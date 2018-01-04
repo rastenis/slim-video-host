@@ -249,7 +249,7 @@ app.get('/api/requestReset', function(req, res) {
             });
 
             var mailOptions = {
-                to: user.email,
+                to: req.body.email,
                 from: 'merchseries.referals@gmail.com',
                 subject: 'Password Reset',
                 text: 'You are receiving this because a password reset for your account was requested.\n\n' +
