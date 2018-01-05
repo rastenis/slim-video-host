@@ -138,7 +138,7 @@ export default {
     right: 0;
     bottom: 0;
     left: 0;
-    height: 50%;
+    height: 40%;
     width: 40%;
   }
 
