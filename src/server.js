@@ -282,6 +282,73 @@ app.post('/api/requestReset', function(req, res) {
 
 });
 
+app.post('/api/changePassword', function(req, res) {
+    var returner = {};
+    returner.error = 0;
+    //ir paprastas pakeitimas ir pass resetas po token gavimo.
+    if (req.body.resetType == 1) { //token reset
+        //neriam iskart i update
+        var hashedPass = hashUpPass(req.body.newPass);
+
+        db.users.update({
+            resetToken: req.body.token,
+            tokenExpiry: {
+                $gt: Date.now()
+            }
+        }, {
+            $set: {
+                password: hashedPass
+            }
+        }, {
+            upsert: false,
+            multi: false
+        }, function(err, numAffected, affectedDocs) {
+            if (numAffected < 1) {
+                returner.msg = "Password reset token is invalid or has expired.";
+                returner.msgType = "error";
+                returner.error = 1;
+            } else if (numAffected > 1) {
+                //shouldnt ever happen
+                console.log(chalk.bgRed.white("CRITICAL! ") + "multiple passwords updated somehow");
+            } else {
+                //all ok
+                returner.msg = "You have successfully changed your password!";
+                returner.msgType = "success";
+                returner.error = 0;
+            }
+            res.json(returner);
+        });
+    } else { //regular reset
+        if (!req.session.authUser) { //negali passwordo keisti neprisijunges
+            returner.msg = "You are not authorized for this action.";
+            returner.msgType = "error";
+            returner.error = 1;
+            res.json(returner);
+        } else { //useris prisijunges
+            //hashinam new password
+            var hashedPass = hashUpPass(req.body.newPass);
+            //updateinam
+            db.users.update({
+                email: req.session.authUser.email
+            }, {
+                $set: {
+                    password: hashedPass
+                }
+            }, {
+                upsert: false
+            }, function(err) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    returner.msg = "You have successfully changed your password!";
+                    returner.msgType = "success";
+                    res.json(returner);
+                }
+            });
+        }
+    }
+});
+
 // route for video actions (like/dislike)
 app.post('/api/act', function(req, res) {
     //ignore unauthorized acts
