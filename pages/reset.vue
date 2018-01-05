@@ -58,7 +58,7 @@ export default {
           ).then(res=>{
             this.$message({
               type:res.data.msgType,
-              msg:res.data.msg
+              message:res.data.msg
             });
           }).catch(e=>{
             console.log(e);

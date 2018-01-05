@@ -102,11 +102,11 @@ export default {
               token: this.token.token
             }
           }).then(res => {
-            resetform("resetForm");
             this.$message({
               type: res.data.msgType,
-              msg: res.data.msg
+              message: res.data.msg
             });
+            this.$refs["resetForm"].resetFields();
           }).catch(e => {
             console.log(e);
           });
@@ -115,9 +115,6 @@ export default {
           return false;
         }
       });
-    },
-    resetform(formName) {
-      this.$refs[formName].resetFields();
     }
   },
   mounted() {

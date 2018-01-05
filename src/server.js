@@ -283,6 +283,7 @@ app.post('/api/requestReset', function(req, res) {
 });
 
 app.post('/api/changePassword', function(req, res) {
+    console.log("PASSWORD CHANGE ||");
     var returner = {};
     returner.error = 0;
     //ir paprastas pakeitimas ir pass resetas po token gavimo.
@@ -300,9 +301,12 @@ app.post('/api/changePassword', function(req, res) {
                 password: hashedPass
             }
         }, {
-            upsert: false
+            upsert: false,
+            returnUpdatedDocs: true
         }, function(err, numAffected, affectedDocs) {
-            if (numAffected < 1) {
+            console.log("found the token");
+            if (numAffected == 0) {
+                console.log("password was NOT successfully changed");
                 returner.msg = "Password reset token is invalid or has expired.";
                 returner.msgType = "error";
                 returner.error = 1;
@@ -311,11 +315,13 @@ app.post('/api/changePassword', function(req, res) {
                 console.log(chalk.bgRed.white("CRITICAL! ") + "multiple passwords updated somehow");
             } else {
                 //all ok
+                console.log("password was successfully changed");
                 returner.msg = "You have successfully changed your password!";
                 returner.msgType = "success";
                 returner.error = 0;
+                res.json(returner);
+
             }
-            res.json(returner);
         });
     } else { //regular reset
         if (!req.session.authUser) { //negali passwordo keisti neprisijunges
@@ -666,7 +672,8 @@ app.post('/api/newLink', function(req, res) {
                     link: newVidLink
                 }
             }, {
-                upsert: false
+                upsert: false,
+                returnUpdatedDocs: true
             }, function(err, numAffected, affectedDocs) {
                 if (numAffected < 1) {
                     returner.error = true;
