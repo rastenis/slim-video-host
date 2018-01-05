@@ -4,10 +4,10 @@
     <el-card class='ResetForm' v-if="token.valid">
       <el-form :model="resetForm" label-position="top" label-width="100px" ref="resetForm" :rules="formRulesReset">
         <el-form-item prop="pass" label="New password:">
-          <el-input v-model="resetForm.pass" ></el-input>
+          <el-input type="password" v-model="resetForm.pass" ></el-input>
         </el-form-item>
         <el-form-item prop="passconf" label="Confirm new password:">
-          <el-input v-model="resetForm.passconf"></el-input>
+          <el-input type="password" v-model="resetForm.passconf"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button @click="reset">Reset password</el-button>
@@ -15,7 +15,7 @@
       </el-form> 
     </el-card>
     <el-card v-else>
-      <h3>No such token/The token has expired.</h3>
+      <h3>No such token or the token has expired.</h3>
     </el-card>
   </div>
 </template>
@@ -93,10 +93,11 @@ export default {
       this.$refs["resetForm"].validate((valid) => {
         if (valid) {
           axios({
-            url: 'https://cigari.ga/api/resetPassword',
+            url: 'https://cigari.ga/api/changePassword',
             method: 'post',
             credentials: 'same-origin',
             data: {
+              resetType:1,
               newPass: this.resetForm.pass,
               token: this.token.token
             }

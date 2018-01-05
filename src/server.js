@@ -300,8 +300,7 @@ app.post('/api/changePassword', function(req, res) {
                 password: hashedPass
             }
         }, {
-            upsert: false,
-            multi: false
+            upsert: false
         }, function(err, numAffected, affectedDocs) {
             if (numAffected < 1) {
                 returner.msg = "Password reset token is invalid or has expired.";
