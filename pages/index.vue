@@ -18,6 +18,7 @@
           </el-form-item>
           <el-form-item>
             <el-button class="loginButton" type="submit" @click="login">Login</el-button>
+            <a type="text" @click="$store.app.router.push('/reset')" class="forgotPasswordLink">Forgot your password?</a>                      
           </el-form-item>
         </el-form>
       </div>
@@ -137,13 +138,21 @@ export default {
 </style>
 
 
-
 <style>
 .postLogin{
   margin-top:10vh;
   text-align:center;
 }
 
+.forgotPasswordLink{
+  position: absolute;
+  margin-top:-2vh !important; 
+  cursor: pointer;
+  margin: auto;
+  font-family: LatoRegular;
+
+}
+ 
 .subsituteInput {
   font-family: LatoRegular !important;
   border-style: solid !important;

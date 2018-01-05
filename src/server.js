@@ -18,6 +18,8 @@ const fs = require("fs");
 const util = require('util');
 const helmet = require('helmet');
 const du = require('du');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 //isemu - ir _ is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
@@ -37,7 +39,6 @@ db.videos = new Datastore({
     filename: process.env.DB_VIDEOS_PATH,
     autoload: true
 });
-
 db.ratings = new Datastore({
     filename: process.env.DB_RATINGS_PATH,
     autoload: true
@@ -46,6 +47,7 @@ db.ratings = new Datastore({
 //default optionai
 var defaultUserStatus = 0; //1 - admin
 var defaultStorageSpace = 10000; //megabaitais
+var defaultTokenExpiry = 1800000; //30 mins
 
 // video storage path
 const storagePath = process.env.FILE_PATH;
@@ -187,6 +189,166 @@ app.get('/api/cv/:id', function(req, res) {
         } else {
             res.json({
                 error: 1
+            });
+        }
+    }
+});
+
+
+app.get('/api/checkToken/:token', function(req, res) {
+    var returner = {};
+    returner.valid = false;
+    console.log("checking for token " + req.params.token);
+    db.users.find({ resetToken: req.params.token, tokenExpiry: { $gt: Date.now() } }, function(err, docs) {
+        if (docs.length > 1) {
+            console.log("duplicate tokens?? purge all");
+            returner.error = true;
+            db.users.remove({}, { multi: true }, function(err, docs) {
+                if (err) {
+                    console.log(err);
+                }
+            });
+        } else if (docs.length < 1) {
+            console.log("no such token.");
+            returner.token = null;
+            returner.error = true;
+        } else { //token found
+            console.log("found token!");
+            returner.token = docs[0].resetToken;
+            returner.valid = true;
+            returner.error = false;
+        }
+        res.json(returner);
+    });
+
+});
+
+app.post('/api/requestReset', function(req, res) {
+    console.log("reset request");
+    var returner = {};
+    returner.error = true;
+    returner.token = null;
+    console.log(req.body.email);
+    db.users.find({ email: req.body.email }, function(err, docs) {
+        if (docs.length > 1) {
+            console.log(chalk.bgRed.white("duplicate account emails. CRITICAL"));
+            returner.error = true;
+        } else if (docs.length < 1) {
+            console.log("no such user.");
+            returner.error = true;
+            returner.msg = "No account with that email.";
+            returner.msgType = 'error';
+            res.json(returner);
+        } else { //token found
+            let token = crypto.randomBytes(23).toString('hex');
+            console.log("generated token is " + token);
+
+            var nmlTrans = nodemailer.createTransport({
+                service: 'Gmail',
+                auth: {
+                    user: process.env.MAIL_UN,
+                    pass: process.env.MAIL_PASS
+                }
+            });
+
+            var mailOptions = {
+                to: req.body.email,
+                from: 'merchseries.referals@gmail.com',
+                subject: 'Password Reset',
+                text: 'You are receiving this because a password reset for your account was requested.\n\n' +
+                    'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
+                    'http://' + req.headers.host + '/r/' + token + '\n\n' +
+                    'If you did not request this, please ignore this email and your password will remain unchanged.\n\n' +
+                    'Sincerely,\n' +
+                    'Scharkee-v team.'
+            };
+            nmlTrans.sendMail(mailOptions, function(err) {
+                if (err) {
+                    console.log(err);
+                }
+            });
+
+            //store token
+            db.users.update({ email: req.body.email }, { $set: { resetToken: token, tokenExpiry: Date.now() + defaultTokenExpiry } }, { upsert: false }, function(err, docs) {
+                returner.msg = "Success! Check your email for further instructions.";
+                returner.msgType = 'success';
+                returner.error = false;
+                res.json(returner);
+            });
+
+        }
+    });
+
+});
+
+app.post('/api/changePassword', function(req, res) {
+    console.log("PASSWORD CHANGE ||");
+    var returner = {};
+    returner.error = 0;
+    //ir paprastas pakeitimas ir pass resetas po token gavimo.
+    if (req.body.resetType == 1) { //token reset
+        //neriam iskart i update
+        var hashedPass = hashUpPass(req.body.newPass);
+
+        db.users.update({
+            resetToken: req.body.token,
+            tokenExpiry: {
+                $gt: Date.now()
+            }
+        }, {
+            $set: {
+                password: hashedPass,
+                tokenExpiry: 0
+            }
+        }, {
+            upsert: false,
+            returnUpdatedDocs: true
+        }, function(err, numAffected, affectedDocs) {
+            console.log("found the token");
+            if (numAffected == 0) {
+                console.log("password was NOT successfully changed");
+                returner.msg = "Password reset token is invalid or has expired.";
+                returner.msgType = "error";
+                returner.error = 1;
+            } else if (numAffected > 1) {
+                //shouldnt ever happen
+                console.log(chalk.bgRed.white("CRITICAL! ") + "multiple passwords updated somehow");
+            } else {
+                //all ok
+                console.log("password was successfully changed");
+                returner.msg = "You have successfully changed your password!";
+                returner.msgType = "success";
+                returner.error = 0;
+                res.json(returner);
+
+            }
+        });
+    } else { //regular reset
+        if (!req.session.authUser) { //negali passwordo keisti neprisijunges
+            returner.msg = "You are not authorized for this action.";
+            returner.msgType = "error";
+            returner.error = 1;
+            res.json(returner);
+        } else { //useris prisijunges
+            //hashinam new password
+            var hashedPass = hashUpPass(req.body.newPass);
+            //updateinam
+            db.users.update({
+                email: req.session.authUser.email
+            }, {
+                $set: {
+                    password: hashedPass
+                }
+            }, {
+                upsert: false
+            }, function(err) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    returner.msg = "You have successfully changed your password!";
+                    returner.msgType = "success";
+                    res.json(returner);
+                }
             });
         }
     }
@@ -510,7 +672,8 @@ app.post('/api/newLink', function(req, res) {
                     link: newVidLink
                 }
             }, {
-                upsert: false
+                upsert: false,
+                returnUpdatedDocs: true
             }, function(err, numAffected, affectedDocs) {
                 if (numAffected < 1) {
                     returner.error = true;
