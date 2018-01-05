@@ -84,6 +84,8 @@ export default {
 
 
 <style>
+
+
   .ResetForm{
     position: absolute;
     margin: auto;
@@ -91,7 +93,7 @@ export default {
     right: 0;
     bottom: 0;
     left: 0;
-    height: 50%;
+    height: 30%;
     width: 40%;
   }
 
