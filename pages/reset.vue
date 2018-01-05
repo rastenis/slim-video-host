@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1 class="title">Password reset</h1>
-    <div class='ResetForm' v-if="!$store.state.authUser">
+    <el-card class='ResetForm' v-if="!$store.state.authUser">
       <el-form label-position="top" :model="resetForm" label-width="100px" ref="tokenReqForm" :rules="formRules">
         <el-form-item label="Email" prop="email">
           <el-input v-model="resetForm.email"></el-input>
@@ -10,7 +10,7 @@
           <el-button @click="askForToken">Request reset</el-button>
         </el-form-item>
       </el-form> 
-    </div>
+    </el-card>
     <div v-else>
       <h1>You already have an account!</h1>
     </div>

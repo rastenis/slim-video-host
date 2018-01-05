@@ -242,7 +242,6 @@ app.post('/api/requestReset', function(req, res) {
         } else { //token found
             let token = crypto.randomBytes(23).toString('hex');
             console.log("generated token is " + token);
-            //TODO: SEND TOKEN TO EMAIL
 
             var nmlTrans = nodemailer.createTransport({
                 service: 'Gmail',
@@ -298,7 +297,8 @@ app.post('/api/changePassword', function(req, res) {
             }
         }, {
             $set: {
-                password: hashedPass
+                password: hashedPass,
+                tokenExpiry: 0
             }
         }, {
             upsert: false,
