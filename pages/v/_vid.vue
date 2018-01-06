@@ -59,7 +59,6 @@ export default {
     }
   },
   asyncData(context) {
-    console.log(context.route);
     var nonExistent = false;
     var video,ratings,userRatings;
     return axios({
@@ -156,7 +155,9 @@ export default {
       meta: [
         { property: "og:url",  content:"https://cigari.ga/v/"+this.video.videoID },
         { property: "og:title",  content:this.video.name },
-        { property: "og:type",  content:"video.other"}
+        { property: "og:type",  content:"video.other"},
+        { property: "og:image",  content:'/videos/thumbs/' +this.video.videoID + '.jpg'}
+        
         
         
       ]

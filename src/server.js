@@ -20,6 +20,7 @@ const helmet = require('helmet');
 const du = require('du');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+var exec = require('child_process').exec;
 
 //isemu - ir _ is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
@@ -1016,7 +1017,16 @@ app.post('/api/upload', function(req, res) {
                                 size: fileSizeInMegabytes,
                                 confirmed: false
                             }, function() {
-                                req.files.file.mv(storagePath + videoID + extension);
+                                req.files.file.mv(storagePath + videoID + extension, function(err) {
+                                    //savinu thumbnail
+                                    exec('ffmpeg -i ../' + storagePath + videoID + extension + ' -ss 0 -vframes 1 ../' + storagePath + "thumbs/" + videoID + '.jpg', {
+                                        cwd: __dirname
+                                    }, function(error, stdout, stderr) {
+                                        if (error) {
+                                            console.log(error);
+                                        }
+                                    });
+                                });
                             });
                         }
                     });
