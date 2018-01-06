@@ -15,7 +15,7 @@
       </el-form>
     </el-card>
     <el-card class="uploadCard uploadForm clickableCard" v-else>
-        <el-upload ref="uploader" :multiple="false" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :show-file-list="false" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
+        <el-upload ref="uploader" :multiple="false" :thumbnail-mode="true" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :show-file-list="false" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
           <i class="el-icon-upload"></i>
           <div class="el-upload__text">Drop file here or
             <em>click to upload</em>

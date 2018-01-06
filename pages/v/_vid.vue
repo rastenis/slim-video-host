@@ -59,6 +59,7 @@ export default {
     }
   },
   asyncData(context) {
+    console.log(context.route);
     var nonExistent = false;
     var video,ratings,userRatings;
     return axios({
@@ -147,6 +148,18 @@ export default {
             duration: 2000
           });
         });
+    }
+  },
+  head() {
+    return {
+      title: this.video.name,
+      meta: [
+        { property: "og:url",  content:"https://cigari.ga/v/"+this.video.videoID },
+        { property: "og:title",  content:this.video.name },
+        { property: "og:type",  content:"video.other"}
+        
+        
+      ]
     }
   },
   layout: 'video'
