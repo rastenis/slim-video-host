@@ -907,6 +907,9 @@ app.post('/api/removeVideo', function(req, res) {
                     }, {}, function() {
                         //taip pat ir istrinamas pats video is storage
                         fs.unlink(storagePath + selection.videoID + ".mp4");
+
+                        //istrinamas ir thumbnailas
+                        fs.unlink(storagePath + "thumbs/" + selection.videoID + ".jpg");
                     });
 
                     db.videos.remove({

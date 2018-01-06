@@ -321,7 +321,6 @@ export default {
     redirect(link) {
       this.redirect(link);
     },
-    
     toggleSelection(rows) {
       if (rows) {
         rows.forEach(row => {
