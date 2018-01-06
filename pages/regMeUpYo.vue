@@ -1,6 +1,7 @@
 <template>
   <div>
-    <div class='RegForm' v-if="!$store.state.authUser">
+    <h1 class="title">Registration</h1>
+    <el-card class='RegForm' v-if="!$store.state.authUser">
       <el-form :model="regForm" label-width="100px" ref="regForm" :rules="formRules">
         <el-form-item label="Username" prop="username">
           <el-input v-model="regForm.username"></el-input>
@@ -26,10 +27,10 @@
           <el-button @click="submitForm('regForm')">Register</el-button>
         </el-form-item>
       </el-form> 
-    </div>
-    <div v-else>
+    </el-card>
+    <el-card v-else>
       <h1>You already have an account!</h1>
-    </div>
+    </el-card>
   </div>
 </template>
 
@@ -152,7 +153,14 @@ export default {
     right: 0;
     bottom: 0;
     left: 0;
-    height: 50%;
+    height: 60%;
     width: 40%;
+  }
+
+  .title{
+    font-family: LatoLight;
+    font-size: 6vh;
+    padding-top:7vh;
+    padding-left:3vw;
   }
 </style>
