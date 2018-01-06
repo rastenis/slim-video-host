@@ -1,5 +1,5 @@
 # [WIP] Scharkee-vid
----
+
 ##### - a redistributable private video hosting platform.
 *linux only for the time being*
 
@@ -11,7 +11,7 @@
     * Statistics
     * Video list w/ video renaming, removal and link regeneration
 
----
+
 ## Quick setup:
 
 ```shell
@@ -23,7 +23,7 @@ npm run dev
 * The first registered user will be set as admin
 * The registration page is accessible by pressing Alt+R while editing the username field in the landing/login page
 
----
+
 ##### PREREQUISITES:
 * **.env file in the root directory with the following contents:**
     1. ``FILE_PATH`` - video storage path, must also be served as static content, relative to the root dir
@@ -32,7 +32,7 @@ npm run dev
     4. `TOTAL_SPACE` - the total amount of space you are willing to dedicate for the website. It will not allow any more registrations when the amount of reserved user space exceeds `TOTAL_SPACE` **(in bytes)**
     5. `MAIL_UN` and `MAIL_PASS` - gmail account credentials, will be used for password resets
 
----
+
 ##### SCRIPTS:
 
 * ``npm run dev`` rebuilds and runs the server
