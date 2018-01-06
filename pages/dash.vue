@@ -240,7 +240,6 @@ export default {
         cancelButtonText: 'Cancel',
         type: 'warning'
       }).then(() => {
-        console.log(selects);
         axios({
             url: 'https://cigari.ga/api/removeVideo',
             method: 'post',
@@ -251,6 +250,10 @@ export default {
             }
           })
           .then((res) => {
+
+            //resetting selection
+            this.toggleSelection();
+
             res.data.selection.forEach(selection => {
               this.videos.splice(selection.index, 1);
             });
@@ -290,8 +293,10 @@ export default {
               message: res.data.msg
             });
             if (res.data.error == 0) {
-              this.multipleSelection = [];
-              //TODO: update local representation 
+              
+              //resetting selection
+              this.toggleSelection();
+
               this.videos.forEach((video, index) => {
                 res.data.newData.forEach(newVideo => {
                   if (newVideo.videoID == video.videoID) { //update local
@@ -312,10 +317,19 @@ export default {
     handleSelectionChange(val) {
       this.multipleSelection = val;
       console.log(this.multipleSelection);
-
     },
     redirect(link) {
       this.redirect(link);
+    },
+    
+    toggleSelection(rows) {
+      if (rows) {
+        rows.forEach(row => {
+          this.$refs.videoTable.toggleRowSelection(row);
+        });
+      } else {
+        this.$refs.videoTable.clearSelection();
+      }
     },
     copyLink(link) {
       var outt = this;
