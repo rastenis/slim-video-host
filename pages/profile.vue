@@ -20,13 +20,13 @@
         </el-form-item>
       </el-form> 
     </el-card>
-    <el-card class='ProfileForm' v-if="$store.state.authUser">
+    <el-card class='ProfileForm spaced' v-if="$store.state.authUser">
       <div slot="header" class="clearfix">
         <span>Account deletion</span>
       </div>
       <el-form label-position="top" label-width="100px">
         <el-form-item>
-          <el-button @click="deleteAccount">Reset Password</el-button>
+          <el-button type='danger' @click="deleteAccount">Delete account</el-button>
         </el-form-item>
       </el-form> 
     </el-card>
@@ -96,6 +96,34 @@ export default {
         }
       });
     },
+    async deleteAccount() {
+      this.$confirm('This will permanently close your account','Warning',{
+        confirmButtonText:'Proceed',
+        cancelButtonText:'Cancel',
+        type:'error'
+      }).then(() => {
+        axios({
+          url: 'https://cigari.ga/api/deleteAccount',
+          method: 'post',
+          credentials: 'same-origin',
+          data: {
+            //*probably* no data needed, just pull from session even though it's an important action
+          }
+        }
+        ).then(res=>{
+          this.$message({
+            type:res.data.msgType,
+            message:res.data.msg
+          });
+          //log out
+        }).catch(err=>{
+          console.log(err);
+        });
+      }).catch((err) => {
+        console.log(err);
+      }) 
+      
+    },
     validatePassConfirmation(rule, value, callback) {
         if (value === '') {
           callback(new Error('Please confirm the password.'));
@@ -131,6 +159,9 @@ export default {
     width: 80%;
   }
 
+  .spaced{
+    margin-top:5vh;
+  }
   .title{
     font-family: LatoLight;
     font-size: 6vh;
