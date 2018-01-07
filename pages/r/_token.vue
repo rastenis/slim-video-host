@@ -35,24 +35,27 @@ export default {
         valid: false,
         token: null
       },
-        formRulesReset: {
-          pass: [{
-              required: true,
-              message: 'Please enter a password.',
-              trigger: 'blur'
-            },
-            {
-              min: 8,
-              max: 100,
-              message: 'Length should be 8 to 100',
-              trigger: 'blur'
-            }
-          ],
-          passconf: [{
+      formRulesReset: {
+        pass: [{
             required: true,
-            message: 'Please confirm your password.',
+            message: 'Please enter a password.',
             trigger: 'blur'
-          }]
+          },
+          {
+            min: 8,
+            max: 100,
+            message: 'Length should be 8 to 100',
+            trigger: 'blur'
+          }
+        ],
+        passconf: [{
+          validator: this.validatePassConfirmation,
+          trigger: 'blur'
+        }, {
+          required: true,
+          message: 'Please confirm the new password.',
+          trigger: 'blur'
+        }]
       }
     }
   },
@@ -115,6 +118,15 @@ export default {
           return false;
         }
       });
+    },
+    validatePassConfirmation(rule, value, callback) {
+      if (value === '') {
+        callback(new Error('Please confirm the password.'));
+      } else if (value !== this.resetForm.pass) {
+        callback(new Error("Password confirmation doesn't match!"));
+      } else {
+        callback();
+      }
     }
   },
   mounted() {

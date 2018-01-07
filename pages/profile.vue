@@ -129,7 +129,6 @@ export default {
       }).catch((err) => {
         console.log(err);
       }) 
-      
     },
     validatePassConfirmation(rule, value, callback) {
         if (value === '') {
