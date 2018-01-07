@@ -20,6 +20,8 @@
       <el-menu-item index="2">Dashboard</el-menu-item>
       <el-menu-item index="3">Upload</el-menu-item>
       <el-menu-item index="4" class="pRight">Logout</el-menu-item>
+      <el-menu-item index="5" class="pRight">Profile</el-menu-item>
+      
     </el-menu>
     <div class="container">
       <nuxt/>
@@ -54,6 +56,10 @@
             break;
           case "4":
             this.logout();
+            break;
+          case "5":
+            this.$store.app.router.push("/profile")
+            this.$store.state.activeTab = '5';
             break;
           default:
             console.log("invalid nav choice");
