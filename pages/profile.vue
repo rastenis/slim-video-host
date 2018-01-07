@@ -5,14 +5,14 @@
       <div slot="header" class="clearfix">
         <span>Password Change</span>
       </div>
-      <el-form label-position="top" :model="resetForm" label-width="100px" ref="passwordResetForm" :rules="passResetFormRules">
-        <el-form-item prop="oldPass" label="Current password:">
+      <el-form label-position="top" :model="passReset" label-width="100px" ref="passwordResetForm" :rules="passResetFormRules">
+        <el-form-item prop="currentPassword" label="Current password:">
           <el-input type="password" v-model="passReset.currentPassword" ></el-input>
         </el-form-item>
-        <el-form-item prop="pass" label="New password:">
+        <el-form-item prop="newPassword" label="New password:">
           <el-input type="password" v-model="passReset.newPassword" ></el-input>
         </el-form-item>
-        <el-form-item prop="passconf" label="Confirm new password:">
+        <el-form-item prop="newPasswordConf" label="Confirm new password:">
           <el-input type="password" v-model="passReset.newPasswordConf"></el-input>
         </el-form-item>
         <el-form-item>
@@ -46,13 +46,13 @@ export default {
         newPasswordConf:''
       },
       passResetFormRules: {
-        oldPass:[{
+        currentPassword:[{
             required: true,
             message: 'Please enter your current password.',
             trigger: 'blur'
           }
         ],
-        pass: [{
+        newPassword: [{
             required: true,
             message: 'Please enter a new password.',
             trigger: 'blur'
@@ -64,8 +64,15 @@ export default {
             trigger: 'blur'
           }
         ],
-        passconf: [{ validator: this.validatePassConfirmation, trigger: 'blur' }]
-      }
+        newPasswordConf: [ {
+          validator: this.validatePassConfirmation,
+          trigger: 'blur'
+        },{
+          required: true,
+          message: 'Please confirm the new password.',
+          trigger: 'blur'
+        }]
+        }
     }
   },
   methods: {
@@ -127,7 +134,7 @@ export default {
     validatePassConfirmation(rule, value, callback) {
         if (value === '') {
           callback(new Error('Please confirm the password.'));
-        } else if (value !== this.passReset.pass) {
+        } else if (value !== this.passReset.newPassword) {
           callback(new Error("Password confirmation doesn't match!"));
         } else {
           callback();
