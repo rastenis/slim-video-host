@@ -36,6 +36,7 @@
 <script>
 
 import axios from 'axios';
+import _ from 'lodash';
 
 export default {
   data() {
@@ -84,6 +85,7 @@ export default {
             method: 'post',
             credentials: 'same-origin',
             data: {
+              resetType:0,
               oldPass:this.passReset.oldPass,
               newPassword:this.passReset.newPassword,
               newPasswordConf:this.passReset.newPasswordConf
@@ -104,31 +106,35 @@ export default {
       });
     },
     async deleteAccount() {
-      this.$confirm('This will permanently close your account','Warning',{
-        confirmButtonText:'Proceed',
-        cancelButtonText:'Cancel',
-        type:'error'
-      }).then(() => {
-        axios({
-          url: 'https://cigari.ga/api/deleteAccount',
-          method: 'post',
-          credentials: 'same-origin',
-          data: {
-            //*probably* no data needed, just pull from session even though it's an important action
-          }
-        }
-        ).then(res=>{
-          this.$message({
-            type:res.data.msgType,
-            message:res.data.msg
-          });
-          //log out
-        }).catch(err=>{
-          console.log(err);
-        });
-      }).catch((err) => {
-        console.log(err);
-      }) 
+     // _.debounce(() => {console.log("boing")},1000);
+
+      // _.debounce(() => {
+      //   this.$confirm('This will permanently close your account','Warning',{
+      //     confirmButtonText:'Proceed',
+      //     cancelButtonText:'Cancel',
+      //     type:'error'
+      //   }).then(() => {
+      //     axios({
+      //       url: 'https://cigari.ga/api/deleteAccount',
+      //       method: 'post',
+      //       credentials: 'same-origin',
+      //       data: {
+      //         //*probably* no data needed, just pull from session even though it's an important action
+      //       }
+      //     }
+      //     ).then(res=>{
+      //       this.$message({
+      //         type:res.data.msgType,
+      //         message:res.data.msg
+      //       });
+      //       //log out
+      //     }).catch(err=>{
+      //       console.log(err);
+      //     });
+      //   }).catch((err) => {
+      //     console.log(err);
+      //   }) 
+      // }, 2000);
     },
     validatePassConfirmation(rule, value, callback) {
         if (value === '') {

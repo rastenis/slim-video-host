@@ -283,7 +283,7 @@ app.post('/api/requestReset', function(req, res) {
 });
 
 app.post('/api/changePassword', function(req, res) {
-    console.log("PASSWORD CHANGE ||");
+    console.log("PASSWORD CHANGE || " + req.body.resetType == 1 ? "normal" : "token");
     var returner = {};
     returner.error = 0;
     //ir paprastas pakeitimas ir pass resetas po token gavimo.
@@ -312,7 +312,7 @@ app.post('/api/changePassword', function(req, res) {
                 returner.msgType = "error";
                 returner.error = 1;
             } else if (numAffected > 1) {
-                //shouldnt ever happen
+                //shouldnt ever happen, severe edge
                 console.log(chalk.bgRed.white("CRITICAL! ") + "multiple passwords updated somehow");
             } else {
                 //all ok
@@ -332,7 +332,7 @@ app.post('/api/changePassword', function(req, res) {
             res.json(returner);
         } else { //useris prisijunges
             //hashinam new password
-            var hashedPass = hashUpPass(req.body.newPass);
+            var hashedPass = hashUpPass(req.body.newPassword);
             //updateinam
             db.users.update({
                 email: req.session.authUser.email
@@ -1052,6 +1052,8 @@ app.post('/api/upload', function(req, res) {
     }
 
 });
+
+
 
 // removinam useri is req.session on logout
 app.post('/api/logout', function(req, res) {

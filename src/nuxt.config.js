@@ -1,3 +1,6 @@
+const webpack = require('webpack');
+
+
 module.exports = {
     build: {
         analyze: false,
