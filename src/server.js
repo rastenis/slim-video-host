@@ -1,3 +1,5 @@
+import { retry } from '../../../../../../../../Microsoft/TypeScript/2.6/node_modules/@types/async';
+
 //deps
 require('dotenv').config();
 process.env.DEBUG = 'nuxt:*'
@@ -644,7 +646,62 @@ app.post('/api/upgradeStorage', function(req, res) {
     });
 });
 
-//new link generation
+// account deletion
+app.post('/api/deleteAccount', function(req, res) {
+    console.log("ACCOUNT DELETION | requester: " + req.session.authUser.username);
+    var returner = {};
+    returner.error = false;
+    var opCount = 0;
+    if (!req.session.authUser) {
+        res.json({
+            error: true,
+            msg: "No authentication. Please sign in.",
+            msgType: "error"
+        });
+    } else {
+        async.waterfall([function(done) {
+            db.users.find({ email: req.session.authUser.email }, function(err, docs) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    if (docs.length == 0) {
+                        console.log(chalk.bgReg.white("CRITICAL! delete reqests for non-existent accounts!"));
+                        returner.error = 1;
+                    } else if (docs.length > 1) {
+                        console.log(chalk.bgReg.white("CRITICAL! delete reqest matches multiple accounts!"));
+                        returner.error = 1;
+                    } else { //all fine, atskidiu find ir remove nes tai nera easily reversible, geriau patikrinsiu del multiple acc nei tikesiuos, jog istrins tinkama(jei multiple yra for some reason)
+                        done();
+                    }
+                }
+            });
+        }, function(done) {
+            if (returner.error) { //erorras su findais
+                returner.msg = "An error occured when deleting your account. Please try again later.";
+                returner.msgType = "error";
+            } else {
+                db.users.remove({ email: req.session.authUser.email }, { multi: true }, function(err) {
+                    if (err) {
+                        console.log(err);
+                        returner.error = 1;
+                        returner.msg = "An internal error occured. Please try again later.";
+                        returner.msgType = "error";
+                    } else {
+                        returner.error = 0;
+                        returner.msg = "You have successfully deleted your account!";
+                        returner.msgType = "success";
+                    }
+                    done();
+
+                });
+            }
+        }], function(err) {
+            res.json(returner);
+        });
+    }
+});
+
+// new link generation
 app.post('/api/newLink', function(req, res) {
     console.log("NEW LINKS | requester: " + req.session.authUser.username);
 
