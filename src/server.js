@@ -280,7 +280,7 @@ app.post('/api/requestReset', function(req, res) {
 });
 
 app.post('/api/changePassword', function(req, res) {
-    console.log("PASSWORD CHANGE || " + req.body.resetType == 1 ? "normal" : "token");
+    console.log("PASSWORD CHANGE || " + (req.body.resetType == 1 ? "normal" : "token"));
     var returner = {};
     returner.error = 0;
     //ir paprastas pakeitimas ir pass resetas po token gavimo.
@@ -329,25 +329,54 @@ app.post('/api/changePassword', function(req, res) {
             res.json(returner);
         } else { //useris prisijunges
 
-            //patikrinam password confirmation
+            //patikrinamas password confirmation
+            //del viso pikto is naujo paimu password is database
+            async.waterfall([function(done) {
 
-            //hashinam new password
-            var hashedPass = hashUpPass(req.body.newPassword);
-            //updateinam
-            db.users.update({
-                email: req.session.authUser.email
-            }, {
-                $set: {
-                    password: hashedPass
+                db.users.find({ username: req.session.authUser.username.toLowerCase() }, function(err, docs) {
+                    //useris prisijunges per login route'a, todel duplicates nera.
+                    done(null, docs[0]);
+                });
+            }, function(fetchedUser, done) {
+                bcrypt.compare(req.body.currentPassword, fetchedUser.password, function(err, valid) {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        done(null, valid);
+                    }
+                });
+            }, function(valid, done) {
+                if (valid) { //all fine
+                    //hashinam new password
+                    var hashedPass = hashUpPass(req.body.newPassword);
+
+                    //password keiciamas
+                    db.users.update({
+                        email: req.session.authUser.email
+                    }, {
+                        $set: {
+                            password: hashedPass
+                        }
+                    }, {
+                        upsert: false
+                    }, function(err) {
+                        if (err) {
+                            console.log(err);
+                        } else {
+                            returner.msg = "You have successfully changed your password!";
+                            returner.msgType = "success";
+                            done(null);
+                        }
+                    });
+                } else {
+                    returner.msg = "Incorrect old password!";
+                    returner.msgType = "error";
+                    done(null);
                 }
-            }, {
-                upsert: false
-            }, function(err) {
+            }], function(err) {
                 if (err) {
                     console.log(err);
                 } else {
-                    returner.msg = "You have successfully changed your password!";
-                    returner.msgType = "success";
                     res.json(returner);
                 }
             });

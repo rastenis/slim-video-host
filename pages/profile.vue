@@ -89,7 +89,7 @@ export default {
             credentials: 'same-origin',
             data: {
               resetType:0,
-              oldPass:this.passReset.oldPass,
+              currentPassword:this.passReset.currentPassword,
               newPassword:this.passReset.newPassword,
               newPasswordConf:this.passReset.newPasswordConf
             }
