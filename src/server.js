@@ -88,7 +88,6 @@ app.post('/api/login', function(req, res) {
 
         docs.forEach(function(doc) {
             console.log(chalk.bgGreen("ELEMENT: " + doc.username));
-
             if (bcrypt.compareSync(req.body.password, doc.password)) { //passwordas atitinka
                 console.log(chalk.green("passwords match!"));
                 req.session.authUser = doc;

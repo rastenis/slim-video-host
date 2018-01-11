@@ -4,7 +4,7 @@ const webpack = require('webpack');
 module.exports = {
     build: {
         analyze: false,
-        vendor: ['element-ui', 'axios', 'vue-clipboard2']
+        vendor: ['element-ui', 'axios', 'vue-clipboard2', 'lodash']
     },
     plugins: [
         '~plugins/element-ui',
