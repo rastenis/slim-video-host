@@ -1,5 +1,3 @@
-import { retry } from '../../../../../../../../Microsoft/TypeScript/2.6/node_modules/@types/async';
-
 //deps
 require('dotenv').config();
 process.env.DEBUG = 'nuxt:*'
