@@ -86,25 +86,22 @@ app.post('/api/login', function(req, res) {
             });
         }
 
-        docs.forEach(function(doc) {
-            console.log(chalk.bgGreen("ELEMENT: " + doc.username));
-
-            if (bcrypt.compareSync(req.body.password, doc.password)) { //passwordas atitinka
-                console.log(chalk.green("passwords match!"));
-                req.session.authUser = doc;
-                return res.json(doc);
-            } else {
-                console.log(chalk.red("passwords don't match!"));
-                res.status(556).json({
-                    error: 'Bad credentials'
-                });
-            }
-
-        });
+        // useris egzistuoja ir nera duplicates, proceedinu su password checku
+        if (bcrypt.compareSync(req.body.password, docs[0].password)) { //passwordas atitinka
+            console.log(chalk.green("passwords match!"));
+            req.session.authUser = docs[0];
+            return res.json(docs[0]);
+        } else {
+            console.log(chalk.red("passwords don't match!"));
+            res.status(556).json({
+                error: 'Bad credentials'
+            });
+        }
 
     });
 
 });
+
 
 //patikra ar yra toks video
 app.get('/api/cv/:id', function(req, res) {
@@ -283,7 +280,7 @@ app.post('/api/requestReset', function(req, res) {
 });
 
 app.post('/api/changePassword', function(req, res) {
-    console.log("PASSWORD CHANGE ||");
+    console.log("PASSWORD CHANGE || " + (req.body.resetType == 1 ? "normal" : "token"));
     var returner = {};
     returner.error = 0;
     //ir paprastas pakeitimas ir pass resetas po token gavimo.
@@ -312,7 +309,7 @@ app.post('/api/changePassword', function(req, res) {
                 returner.msgType = "error";
                 returner.error = 1;
             } else if (numAffected > 1) {
-                //shouldnt ever happen
+                //shouldnt ever happen, severe edge
                 console.log(chalk.bgRed.white("CRITICAL! ") + "multiple passwords updated somehow");
             } else {
                 //all ok
@@ -331,23 +328,55 @@ app.post('/api/changePassword', function(req, res) {
             returner.error = 1;
             res.json(returner);
         } else { //useris prisijunges
-            //hashinam new password
-            var hashedPass = hashUpPass(req.body.newPass);
-            //updateinam
-            db.users.update({
-                email: req.session.authUser.email
-            }, {
-                $set: {
-                    password: hashedPass
+
+            //patikrinamas password confirmation
+            //del viso pikto is naujo paimu password is database
+            async.waterfall([function(done) {
+
+                db.users.find({ username: req.session.authUser.username.toLowerCase() }, function(err, docs) {
+                    //useris prisijunges per login route'a, todel duplicates nera.
+                    done(null, docs[0]);
+                });
+            }, function(fetchedUser, done) {
+                bcrypt.compare(req.body.currentPassword, fetchedUser.password, function(err, valid) {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        done(null, valid);
+                    }
+                });
+            }, function(valid, done) {
+                if (valid) { //all fine
+                    //hashinam new password
+                    var hashedPass = hashUpPass(req.body.newPassword);
+
+                    //password keiciamas
+                    db.users.update({
+                        email: req.session.authUser.email
+                    }, {
+                        $set: {
+                            password: hashedPass
+                        }
+                    }, {
+                        upsert: false
+                    }, function(err) {
+                        if (err) {
+                            console.log(err);
+                        } else {
+                            returner.msg = "You have successfully changed your password!";
+                            returner.msgType = "success";
+                            done(null);
+                        }
+                    });
+                } else {
+                    returner.msg = "Incorrect old password!";
+                    returner.msgType = "error";
+                    done(null);
                 }
-            }, {
-                upsert: false
-            }, function(err) {
+            }], function(err) {
                 if (err) {
                     console.log(err);
                 } else {
-                    returner.msg = "You have successfully changed your password!";
-                    returner.msgType = "success";
                     res.json(returner);
                 }
             });
@@ -645,7 +674,63 @@ app.post('/api/upgradeStorage', function(req, res) {
     });
 });
 
-//new link generation
+// account deletion
+app.post('/api/deleteAccount', function(req, res) {
+    console.log("ACCOUNT DELETION | requester: " + req.session.authUser.username);
+    var returner = {};
+    returner.error = false;
+    var opCount = 0;
+    if (!req.session.authUser) {
+        res.json({
+            error: true,
+            msg: "No authentication. Please sign in.",
+            msgType: "error"
+        });
+    } else {
+        async.waterfall([function(done) {
+            db.users.find({ email: req.session.authUser.email }, function(err, docs) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    if (docs.length == 0) {
+                        console.log(chalk.bgReg.white("CRITICAL! delete reqests for non-existent accounts!"));
+                        returner.error = 1;
+                    } else if (docs.length > 1) {
+                        console.log(chalk.bgReg.white("CRITICAL! delete reqest matches multiple accounts!"));
+                        returner.error = 1;
+                    } else { //all fine, atskidiu find ir remove nes tai nera easily reversible, geriau patikrinsiu del multiple acc nei tikesiuos, jog istrins tinkama(jei multiple yra for some reason)
+                        done();
+                    }
+                }
+            });
+        }, function(done) {
+            if (returner.error) { //erorras su findais
+                returner.msg = "An error occured when deleting your account. Please try again later.";
+                returner.msgType = "error";
+            } else {
+                db.users.remove({ email: req.session.authUser.email }, { multi: true }, function(err) {
+                    if (err) {
+                        console.log(err);
+                        returner.error = 1;
+                        returner.msg = "An internal error occured. Please try again later.";
+                        returner.msgType = "error";
+                    } else {
+                        returner.error = 0;
+                        returner.msg = "You have successfully deleted your account!";
+                        returner.msgType = "success";
+                    }
+                    done();
+                });
+            }
+
+            //TODO: cycle-remove all videos, thumbnails. Export video deletion to a promise probably
+        }], function(err) {
+            res.json(returner);
+        });
+    }
+});
+
+// new link generation
 app.post('/api/newLink', function(req, res) {
     console.log("NEW LINKS | requester: " + req.session.authUser.username);
 
@@ -1052,6 +1137,8 @@ app.post('/api/upload', function(req, res) {
     }
 
 });
+
+
 
 // removinam useri is req.session on logout
 app.post('/api/logout', function(req, res) {

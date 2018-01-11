@@ -85,8 +85,11 @@ export default {
           }
         ],
         passconf: [{
+          validator: this.validatePassConfirmation,
+          trigger: 'blur'
+        },{
           required: true,
-          message: 'Please confirm your password.',
+          message: 'Please confirm the new password.',
           trigger: 'blur'
         }]
       }
@@ -130,6 +133,15 @@ export default {
     },
     resetForm(formName) {
       this.$refs[formName].resetFields();
+    },
+    validatePassConfirmation(rule, value, callback) {
+      if (value === '') {
+        callback(new Error('Please confirm the password.'));
+      } else if (value !== this.regForm.pass) {
+        callback(new Error("Password confirmation doesn't match!"));
+      } else {
+        callback();
+      }
     }
   },
   mounted() {
