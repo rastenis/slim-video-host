@@ -99,6 +99,10 @@ export default {
               type:res.data.msgType,
               message:res.data.msg
             });
+            //clearing forms
+            this.passReset.newPassword="";
+            this.passReset.newPasswordConf="";
+            this.passReset.currentPassword="";
           }).catch(e=>{
             console.log(e);
           });
@@ -108,7 +112,7 @@ export default {
         }
       });
     },
-    deleteAccount(){
+    async deleteAccount(){
         this.$confirm('This will permanently close your account','Warning',{
           confirmButtonText:'Proceed',
           cancelButtonText:'Cancel',
@@ -128,6 +132,7 @@ export default {
               message:res.data.msg
             });
             //log out
+            this.logout();
           }).catch(err=>{
             console.log(err);
           });
@@ -143,6 +148,14 @@ export default {
         } else {
           callback();
         }
+    },
+    async logout() {
+      try { //because apparently i can't access the lyaout's logout
+        await this.$store.dispatch('logout');
+        this.$store.app.router.push("/")
+      } catch (e) {
+        this.formError = e.message
+      }
     }
   },
   mounted() {

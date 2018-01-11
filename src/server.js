@@ -86,24 +86,22 @@ app.post('/api/login', function(req, res) {
             });
         }
 
-        docs.forEach(function(doc) {
-            console.log(chalk.bgGreen("ELEMENT: " + doc.username));
-            if (bcrypt.compareSync(req.body.password, doc.password)) { //passwordas atitinka
-                console.log(chalk.green("passwords match!"));
-                req.session.authUser = doc;
-                return res.json(doc);
-            } else {
-                console.log(chalk.red("passwords don't match!"));
-                res.status(556).json({
-                    error: 'Bad credentials'
-                });
-            }
-
-        });
+        // useris egzistuoja ir nera duplicates, proceedinu su password checku
+        if (bcrypt.compareSync(req.body.password, docs[0].password)) { //passwordas atitinka
+            console.log(chalk.green("passwords match!"));
+            req.session.authUser = docs[0];
+            return res.json(docs[0]);
+        } else {
+            console.log(chalk.red("passwords don't match!"));
+            res.status(556).json({
+                error: 'Bad credentials'
+            });
+        }
 
     });
 
 });
+
 
 //patikra ar yra toks video
 app.get('/api/cv/:id', function(req, res) {
@@ -330,6 +328,9 @@ app.post('/api/changePassword', function(req, res) {
             returner.error = 1;
             res.json(returner);
         } else { //useris prisijunges
+
+            //patikrinam password confirmation
+
             //hashinam new password
             var hashedPass = hashUpPass(req.body.newPassword);
             //updateinam
@@ -690,9 +691,10 @@ app.post('/api/deleteAccount', function(req, res) {
                         returner.msgType = "success";
                     }
                     done();
-
                 });
             }
+
+            //TODO: cycle-remove all videos, thumbnails. Export video deletion to a promise probably
         }], function(err) {
             res.json(returner);
         });
