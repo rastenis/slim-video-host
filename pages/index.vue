@@ -119,9 +119,8 @@ export default {
   background: rgba(0, 0, 0, 0.801)  !important;
   color: #ffffff !important;
   font-size: 3vh !important;
-  border-radius: 0px !important;
   -webkit-transition: .1s;
-  transition: .1s;
+  transition: 0.2s !important;
   transition-property: color, background-color;
   width: 21vw;
   height: 8vh;
@@ -134,6 +133,8 @@ export default {
   background: rgba(255, 255, 255, 0.801)  !important;
   color: black !important;
 }
+
+
 </style>
 
 
@@ -154,15 +155,26 @@ export default {
  
 .substituteInput {
   font-family: LatoRegular !important;
-  background: rgba(0,0,0,0.3)  !important;
-  border:none !important;
-  border-bottom: 3px solid white !important;
+  background: rgba(0,0,0,0.5)  !important;
   color: white !important;
   font-weight: bold;
   padding: 0 4px !important;
   font-size: 4vh !important;
-  height: 5vh !important;
+  height: 7vh !important;
   width: 20vw !important;
+  border: solid 5px white !important; 
+  clip-path: polygon( 
+    calc(0%) calc(0% + 5px), /* top left */
+    calc(100% - 5px) calc(0% + 5px), /* top right */
+    calc(100% - 5px) calc(100% - 5px), /* bottom right */
+    calc(0%) calc(100% - 5px) /* bottom left */
+  );
+  transition: clip-path 0.2s ease;
+}
+
+.substituteInput:focus{
+    outline: none;
+    clip-path: polygon(calc(0%+5px) calc(0%+5px), calc(100%-5px) calc(0%+5px), calc(100%-5px) calc(100%), calc(0%+5px) 100%);
 }
 
 @font-face {
@@ -174,6 +186,15 @@ export default {
 
 a {
   text-decoration: none;
+  transition: 0.6s;  
+}
+
+
+a:hover{
+  color:black;
+  font-weight:bold;
+  font-size:150%;
+  border-bottom:solid 2 px white;
 }
 
 .nudge {
@@ -212,9 +233,7 @@ a {
   content: center;
   font-size: 14vh;
   color: white;
-  border-style: solid;
-  border-color: white;
-  border-width: 0.5vw;
+  border: solid 0.5vw white;
   font-family: LatoRegular;
   cursor: pointer;
   font-weight: bold;
