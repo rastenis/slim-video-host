@@ -2,7 +2,7 @@
   <div class="hiddenOverflow">
     <div v-bind:style="intro" ref="introBCG">
     </div>
-    <transition name="fadeUp" :duration="{ enter: 1000, leave: 50 }" appear>
+    <transition name="fadeUp" :duration="{ enter: 1000, leave: 20 }" appear>
       <a class="hvr-fade introMainButton" @click="activateLogin(true)" v-show="!showLogin">
         <p v-if="!$store.state.authUser" class="nudge">Login</p>
         <p v-else class="nudge minif">Welcome back</p>

@@ -37,7 +37,7 @@
             </el-card>
           </el-col>
         </el-row>
-        <el-table :data="videos" style="width: 100%; margin-top:4vh;">
+        <el-table v-loading="loading" :data="videos" style="width: 100%; margin-top:4vh;">
           <el-table-column prop="name" label="Video">
             <template slot-scope="scope">
               <div class="nameColumn">
@@ -163,7 +163,7 @@ import axios from 'axios'
 export default {
   data() {
     return {
-      loadingMore: true,
+      loading:true,
       videos: [],
       stats: {},
       currentCopyTooltip: "Click to copy!",
@@ -186,7 +186,7 @@ export default {
             if (res.data.error == 0) {
               return {
                 stats: res.data.stats,
-                loadingMore: false,
+                loading: false,
                 videos: res.data.videos
               }
             } else if (res.data.error == 1) {}
@@ -207,7 +207,7 @@ export default {
             if (res.data.error == 0) {
               return {
                 videos: res.data.videos,
-                loadingMore: false
+                loading:false
               }
             } else if (res.data.error == 1) {
               console.log("error while fetching videos");
