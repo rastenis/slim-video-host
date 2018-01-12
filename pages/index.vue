@@ -11,10 +11,10 @@
         <el-form v-on:submit.prevent="login" class="formField">
           <p class="error" v-if="formError">{{ formError }}</p>
           <el-form-item prop="username">
-            <input class="subsituteInput topField " @keyup.alt.82="redirectToRegister" placeholder="Username" type="text" v-model="form.username" name="username"/>
+            <input class="substituteInput topField " @keyup.alt.82="redirectToRegister" placeholder="Username" type="text" v-model="form.username" name="username"/>
           </el-form-item>
           <el-form-item prop="password">
-            <input class="subsituteInput" @keydown.enter="login" placeholder="Password" type="password" v-model="form.password" name="password" />
+            <input class="substituteInput" @keydown.enter="login" placeholder="Password" type="password" v-model="form.password" name="password" />
           </el-form-item>
           <el-form-item>
             <el-button class="loginButton" type="submit" @click="login">Login</el-button>
@@ -115,8 +115,8 @@ export default {
 <style scoped>
 .el-button {
   font-weight: bold !important;
-  background: rgb(0, 0, 0) !important;
-  border: 5px solid #ffffff !important;
+  border:none !important;
+  background: rgba(0, 0, 0, 0.801)  !important;
   color: #ffffff !important;
   font-size: 3vh !important;
   border-radius: 0px !important;
@@ -131,9 +131,8 @@ export default {
 .el-button:hover,
 .el-button:focus,
 .el-button:active {
-  background-color: white !important;
+  background: rgba(255, 255, 255, 0.801)  !important;
   color: black !important;
-  opacity: 0.95 !important;
 }
 </style>
 
@@ -153,13 +152,11 @@ export default {
 
 }
  
-.subsituteInput {
+.substituteInput {
   font-family: LatoRegular !important;
-  border-style: solid !important;
-  border-width: 5px !important;
-  border-color: white !important;
-  background: black !important;
-  border-radius: 0px !important;
+  background: rgba(0,0,0,0.3)  !important;
+  border:none !important;
+  border-bottom: 3px solid white !important;
   color: white !important;
   font-weight: bold;
   padding: 0 4px !important;
@@ -224,20 +221,15 @@ a {
 }
 
 .introLoginForm {
-  background: black;
   position: absolute;
   margin: auto;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
-  opacity: 0.7;
   height: 35vh;
   width: 40vw;
   color: white;
-  border-style: solid;
-  border-color: white;
-  border-width: 0.5vw;
 }
 /* Fade */
 
