@@ -11,10 +11,10 @@
         <el-form v-on:submit.prevent="login" class="formField">
           <p class="error" v-if="formError">{{ formError }}</p>
           <el-form-item prop="username">
-            <input class="subsituteInput topField " @keyup.alt.82="redirectToRegister" placeholder="Username" type="text" v-model="form.username" name="username"/>
+            <input class="substituteInput topField " @keyup.alt.82="redirectToRegister" placeholder="Username" type="text" v-model="form.username" name="username"/>
           </el-form-item>
           <el-form-item prop="password">
-            <input class="subsituteInput" @keydown.enter="login" placeholder="Password" type="password" v-model="form.password" name="password" />
+            <input class="substituteInput" @keydown.enter="login" placeholder="Password" type="password" v-model="form.password" name="password" />
           </el-form-item>
           <el-form-item>
             <el-button class="loginButton" type="submit" @click="login">Login</el-button>
@@ -115,13 +115,11 @@ export default {
 <style scoped>
 .el-button {
   font-weight: bold !important;
-  background: rgb(0, 0, 0) !important;
-  border: 5px solid #ffffff !important;
+  border:none !important;
+  background: rgba(0, 0, 0, 0.801)  !important;
   color: #ffffff !important;
-  font-size: 3vh !important;
-  border-radius: 0px !important;
   -webkit-transition: .1s;
-  transition: .1s;
+  transition: 0.2s !important;
   transition-property: color, background-color;
   width: 21vw;
   height: 8vh;
@@ -131,10 +129,12 @@ export default {
 .el-button:hover,
 .el-button:focus,
 .el-button:active {
-  background-color: white !important;
+  background: rgba(255, 255, 255, 0.801)  !important;
   color: black !important;
-  opacity: 0.95 !important;
 }
+
+
+
 </style>
 
 
@@ -152,20 +152,36 @@ export default {
   font-family: LatoRegular;
 
 }
+
+.forgotPasswordLink:hover{
+  color:black;
+  font-weight:bold;
+  font-size:150%;
+  border-bottom:solid 2 px white;
+}
  
-.subsituteInput {
+.substituteInput {
   font-family: LatoRegular !important;
-  border-style: solid !important;
-  border-width: 5px !important;
-  border-color: white !important;
-  background: black !important;
-  border-radius: 0px !important;
+  background: rgba(0,0,0,0.5)  !important;
   color: white !important;
   font-weight: bold;
   padding: 0 4px !important;
   font-size: 4vh !important;
-  height: 5vh !important;
+  height: 7vh !important;
   width: 20vw !important;
+  border: solid 5px white !important; 
+  clip-path: polygon( 
+    calc(0%) calc(0% + 5px), /* top left */
+    calc(100% - 5px) calc(0% + 5px), /* top right */
+    calc(100% - 5px) calc(100% - 5px), /* bottom right */
+    calc(0%) calc(100% - 5px) /* bottom left */
+  );
+  transition: clip-path 0.2s ease;
+}
+
+.substituteInput:focus{
+    outline: none;
+    clip-path: polygon(calc(0%+5px) calc(0%+5px), calc(100%-5px) calc(0%+5px), calc(100%-5px) calc(100%), calc(0%+5px) 100%);
 }
 
 @font-face {
@@ -177,6 +193,12 @@ export default {
 
 a {
   text-decoration: none;
+  transition: 0.6s;  
+}
+
+
+a:hover{
+  color:black;
 }
 
 .nudge {
@@ -215,29 +237,22 @@ a {
   content: center;
   font-size: 14vh;
   color: white;
-  border-style: solid;
-  border-color: white;
-  border-width: 0.5vw;
+  border: solid 0.5vw white;
   font-family: LatoRegular;
   cursor: pointer;
   font-weight: bold;
 }
 
 .introLoginForm {
-  background: black;
   position: absolute;
   margin: auto;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
-  opacity: 0.7;
   height: 35vh;
   width: 40vw;
   color: white;
-  border-style: solid;
-  border-color: white;
-  border-width: 0.5vw;
 }
 /* Fade */
 
@@ -282,6 +297,7 @@ body {
 
 .loginButton {
   margin: 0 auto;
+  font-size:3vh !important;
 }
 
 </style>
