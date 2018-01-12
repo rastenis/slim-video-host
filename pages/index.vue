@@ -118,7 +118,6 @@ export default {
   border:none !important;
   background: rgba(0, 0, 0, 0.801)  !important;
   color: #ffffff !important;
-  font-size: 3vh !important;
   -webkit-transition: .1s;
   transition: 0.2s !important;
   transition-property: color, background-color;
@@ -133,6 +132,7 @@ export default {
   background: rgba(255, 255, 255, 0.801)  !important;
   color: black !important;
 }
+
 
 
 </style>
@@ -151,6 +151,13 @@ export default {
   margin: auto;
   font-family: LatoRegular;
 
+}
+
+.forgotPasswordLink:hover{
+  color:black;
+  font-weight:bold;
+  font-size:150%;
+  border-bottom:solid 2 px white;
 }
  
 .substituteInput {
@@ -192,9 +199,6 @@ a {
 
 a:hover{
   color:black;
-  font-weight:bold;
-  font-size:150%;
-  border-bottom:solid 2 px white;
 }
 
 .nudge {
@@ -293,6 +297,7 @@ body {
 
 .loginButton {
   margin: 0 auto;
+  font-size:3vh !important;
 }
 
 </style>
