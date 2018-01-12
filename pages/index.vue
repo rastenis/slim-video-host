@@ -2,10 +2,12 @@
   <div class="hiddenOverflow">
     <div v-bind:style="intro" ref="introBCG">
     </div>
-    <a class="hvr-fade introMainButton" @click="activateLogin(true)" v-show="!showLogin">
-      <p v-if="!$store.state.authUser" class="nudge">Login</p>
-      <p v-else class="nudge minif">Welcome back</p>
-    </a>
+    <transition name="fadeUp" :duration="{ enter: 1000, leave: 50 }" appear>
+      <a class="hvr-fade introMainButton" @click="activateLogin(true)" v-show="!showLogin">
+        <p v-if="!$store.state.authUser" class="nudge">Login</p>
+        <p v-else class="nudge minif">Welcome back</p>
+      </a>
+    </transition>
     <div v-show="showLogin" class="introLoginForm">
       <div class="centerHor" v-if="!$store.state.authUser">
         <el-form v-on:submit.prevent="login" class="formField">
@@ -133,7 +135,22 @@ export default {
   color: black !important;
 }
 
+@keyframes fadeUp {
+  0% {
+      transform: translateY(+20px);
+  }
+  100% {
+      transform: translateY(0);
+  }
+}
 
+.fadeUp-enter-active {
+  animation: fadeUp 1s;
+}
+
+.fadeUp-leave-active {
+  
+}
 
 </style>
 
@@ -142,6 +159,10 @@ export default {
 .postLogin{
   margin-top:10vh;
   text-align:center;
+}
+
+body{
+  overflow: hidden;
 }
 
 .forgotPasswordLink{
