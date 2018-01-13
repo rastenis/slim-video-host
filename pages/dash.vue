@@ -121,7 +121,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="name" label="Video">
+          <el-table-column prop="name" label="Name">
             <template slot-scope="scope">
               <div class="nameColumn">
                 {{videos[scope.$index].name}}
@@ -150,8 +150,14 @@
           </el-table-column>
           <el-table-column label="Actions">
             <template slot-scope="scope">
-              <el-button :disabled="multipleSelection.length!=0" type="warning" size="small" @click.native.prevent="requestNewID([videos[scope.$index]])">New link</el-button>
-              <el-button :disabled="multipleSelection.length!=0" type="danger" size="small" @click.native.prevent="deleteVideo([videos[scope.$index]])">Remove</el-button>
+              <el-form size="small">
+                <el-form-item>
+                  <el-button :disabled="multipleSelection.length!=0" type="warning" size="small" @click.native.prevent="requestNewID([videos[scope.$index]])">New link</el-button>
+                </el-form-item>
+                <el-form-item>
+                  <el-button :disabled="multipleSelection.length!=0" type="danger" size="small" @click.native.prevent="deleteVideo([videos[scope.$index]])">Remove</el-button>
+                </el-form-item>
+              </el-form>
             </template>
           </el-table-column>
         </el-table>
@@ -432,8 +438,13 @@ export default {
 
 <style scoped>
 img {
-    max-width: 100%;
-    max-height: 100%;
+    max-width: 80%;
+    max-height: 80%;
+}
+
+.el-form-item--mini.el-form-item,
+.el-form-item--small.el-form-item {
+    margin-bottom: 3px
 }
 </style>
 
