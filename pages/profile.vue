@@ -46,29 +46,27 @@
 </template>
 
 <script>
-
 import axios from 'axios';
 import _ from 'lodash';
 
 export default {
   data() {
     return {
-      accountDeletion:{
-        dialogOpen:false,
-        passwordConfirmation:''
+      accountDeletion: {
+        dialogOpen: false,
+        passwordConfirmation: ''
       },
       passReset: {
-        currentPassword:'',
-        newPassword:'',
-        newPasswordConf:''
+        currentPassword: '',
+        newPassword: '',
+        newPasswordConf: ''
       },
       passResetFormRules: {
-        currentPassword:[{
-            required: true,
-            message: 'Please enter your current password.',
-            trigger: 'blur'
-          }
-        ],
+        currentPassword: [{
+          required: true,
+          message: 'Please enter your current password.',
+          trigger: 'blur'
+        }],
         newPassword: [{
             required: true,
             message: 'Please enter a new password.',
@@ -81,20 +79,20 @@ export default {
             trigger: 'blur'
           }
         ],
-        newPasswordConf: [ {
+        newPasswordConf: [{
           validator: this.validatePassConfirmation,
           trigger: 'blur'
-        },{
+        }, {
           required: true,
           message: 'Please confirm the new password.',
           trigger: 'blur'
         }]
-        }
+      }
     }
   },
   methods: {
-    confirmation(msg, type,settings){
-      return this.$confirm(msg, type,settings);
+    confirmation(msg, type, settings) {
+      return this.$confirm(msg, type, settings);
     },
     async changePassword() {
       this.$refs["passwordResetForm"].validate((valid) => {
@@ -104,22 +102,21 @@ export default {
             method: 'post',
             credentials: 'same-origin',
             data: {
-              resetType:0,
-              currentPassword:this.passReset.currentPassword,
-              newPassword:this.passReset.newPassword,
-              newPasswordConf:this.passReset.newPasswordConf
+              resetType: 0,
+              currentPassword: this.passReset.currentPassword,
+              newPassword: this.passReset.newPassword,
+              newPasswordConf: this.passReset.newPasswordConf
             }
-          }
-          ).then(res=>{
+          }).then(res => {
             this.$message({
-              type:res.data.msgType,
-              message:res.data.msg
+              type: res.data.msgType,
+              message: res.data.msg
             });
             //clearing forms
-            this.passReset.newPassword="";
-            this.passReset.newPasswordConf="";
-            this.passReset.currentPassword="";
-          }).catch(e=>{
+            this.passReset.newPassword = "";
+            this.passReset.newPasswordConf = "";
+            this.passReset.currentPassword = "";
+          }).catch(e => {
             console.log(e);
           });
         } else {
@@ -128,37 +125,36 @@ export default {
         }
       });
     },
-    async deleteAccount(){
-      this.accountDeletion.dialogOpen=false;
+    async deleteAccount() {
+      this.accountDeletion.dialogOpen = false;
       axios({
         url: 'https://cigari.ga/api/deleteAccount',
         method: 'post',
         credentials: 'same-origin',
         data: {
-          passwordConfirmation:this.accountDeletion.passwordConfirmation
+          passwordConfirmation: this.accountDeletion.passwordConfirmation
         }
-      }
-      ).then(res=>{
+      }).then(res => {
         this.$message({
-          type:res.data.msgType,
-          message:res.data.msg
+          type: res.data.msgType,
+          message: res.data.msg
         });
         //log out tik jei pass correct ir no error
-        if(!res.data.error){
+        if (!res.data.error) {
           this.logout();
         }
-      }).catch(err=>{
+      }).catch(err => {
         console.log(err);
       });
     },
     validatePassConfirmation(rule, value, callback) {
-        if (value === '') {
-          callback(new Error('Please confirm the password.'));
-        } else if (value !== this.passReset.newPassword) {
-          callback(new Error("Password confirmation doesn't match!"));
-        } else {
-          callback();
-        }
+      if (value === '') {
+        callback(new Error('Please confirm the password.'));
+      } else if (value !== this.passReset.newPassword) {
+        callback(new Error("Password confirmation doesn't match!"));
+      } else {
+        callback();
+      }
     },
     async logout() {
       try { //because apparently i can't access the lyaout's logout
@@ -177,7 +173,7 @@ export default {
     }
   },
   layout: 'main',
-  transition:'mainTransition'
+  transition: 'mainTransition'
 }
 </script>
 
