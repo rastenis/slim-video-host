@@ -180,9 +180,10 @@ export default {
   font-size:1.5vh;
 }
 
-body{
-  overflow-y: hidden;
+::-webkit-scrollbar {
+display: none;
 }
+
 .bottomField{
   margin-bottom:3.5vh !important;
 }
