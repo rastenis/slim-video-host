@@ -114,6 +114,13 @@
         <el-table :data="videos" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
           <el-table-column type="selection" width="40">
           </el-table-column>
+          <el-table-column prop="thumbnail" label="Thumbnail">
+            <template slot-scope="scope">
+              <div class="thumbnailColumn">
+                <img :src="videos[scope.$index].thumbnailSrc" alt="">
+              </div>
+            </template>
+          </el-table-column>
           <el-table-column prop="name" label="Video">
             <template slot-scope="scope">
               <div class="nameColumn">
@@ -421,6 +428,14 @@ export default {
   transition: 'mainTransition'
 }
 </script>
+
+
+<style scoped>
+img {
+    max-width: 100%;
+    max-height: 100%;
+}
+</style>
 
 <style>
   .multiSelectActions{

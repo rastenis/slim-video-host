@@ -590,6 +590,7 @@ app.post('/api/getVideos', function(req, res) {
         }
         if (docs.length > 0) {
             docs.forEach(function(i, index) {
+                docs[index].thumbnailSrc = '/videos/thumbs/' + docs[index].videoID + '.jpg';
                 async.waterfall([
                     function(done) {
                         db.ratings.count({
@@ -991,10 +992,17 @@ app.post('/api/removeVideo', function(req, res) {
                         }
                     }, {}, function() {
                         //taip pat ir istrinamas pats video is storage
-                        fs.unlink(storagePath + selection.videoID + ".mp4");
-
+                        try {
+                            fs.unlink(storagePath + selection.videoID + ".mp4");
+                        } catch (err) {
+                            console.log(err);
+                        }
                         //istrinamas ir thumbnailas
-                        fs.unlink(storagePath + "thumbs/" + selection.videoID + ".jpg");
+                        try {
+                            fs.unlink(storagePath + "thumbs/" + selection.videoID + ".jpg");
+                        } catch (err) {
+                            console.log(err);
+                        }
                     });
 
                     db.videos.remove({
