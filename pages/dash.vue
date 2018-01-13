@@ -111,7 +111,7 @@
           </el-card>
         </div>
         <h2 class="subtitle1">Your videos:</h2>
-          <el-input @change="updateFilter()" v-model="searchTerm"></el-input>        
+          <el-input @change="updateFilter()" class="searchField" v-model="searchTerm" placeholder="Search videos..."></el-input>        
         <el-table :data="videos" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
           <el-table-column type="selection" width="40">
           </el-table-column>
@@ -461,6 +461,12 @@ img {
 </style>
 
 <style>
+
+  .searchField{
+    max-width: 40%;
+    float: right !important;
+    margin-bottom:1vh;
+  }
   .multiSelectActions{
     margin-top:vh;
     height:10vh;
