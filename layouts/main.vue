@@ -84,6 +84,9 @@
 
 <style scoped>
 
+  .el-menu-item {
+    font-size: 2.5vh;
+  }
   
   .main {
     position: absolute;
