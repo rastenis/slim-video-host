@@ -111,14 +111,12 @@
           </el-card>
         </div>
         <h2 class="subtitle1">Your videos:</h2>
-          <div  >
-          </div>
           <el-card>      
             <transition name="el-zoom-in-center">
-              <el-button v-if="multipleSelection.length!=0" type="warning" size="medium" @click.native.prevent="requestNewID(multipleSelection)">New links for selected</el-button>
+              <el-button :disabled="multipleSelection.length==0" type="warning" size="medium" @click.native.prevent="requestNewID(multipleSelection)">New links for selected</el-button>
             </transition>   
             <transition name="el-zoom-in-center">
-              <el-button v-if="multipleSelection.length!=0" type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
+              <el-button :disabled="multipleSelection.length==0" type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
             </transition>   
             <el-input @keyup.native="updateFilter" class="searchField" v-model="searchTerm" placeholder="Search videos..."></el-input>  
             </el-card>
