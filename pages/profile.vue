@@ -2,13 +2,14 @@
   <div>
     
     <el-dialog
-      title="Tips"
-      :visible.sync="deletionConfirmationDialog"
+      title="Account deletion"
+      :visible.sync="accountDeletion.dialogOpen"
       width="30%">
       <span>Please input your password in order to delete your account. The proccess is IRREVERSIBLE.</span>
+      <el-input type="password" placeholder="Password" style="margin-top:1vh;" v-model="passReset.currentPassword" ></el-input>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false ; ">Cancel</el-button>
-        <el-button type="primary" @click="dialogVisible = false">Confirm</el-button>
+        <el-button @click="accountDeletion.dialogOpen = false ; ">Cancel</el-button>
+        <el-button type="primary" @click="accountDeletion.dialogOpen = false">Confirm</el-button>
       </span>
     </el-dialog>
     <h1 class="title">Profile</h1>
@@ -37,7 +38,7 @@
       </div>
       <el-form label-position="top" label-width="100px">
         <el-form-item>
-          <el-button type='danger' @click="deleteAccount">Delete account</el-button>
+          <el-button type='danger' @click="accountDeletion.dialogOpen=true">Delete account</el-button>
         </el-form-item>
       </el-form> 
     </el-card>
@@ -52,7 +53,10 @@ import _ from 'lodash';
 export default {
   data() {
     return {
-      deletionConfirmationDialog:false,
+      accountDeletion:{
+        dialogOpen:false,
+        passwordConfirmation:''
+      },
       passReset: {
         currentPassword:'',
         newPassword:'',
