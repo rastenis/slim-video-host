@@ -6,10 +6,10 @@
       :visible.sync="accountDeletion.dialogOpen"
       width="30%">
       <span>Please input your password in order to delete your account. The proccess is IRREVERSIBLE.</span>
-      <el-input type="password" placeholder="Password" style="margin-top:1vh;" v-model="passReset.currentPassword" ></el-input>
+      <el-input type="password" placeholder="Password" style="margin-top:1vh;" v-model="accountDeletion.passwordConfirmation" ></el-input>
       <span slot="footer" class="dialog-footer">
         <el-button @click="accountDeletion.dialogOpen = false ; ">Cancel</el-button>
-        <el-button type="primary" @click="accountDeletionConfirm">Confirm</el-button>
+        <el-button type="primary" @click="deleteAccount">Confirm</el-button>
       </span>
     </el-dialog>
     <h1 class="title">Profile</h1>
@@ -128,22 +128,14 @@ export default {
         }
       });
     },
-    accountDeletionConfirm(){
-      this.accountDeletion.dialogOpen=false;
-
-      this.$message({
-        type:'success',
-        message:'deleted'
-      });
-          //  deleteAccount();
-    },
     async deleteAccount(){
+      this.accountDeletion.dialogOpen=false;
       axios({
         url: 'https://cigari.ga/api/deleteAccount',
         method: 'post',
         credentials: 'same-origin',
         data: {
-          passwordConfirmation:accountDeletion.passwordConfirmation
+          passwordConfirmation:this.accountDeletion.passwordConfirmation
         }
       }
       ).then(res=>{

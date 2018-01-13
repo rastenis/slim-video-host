@@ -700,14 +700,28 @@ app.post('/api/deleteAccount', function(req, res) {
                         console.log(chalk.bgReg.white("CRITICAL! delete reqest matches multiple accounts!"));
                         returner.error = 1;
                     } else { //all fine, atskidiu find ir remove nes tai nera easily reversible, geriau patikrinsiu del multiple acc nei tikesiuos, jog istrins tinkama(jei multiple yra for some reason)
-                        done();
+                        done(null, docs[0]);
                     }
                 }
             });
-        }, function(done) {
-            if (returner.error) { //erorras su findais
+        }, function(fetchedUser, done) {
+            bcrypt.compare(req.body.passwordConfirmation, fetchedUser.password, function(err, valid) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    returner.error = !valid; //jei valid, error nera.
+                    done(null, valid);
+                }
+            });
+        }, function(valid, done) {
+            if (!valid) { //wrong confirmation password
+                returner.msg = "The confirmation password is incorrect! Try again.";
+                returner.msgType = "error";
+                done();
+            } else if (returner.error) { //erorras su findais
                 returner.msg = "An error occured when deleting your account. Please try again later.";
                 returner.msgType = "error";
+                done();
             } else {
                 db.users.remove({ email: req.session.authUser.email }, { multi: true }, function(err) {
                     if (err) {
