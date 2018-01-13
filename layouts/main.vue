@@ -145,7 +145,7 @@
   }
   body{
     font-family: LatoRegular, sans-serif;
-    overflow-y:scroll;
+    overflow:scroll;
   }
 
   ::-webkit-scrollbar { 

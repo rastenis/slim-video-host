@@ -133,6 +133,10 @@ export default {
     margin-bottom: 3px
 }
 
+::selection {
+  background: #dddddd; /* WebKit/Blink Browsers */
+}
+
 .el-button:hover,
 .el-button:focus,
 .el-button:active {
@@ -167,7 +171,7 @@ export default {
 }
 
 body{
-  overflow: hidden;
+  overflow-y: hidden;
 }
 .bottomField{
   margin-bottom:3.5vh !important;
