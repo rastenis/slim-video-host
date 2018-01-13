@@ -111,15 +111,11 @@
           </el-card>
         </div>
         <h2 class="subtitle1">Your videos:</h2>
-          <el-card>      
-            <transition name="el-zoom-in-center">
-              <el-button :disabled="multipleSelection.length==0" type="warning" size="medium" @click.native.prevent="requestNewID(multipleSelection)">New links for selected</el-button>
-            </transition>   
-            <transition name="el-zoom-in-center">
-              <el-button :disabled="multipleSelection.length==0" type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
-            </transition>   
-            <el-input @keyup.native="updateFilter" class="searchField" v-model="searchTerm" placeholder="Search videos..."></el-input>  
-            </el-card>
+        <el-card>
+          <el-button :disabled="multipleSelection.length==0" type="warning" size="medium" @click.native.prevent="requestNewID(multipleSelection)">New links for selected</el-button>
+          <el-button :disabled="multipleSelection.length==0" type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
+          <el-input @keyup.native="updateFilter" class="searchField" v-model="searchTerm" placeholder="Search videos..."></el-input>
+        </el-card>
         <el-table :data="videos" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
           <el-table-column type="selection" width="40">
           </el-table-column>
@@ -181,13 +177,13 @@ import axios from 'axios'
 export default {
   data() {
     return {
-      loading:true,
+      loading: true,
       videos: [],
-      hiddenVideos:[],
+      hiddenVideos: [],
       stats: {},
       currentCopyTooltip: "Click to copy!",
       multipleSelection: [],
-      searchTerm:''
+      searchTerm: ''
     }
   },
   asyncData(context) {
@@ -227,7 +223,7 @@ export default {
             if (res.data.error == 0) {
               return {
                 videos: res.data.videos,
-                loading:false
+                loading: false
               }
             } else if (res.data.error == 1) {
               console.log("error while fetching videos");
@@ -270,7 +266,6 @@ export default {
             }
           })
           .then((res) => {
-
             //resetting selection
             this.toggleSelection();
 
@@ -289,7 +284,6 @@ export default {
           }).catch(function (e) {
             console.log(e);
           });
-
       }).catch(() => {});
     },
     async requestNewID(selection) {
@@ -313,7 +307,7 @@ export default {
               message: res.data.msg
             });
             if (res.data.error == 0) {
-              
+
               //resetting selection
               this.toggleSelection();
 
@@ -436,14 +430,16 @@ export default {
           });
       });
     },
-    updateFilter(event){
+    updateFilter(event) {
       //sumerginu abu masyvus pradzioj, kad galeciau fresh fiterint
-      this.videos=this.videos.concat(this.hiddenVideos);
-      this.hiddenVideos=[];
+      this.videos = this.videos.concat(this.hiddenVideos);
+      this.hiddenVideos = [];
 
-      let filtered = _.partition(this.videos, video => { return video.name.includes(this.searchTerm); });
-      this.videos=filtered[0];
-      this.hiddenVideos=filtered[1];
+      let filtered = _.partition(this.videos, video => {
+        return video.name.includes(this.searchTerm);
+      });
+      this.videos = filtered[0];
+      this.hiddenVideos = filtered[1];
     }
   },
   layout: 'main',
