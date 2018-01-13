@@ -63,7 +63,7 @@
       </div>
     </div>
     <div v-else>
-      <div v-if="videos.length==0" class="centeredUploadVideoSuggestion">
+      <div v-if="videos.length==0 && searchTerm==''" class="centeredUploadVideoSuggestion">
         <el-card>
           <p>You don't have any videos yet!</p>
           <el-button @click="$store.app.router.push('/upload'); this.$store.state.activeTab = '3';">
@@ -111,10 +111,28 @@
           </el-card>
         </div>
         <h2 class="subtitle1">Your videos:</h2>
+          <div  >
+          </div>
+          <el-card>      
+            <transition name="el-zoom-in-center">
+              <el-button v-if="multipleSelection.length!=0" type="warning" size="medium" @click.native.prevent="requestNewID(multipleSelection)">New links for selected</el-button>
+            </transition>   
+            <transition name="el-zoom-in-center">
+              <el-button v-if="multipleSelection.length!=0" type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
+            </transition>   
+            <el-input @keyup.native="updateFilter" class="searchField" v-model="searchTerm" placeholder="Search videos..."></el-input>  
+            </el-card>
         <el-table :data="videos" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
           <el-table-column type="selection" width="40">
           </el-table-column>
-          <el-table-column prop="name" label="Video">
+          <el-table-column prop="thumbnail" label="Thumbnail">
+            <template slot-scope="scope">
+              <div class="thumbnailColumn">
+                <img :src="videos[scope.$index].thumbnailSrc" alt="">
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="name" label="Name">
             <template slot-scope="scope">
               <div class="nameColumn">
                 {{videos[scope.$index].name}}
@@ -132,7 +150,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="views" label="Views" width="100">
+          <el-table-column prop="views" sortable label="Views" width="100">
           </el-table-column>
           <el-table-column label="Ratings">
             <template slot-scope="scope" class="ratingColumn">
@@ -143,15 +161,17 @@
           </el-table-column>
           <el-table-column label="Actions">
             <template slot-scope="scope">
-              <el-button :disabled="multipleSelection.length!=0" type="warning" size="small" @click.native.prevent="requestNewID([videos[scope.$index]])">New link</el-button>
-              <el-button :disabled="multipleSelection.length!=0" type="danger" size="small" @click.native.prevent="deleteVideo([videos[scope.$index]])">Remove</el-button>
+              <el-form size="small">
+                <el-form-item>
+                  <el-button :disabled="multipleSelection.length!=0" type="warning" size="small" @click.native.prevent="requestNewID([videos[scope.$index]])">New link</el-button>
+                </el-form-item>
+                <el-form-item>
+                  <el-button :disabled="multipleSelection.length!=0" type="danger" size="small" @click.native.prevent="deleteVideo([videos[scope.$index]])">Remove</el-button>
+                </el-form-item>
+              </el-form>
             </template>
           </el-table-column>
         </el-table>
-        <el-card v-if="multipleSelection.length!=0" class="multiSelectActions">
-          <el-button type="warning" size="medium" @click.native.prevent="requestNewID(multipleSelection)">New links for selected</el-button>
-          <el-button type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
-        </el-card>
       </div>
     </div>
   </div>
@@ -165,9 +185,11 @@ export default {
     return {
       loading:true,
       videos: [],
+      hiddenVideos:[],
       stats: {},
       currentCopyTooltip: "Click to copy!",
-      multipleSelection: []
+      multipleSelection: [],
+      searchTerm:''
     }
   },
   asyncData(context) {
@@ -415,6 +437,15 @@ export default {
             console.log(e);
           });
       });
+    },
+    updateFilter(event){
+      //sumerginu abu masyvus pradzioj, kad galeciau fresh fiterint
+      this.videos=this.videos.concat(this.hiddenVideos);
+      this.hiddenVideos=[];
+
+      let filtered = _.partition(this.videos, video => { return video.name.includes(this.searchTerm); });
+      this.videos=filtered[0];
+      this.hiddenVideos=filtered[1];
     }
   },
   layout: 'main',
@@ -422,7 +453,30 @@ export default {
 }
 </script>
 
+
+<style scoped>
+img {
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.el-form-item--mini.el-form-item,
+.el-form-item--small.el-form-item {
+    margin-bottom: 3px
+}
+</style>
+
 <style>
+
+  body{
+    overflow:scroll;
+  }
+
+  .searchField{
+    max-width: 40%;
+    float: right !important;
+    margin-bottom:1vh;
+  }
   .multiSelectActions{
     margin-top:vh;
     height:10vh;

@@ -10,13 +10,13 @@
     </transition>
     <div v-show="showLogin" class="introLoginForm">
       <div class="centerHor" v-if="!$store.state.authUser">
-        <el-form v-on:submit.prevent="login" class="formField">
+        <el-form v-on:submit.prevent="login" class="formField" size="small">
           <p class="error" v-if="formError">{{ formError }}</p>
           <el-form-item prop="username">
             <input class="substituteInput topField " @keyup.alt.82="redirectToRegister" placeholder="Username" type="text" v-model="form.username" name="username"/>
           </el-form-item>
           <el-form-item prop="password">
-            <input class="substituteInput" @keydown.enter="login" placeholder="Password" type="password" v-model="form.password" name="password" />
+            <input class="substituteInput bottomField" @keydown.enter="login" placeholder="Password" type="password" v-model="form.password" name="password" />
           </el-form-item>
           <el-form-item>
             <el-button class="loginButton" type="submit" @click="login">Login</el-button>
@@ -128,6 +128,11 @@ export default {
   margin-bottom:2vh;  
 }
 
+.el-form-item--mini.el-form-item,
+.el-form-item--small.el-form-item {
+    margin-bottom: 3px
+}
+
 .el-button:hover,
 .el-button:focus,
 .el-button:active {
@@ -164,7 +169,9 @@ export default {
 body{
   overflow: hidden;
 }
-
+.bottomField{
+  margin-bottom:3.5vh !important;
+}
 .forgotPasswordLink{
   position: absolute;
   margin-top:-2vh !important; 

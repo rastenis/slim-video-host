@@ -5,7 +5,7 @@
       <div slot="header" class="clearfix">
         <span>Password Change</span>
       </div>
-      <el-form label-position="top" :model="passReset" label-width="100px" ref="passwordResetForm" :rules="passResetFormRules">
+      <el-form size="small" label-position="top" :model="passReset" label-width="100px" ref="passwordResetForm" :rules="passResetFormRules">
         <el-form-item prop="currentPassword" label="Current password:">
           <el-input type="password" v-model="passReset.currentPassword" ></el-input>
         </el-form-item>
