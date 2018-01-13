@@ -177,6 +177,7 @@ export default {
 .postLogin{
   margin-top:10vh;
   text-align:center;
+  font-size:1.5vh;
 }
 
 body{
@@ -185,6 +186,7 @@ body{
 .bottomField{
   margin-bottom:3.5vh !important;
 }
+
 .forgotPasswordLink{
   position: absolute;
   margin-top:-2vh !important; 
@@ -295,7 +297,6 @@ a:hover{
   width: 40vw;
   color: white;
 }
-/* Fade */
 
 .minif{
   margin-top:12vh;

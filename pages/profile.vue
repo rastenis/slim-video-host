@@ -1,5 +1,16 @@
 <template>
   <div>
+    
+    <el-dialog
+      title="Tips"
+      :visible.sync="deletionConfirmationDialog"
+      width="30%">
+      <span>Please input your password in order to delete your account. The proccess is IRREVERSIBLE.</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false ; ">Cancel</el-button>
+        <el-button type="primary" @click="dialogVisible = false">Confirm</el-button>
+      </span>
+    </el-dialog>
     <h1 class="title">Profile</h1>
     <el-card class='ProfileForm' v-if="$store.state.authUser">
       <div slot="header" class="clearfix">
@@ -41,6 +52,7 @@ import _ from 'lodash';
 export default {
   data() {
     return {
+      deletionConfirmationDialog:false,
       passReset: {
         currentPassword:'',
         newPassword:'',
@@ -112,7 +124,7 @@ export default {
         }
       });
     },
-    async deleteAccount(){
+    async deleteAccountConf(){
         this.$confirm('This will permanently close your account','Warning',{
           confirmButtonText:'Proceed',
           cancelButtonText:'Cancel',
@@ -139,6 +151,26 @@ export default {
         }).catch((err) => {
           console.log(err);
         }) 
+    },
+    async deleteAccount(){
+      axios({
+        url: 'https://cigari.ga/api/deleteAccount',
+        method: 'post',
+        credentials: 'same-origin',
+        data: {
+          //*probably* no data needed, just pull from session even though it's an important action
+        }
+      }
+      ).then(res=>{
+        this.$message({
+          type:res.data.msgType,
+          message:res.data.msg
+        });
+        //log out
+        this.logout();
+      }).catch(err=>{
+        console.log(err);
+      });
     },
     validatePassConfirmation(rule, value, callback) {
         if (value === '') {
