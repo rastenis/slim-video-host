@@ -155,19 +155,17 @@ export default {
 
 @keyframes fadeUp {
   0% {
-      transform: translateY(+20px);
+      transform: translateY(30px);
+      opacity: 0;
   }
   100% {
       transform: translateY(0);
+      opacity:0.7;
   }
 }
 
 .fadeUp-enter-active {
   animation: fadeUp 1s;
-}
-
-.fadeUp-leave-active {
-  
 }
 
 </style>
