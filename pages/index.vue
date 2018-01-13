@@ -42,7 +42,6 @@ export default {
     return {
       intro: {
         backgroundImage: '',
-        //,transform: 'scale(1.1)' cia jei blura desiu
       },
       form: {
         username: '',
@@ -50,7 +49,7 @@ export default {
       },
       formError: null,
       showLogin: false,
-      gifTags:['art','illusion','psychedelic','trippy','abstract']
+      gifTags:['illusion','psychedelic','trippy','abstract']
     }
   },
   computed:{
@@ -137,16 +136,6 @@ export default {
   margin-bottom:2vh;  
 }
 
-.introLoginForm:before {
-  z-index: -1;
-
-
-  -webkit-filter: blur(5px);
-  -moz-filter: blur(5px);
-  -o-filter: blur(5px);
-  -ms-filter: blur(5px);
-  filter: blur(5px);
-}
 
 .el-form-item--mini.el-form-item,
 .el-form-item--small.el-form-item {
