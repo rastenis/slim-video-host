@@ -111,7 +111,17 @@
           </el-card>
         </div>
         <h2 class="subtitle1">Your videos:</h2>
-          <el-input @change="updateFilter()" class="searchField" v-model="searchTerm" placeholder="Search videos..."></el-input>        
+          <div  >
+          </div>
+          <el-card>      
+            <transition name="el-zoom-in-center">
+              <el-button v-if="multipleSelection.length!=0" type="warning" size="medium" @click.native.prevent="requestNewID(multipleSelection)">New links for selected</el-button>
+            </transition>   
+            <transition name="el-zoom-in-center">
+              <el-button v-if="multipleSelection.length!=0" type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
+            </transition>   
+            <el-input @keyup.native="updateFilter" class="searchField" v-model="searchTerm" placeholder="Search videos..."></el-input>  
+            </el-card>
         <el-table :data="videos" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
           <el-table-column type="selection" width="40">
           </el-table-column>
@@ -162,10 +172,6 @@
             </template>
           </el-table-column>
         </el-table>
-        <el-card v-if="multipleSelection.length!=0" class="multiSelectActions">
-          <el-button type="warning" size="medium" @click.native.prevent="requestNewID(multipleSelection)">New links for selected</el-button>
-          <el-button type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
-        </el-card>
       </div>
     </div>
   </div>
@@ -432,7 +438,7 @@ export default {
           });
       });
     },
-    updateFilter(){
+    updateFilter(event){
       //sumerginu abu masyvus pradzioj, kad galeciau fresh fiterint
       this.videos=this.videos.concat(this.hiddenVideos);
       this.hiddenVideos=[];
@@ -461,6 +467,10 @@ img {
 </style>
 
 <style>
+
+  body{
+    overflow:scroll;
+  }
 
   .searchField{
     max-width: 40%;
