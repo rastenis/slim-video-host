@@ -9,7 +9,7 @@
       <el-input type="password" placeholder="Password" style="margin-top:1vh;" v-model="passReset.currentPassword" ></el-input>
       <span slot="footer" class="dialog-footer">
         <el-button @click="accountDeletion.dialogOpen = false ; ">Cancel</el-button>
-        <el-button type="primary" @click="accountDeletion.dialogOpen = false">Confirm</el-button>
+        <el-button type="primary" @click="accountDeletionConfirm">Confirm</el-button>
       </span>
     </el-dialog>
     <h1 class="title">Profile</h1>
@@ -128,33 +128,14 @@ export default {
         }
       });
     },
-    async deleteAccountConf(){
-        this.$confirm('This will permanently close your account','Warning',{
-          confirmButtonText:'Proceed',
-          cancelButtonText:'Cancel',
-          type:'error'
-        }).then(() => {
-          axios({
-            url: 'https://cigari.ga/api/deleteAccount',
-            method: 'post',
-            credentials: 'same-origin',
-            data: {
-              //*probably* no data needed, just pull from session even though it's an important action
-            }
-          }
-          ).then(res=>{
-            this.$message({
-              type:res.data.msgType,
-              message:res.data.msg
-            });
-            //log out
-            this.logout();
-          }).catch(err=>{
-            console.log(err);
-          });
-        }).catch((err) => {
-          console.log(err);
-        }) 
+    accountDeletionConfirm(){
+      this.accountDeletion.dialogOpen=false;
+
+      this.$message({
+        type:'success',
+        message:'deleted'
+      });
+          //  deleteAccount();
     },
     async deleteAccount(){
       axios({
@@ -162,7 +143,7 @@ export default {
         method: 'post',
         credentials: 'same-origin',
         data: {
-          //*probably* no data needed, just pull from session even though it's an important action
+          passwordConfirmation:accountDeletion.passwordConfirmation
         }
       }
       ).then(res=>{
@@ -170,8 +151,10 @@ export default {
           type:res.data.msgType,
           message:res.data.msg
         });
-        //log out
-        this.logout();
+        //log out tik jei pass correct ir no error
+        if(!res.data.error){
+          this.logout();
+        }
       }).catch(err=>{
         console.log(err);
       });
@@ -208,7 +191,6 @@ export default {
 
 
 <style>
-
 
   .ProfileForm{
     margin: auto;
