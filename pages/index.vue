@@ -1,6 +1,6 @@
 <template>
   <div class="hiddenOverflow">
-    <div v-bind:style="intro" ref="introBCG">
+    <div :style="background" ref="introBCG">
     </div>
     <transition name="fadeUp" :duration="{ enter: 1000, leave: 20 }" appear>
       <a class="hvr-fade introMainButton" @click="activateLogin(true)" v-show="!showLogin">
@@ -41,18 +41,7 @@ export default {
   data() {
     return {
       intro: {
-        position: 'absolute',
-        top: '0',
-        left: '0',
-        width: '100%',
-        height: '100%',
         backgroundImage: '',
-        backgroundSize: 'cover',
-        '-webkit-background-size': 'cover',
-        '-moz-background-size': 'cover',
-        '-o-background-size': 'cover',
-        'background-size': 'cover',
-        'z-index': -1
         //,transform: 'scale(1.1)' cia jei blura desiu
       },
       form: {
@@ -62,6 +51,26 @@ export default {
       formError: null,
       showLogin: false,
       gifTags:['art','illusion','psychedelic','trippy','abstract']
+    }
+  },
+  computed:{
+    background(){
+      return {
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        backgroundImage: this.intro.backgroundImage,
+        backgroundSize: 'cover',
+        '-webkit-background-size': 'cover',
+        '-moz-background-size': 'cover',
+        '-o-background-size': 'cover',
+        'background-size': 'cover',
+        'z-index': -1,
+        filter: this.showLogin?'blur(10px)':'',
+        transform: 'scale(1.05)'
+      }
     }
   },
   methods: {
@@ -126,6 +135,17 @@ export default {
   width: 21vw;
   height: 8vh;
   margin-bottom:2vh;  
+}
+
+.introLoginForm:before {
+  z-index: -1;
+
+
+  -webkit-filter: blur(5px);
+  -moz-filter: blur(5px);
+  -o-filter: blur(5px);
+  -ms-filter: blur(5px);
+  filter: blur(5px);
 }
 
 .el-form-item--mini.el-form-item,
