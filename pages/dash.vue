@@ -63,7 +63,7 @@
       </div>
     </div>
     <div v-else>
-      <div v-if="videos.length==0 && searchTerm==''" class="centeredUploadVideoSuggestion">
+      <div v-if="videos.length==0 && searchTerm=='' && hasVideos==false" class="centeredUploadVideoSuggestion">
         <el-card>
           <p>You don't have any videos yet!</p>
           <el-button @click="$store.app.router.push('/upload'); this.$store.state.activeTab = '3';">
@@ -179,6 +179,7 @@ export default {
     return {
       loading: true,
       videos: [],
+      hasVideos:false,
       hiddenVideos: [],
       stats: {},
       currentCopyTooltip: "Click to copy!",
@@ -221,9 +222,14 @@ export default {
           .then((res) => {
             console.log("res data is" + res.data);
             if (res.data.error == 0) {
+                let hasVideos=false;
+                if(res.data.videos.length!=0){
+                  hasVideos=true;
+                }
               return {
                 videos: res.data.videos,
-                loading: false
+                loading: false,
+                hasVideos:hasVideos
               }
             } else if (res.data.error == 1) {
               console.log("error while fetching videos");
@@ -435,9 +441,21 @@ export default {
       this.videos = this.videos.concat(this.hiddenVideos);
       this.hiddenVideos = [];
 
-      let filtered = _.partition(this.videos, video => {
-        return video.name.includes(this.searchTerm);
-      });
+      let filtered;
+      if(this.searchTerm==''){ //grazinam viska
+        try {
+          filtered[0]=this.videos;
+          filtered[1]=null;
+        
+        } catch (e) {
+        
+        }
+      }else{ //filtruojam
+        filtered = _.partition(this.videos, video => {
+          return video.name.includes(this.searchTerm);
+        });
+      }
+
       this.videos = filtered[0];
       this.hiddenVideos = filtered[1];
     }
