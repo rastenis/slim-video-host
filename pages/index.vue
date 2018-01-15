@@ -13,7 +13,7 @@
         <el-form v-on:submit.prevent="login" class="formField" size="small">
           <p class="error" v-if="formError">{{ formError }}</p>
           <el-form-item prop="username">
-            <input class="substituteInput topField " @keyup.alt.82="redirectToRegister" placeholder="Username" type="text" v-model="form.username" name="username"/>
+            <input class="substituteInput topField" autocorrect="off" autocapitalize="off" spellcheck="false" @keyup.alt.82="redirectToRegister" placeholder="Username" type="text" v-model="form.username" name="username"/>
           </el-form-item>
           <el-form-item prop="password">
             <input class="substituteInput bottomField" @keydown.enter="login" placeholder="Password" type="password" v-model="form.password" name="password" />
