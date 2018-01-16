@@ -804,7 +804,6 @@ app.post('/api/newLink', function(req, res) {
                     if (err) {
                         console.log(err);
                     }
-                    console.log("1");
                     done();
 
                 });
@@ -815,7 +814,6 @@ app.post('/api/newLink', function(req, res) {
                         if (err) {
                             console.log(err);
                         }
-                        console.log("2");
 
                         done();
                     });
@@ -828,7 +826,6 @@ app.post('/api/newLink', function(req, res) {
                         if (err) {
                             console.log(err);
                         }
-                        console.log("3");
 
                         done();
                     });
@@ -837,7 +834,6 @@ app.post('/api/newLink', function(req, res) {
                 if (err) {
                     console.log(err);
                 }
-                console.log("opcount is" + opCount);
 
                 if (opCount == req.body.selection.length - 1) {
                     if (!returner.error) {
