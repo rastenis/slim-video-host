@@ -274,19 +274,28 @@ export default {
           .then((res) => {
             //resetting selection
             this.toggleSelection();
+            
+            if (res.data.error == 0) {
+              res.data.selection.forEach(selection => {
+                console.log(selection._id);
 
-            res.data.selection.forEach(selection => {
-              this.videos.splice(selection.index, 1);
-            });
+                this.videos.forEach((video,index) => {
+                    if(video._id==selection._id){
+                      this.stats.usedSpace -= selection.size;                      
+                      this.videos.splice(index, 1);
+                    }
+                  });
+              });
+
+            } else if (res.data.error == 1) {
+              console.log("error while bulk deleting videos");
+            }
+
             this.$message({
               type: res.data.msgType,
               message: res.data.msg
             });
-            if (res.data.error == 0) {
-              this.stats.usedSpace -= this.videos[index].size;
-            } else if (res.data.error == 1) {
-              console.log("error while bulk deleting videos");
-            }
+
           }).catch(function (e) {
             console.log(e);
           });

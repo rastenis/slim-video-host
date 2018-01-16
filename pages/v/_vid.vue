@@ -151,15 +151,12 @@ export default {
   },
   head() {
     return {
-      title: this.video.name,
+      title: (this.video ? this.video.name:"404"),
       meta: [
         { property: "og:url",  content:"https://cigari.ga/v/"+this.video.videoID },
         { property: "og:title",  content:this.video.name },
         { property: "og:type",  content:"video.other"},
         { property: "og:image",  content:'/videos/thumbs/' +this.video.videoID + '.jpg'}
-        
-        
-        
       ]
     }
   },

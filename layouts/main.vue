@@ -86,6 +86,7 @@
 
   .el-menu-item {
     font-size: 2.5vh;
+    font-family: LatoLight;
   }
   
   .main {
