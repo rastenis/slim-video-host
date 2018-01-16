@@ -764,30 +764,80 @@ app.post('/api/newLink', function(req, res) {
             var newVideoID = shortid.generate();
             var newVidLink = process.env.VIDEO_LINK_PRE + newVideoID;
 
-            db.videos.update({
-                username: req.session.authUser.username,
-                videoID: sel.videoID
-            }, {
-                $set: {
-                    videoID: newVideoID,
-                    link: newVidLink
-                }
-            }, {
-                upsert: false,
-                returnUpdatedDocs: true
-            }, function(err, numAffected, affectedDocs) {
+            async.waterfall([function(done) {
+                db.videos.update({
+                    username: req.session.authUser.username,
+                    videoID: sel.videoID
+                }, {
+                    $set: {
+                        videoID: newVideoID,
+                        link: newVidLink
+                    }
+                }, {
+                    upsert: false,
+                    returnUpdatedDocs: true
+                }, function(err, numAffected, affectedDocs) {
+                    done(null, numAffected);
+                });
+            }, function(numAffected, done) {
                 if (numAffected < 1) {
                     returner.error = true;
                     returner.msgType = "error";
                     returner.msg = "Link regeneration failed.";
                 }
 
-                fs.rename(storagePath + sel.videoID + ".mp4", storagePath + newVideoID + ".mp4", function(err) {
-                    if (err) throw err;
-                });
-
                 returner.newData[index].newVideoID = newVideoID;
                 returner.newData[index].newLink = newVidLink;
+                done();
+
+            }, function(done) {
+                //updating likes/dislikes 
+                db.ratings.update({
+                    videoID: sel.videoID
+                }, {
+                    $set: {
+                        videoID: newVideoID
+                    }
+                }, {
+                    multi: true
+                }, function(err) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    console.log("1");
+                    done();
+
+                });
+            }, function(done) {
+                //removinu video file
+                if (!returner.error) {
+                    fs.rename(storagePath + sel.videoID + ".mp4", storagePath + newVideoID + ".mp4", function(err) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        console.log("2");
+
+                        done();
+                    });
+                }
+
+            }, function(done) {
+                //removinu thumbnail
+                if (!returner.error) {
+                    fs.rename(storagePath + "thumbs/" + sel.videoID + ".jpg", storagePath + "thumbs/" + newVideoID + ".jpg", function(err) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        console.log("3");
+
+                        done();
+                    });
+                }
+            }], function(err) {
+                if (err) {
+                    console.log(err);
+                }
+                console.log("opcount is" + opCount);
 
                 if (opCount == req.body.selection.length - 1) {
                     if (!returner.error) {
@@ -799,8 +849,8 @@ app.post('/api/newLink', function(req, res) {
                 } else {
                     opCount++;
                 }
-
             });
+
         });
 
     }
@@ -974,7 +1024,6 @@ app.post('/api/getAdminStats', function(req, res) {
 
     }
 });
-
 
 app.post('/api/removeVideo', function(req, res) {
     if (!req.session.authUser) {
