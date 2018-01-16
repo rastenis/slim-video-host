@@ -149,14 +149,29 @@ export default {
         });
     }
   },
+  computed:{
+    og_url(){
+      return this.video? "https://cigari.ga/v/"+this.video.videoID :"https://cigari.ga/404";
+    },
+    og_title(){
+      return this.video? this.video.name :"404";
+    },
+    og_type(){
+      return "video.other";
+      //maybe integrate with other formats
+    },
+    og_image(){
+      return this.video? '/videos/thumbs/' +this.video.videoID + '.jpg' :"";
+    }
+  },
   head() {
     return {
       title: (this.video ? this.video.name:"404"),
       meta: [
-        { property: "og:url",  content:"https://cigari.ga/v/"+this.video.videoID },
-        { property: "og:title",  content:this.video.name },
-        { property: "og:type",  content:"video.other"},
-        { property: "og:image",  content:'/videos/thumbs/' +this.video.videoID + '.jpg'}
+        { property: "og:url",  content:this.og_url},
+        { property: "og:title",  content:this.og_title },
+        { property: "og:type",  content:this.og_type},
+        { property: "og:image",  content:this.og_image}
       ]
     }
   },
