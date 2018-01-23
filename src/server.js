@@ -1101,119 +1101,131 @@ app.post('/api/upload', function(req, res) {
         });
     } else {
         // console.log(util.inspect(req.files.file, { showHidden: false, depth: null }))
+        let returner = {},
+            opCount = 0;
+        returner.error = 0;
 
-        // PER-FILE HANDLINGas, kai finalizinsiu response
-        // for (var file in req.files) {
-        //     if (req.files.hasOwnProperty(file)) {
-        //         var fileSizeInBytes = file.data.byteLength;
 
-        //     }
-        // }
-
-        // pasiverciam i megabaitus
-        var fileSizeInBytes = req.files.file.data.byteLength;
-        var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
-        console.log("size is " + fileSizeInMegabytes + "mb");
-
-        if (fileSizeInMegabytes > 100000) { //hard limitas kad neikeltu didesniu uz 100gb failu
-            res.status(557).json({
-                error: 'File too big.'
-            });
-        } else {
-            var extension = ".mp4";
-            // if (req.files.file.mimetype == "video/avi") {
-            //     extension = ".avi";
-            // } else if (req.files.file.mimetype == "video/webm") {
-            //     extension = ".webm";
-            // }
-
-            //TODO: support for more formats
-
-            db.users.find({
-                username: req.session.authUser.username.toLowerCase()
+        //tiesiai i one huge waterfall
+        async.waterfall([function(done) {
+            //runninu very simple all-unconfirmed removal pries pradedant
+            db.videos.find({
+                confirmed: false
             }, function(err, docs) {
-
-                // checkai del duplicate usernames
-                try {
-                    performSecurityChecks(docs);
-                } catch (e) {
-                    res.status(e.status).json({
-                        error: e.message
+                if (docs.length != 0) {
+                    //removing all unconfirmed videos
+                    docs.forEach(function(video) {
+                        console.log(chalk.red("removing unconfirmed video " + video.name));
+                        // removing video from both database and storage
+                        db.videos.remove({
+                            videoID: video.videoID
+                        }, function(err, res) {});
+                        fs.unlink(storagePath + video.videoID + ".mp4");
                     });
+                    done(); //dar nebus visi subs pasibaige, bet naujai ikeltu vistiek nebelies deleteris
                 }
-
-                var cleanedName = req.files.file.name.replace(/[^a-z0-9\s]/gi, "");
-                // patikrinam, ar useriui pakanka storage space
-                if (docs[0].remainingSpace < fileSizeInMegabytes) {
-                    res.status(557).json({
-                        error: 'You do not have enough space remaining to upload this file.'
-                    });
-                } else {
-                    // dedam video i storage
-                    var videoID = shortid.generate();
-                    var vidLink = process.env.VIDEO_LINK_PRE + videoID;
-                    console.log(chalk.bgGreen.black("storing video!"));
-
-                    db.videos.find({
-                        confirmed: false
-                    }, function(err, docs) {
-                        if (docs.length != 0) {
-                            //removing all unconfirmed videos
-                            docs.forEach(function(video) {
-                                console.log(chalk.red("removing unconfirmed video " + video.name));
-                                // removing video from both database and storage
-                                db.videos.remove({
-                                    videoID: video.videoID
-                                }, function(err, res) {});
-                                fs.unlink(storagePath + video.videoID + ".mp4");
-                            });
-                        } else {
-                            db.videos.insert({
-                                username: req.session.authUser.username.toLowerCase(),
-                                link: vidLink,
-                                name: cleanedName,
-                                videoID: videoID,
-                                views: 0,
-                                likes: 0,
-                                dislikes: 0,
-                                size: fileSizeInMegabytes,
-                                confirmed: false
-                            }, function() {
-                                req.files.file.mv(storagePath + videoID + extension, function(err) {
-                                    //savinu thumbnail
-                                    exec('ffmpeg -i ../' + storagePath + videoID + extension + ' -ss 0 -vframes 1 ../' + storagePath + "thumbs/" + videoID + '.jpg', {
-                                        cwd: __dirname
-                                    }, function(error, stdout, stderr) {
-                                        if (error) {
-                                            console.log(error);
-                                        }
-                                    });
-
-                                    //returninu OK responsa
-                                    res.json({
-                                        error: 0,
-                                        thing1: "test"
-                                    });
-                                });
-                            });
-                        }
-                    });
-
-                    var decrement = fileSizeInMegabytes *= -1;
-
-                    // atimam is userio atitnkama kieki duomenu
-                    db.users.update({
-                        username: req.session.authUser.username.toLowerCase()
-                    }, {
-                        $inc: {
-                            remainingSpace: decrement
-                        }
-                    }, {}, function() {});
-                }
-
             });
+        }], function(err) {
+            // PER-FILE HANDLINGas, kai finalizinsiu response            
+            for (const file in req.files) {
+                if (req.files.hasOwnProperty(file)) {
+                    // filesize handlingas
+                    opCount++;
+                    var fileSizeInBytes = req.files[file].data.byteLength;
+                    var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
+                    console.log("size is " + fileSizeInMegabytes + "mb");
 
-        }
+                    if (fileSizeInMegabytes > 10000) { //hard limitas kad neikeltu didesniu uz 10gb failu
+                        res.status(557).json({
+                            error: 'File too big.'
+                        });
+                    } else {
+
+                        var extension = ".mp4";
+                        // if (req.files.file.mimetype == "video/avi") {
+                        //     extension = ".avi";
+                        // } else if (req.files.file.mimetype == "video/webm") {
+                        //     extension = ".webm";
+                        // }
+
+                        //TODO: support for more formats
+
+                        db.users.find({
+                            username: req.session.authUser.username.toLowerCase()
+                        }, function(err, docs) {
+                            var cleanedName = req.files[file].name.replace(/[^a-z0-9\s]/gi, "");
+                            // patikrinam, ar useriui pakanka storage space
+                            if (docs[0].remainingSpace < fileSizeInMegabytes) {
+                                res.status(557).json({
+                                    error: 'You do not have enough space remaining to upload this file.'
+                                });
+                            } else {
+                                // dedam video i storage
+                                var videoID = shortid.generate();
+                                var vidLink = process.env.VIDEO_LINK_PRE + videoID;
+                                console.log(chalk.bgGreen.black("storing video!"));
+
+
+                                db.videos.insert({
+                                    username: req.session.authUser.username.toLowerCase(),
+                                    link: vidLink,
+                                    name: cleanedName,
+                                    videoID: videoID,
+                                    views: 0,
+                                    likes: 0,
+                                    dislikes: 0,
+                                    size: fileSizeInMegabytes,
+                                    confirmed: false
+                                }, function(err, newDoc) {
+                                    if (err) {
+                                        console.log(err);
+                                    } else {
+                                        req.files[file].mv(storagePath + videoID + extension, function(err) {
+                                            //savinu thumbnail
+                                            exec('ffmpeg -i ../' + storagePath + videoID + extension + ' -ss 0 -vframes 1 ../' + storagePath + "thumbs/" + videoID + '.jpg', {
+                                                cwd: __dirname
+                                            }, function(error, stdout, stderr) {
+                                                if (error) {
+                                                    console.log(error);
+                                                }
+                                            });
+
+                                            //prisegu prie returnerio
+                                            returner[videoID] = newDoc;
+
+                                            if (opCount == Object.keys(req.files).length - 1) {
+                                                console.log("RETURNING UPLOAD CALLBACK");
+                                                res.json(returner);
+                                            }
+                                        });
+                                    }
+
+                                });
+
+                                var decrement = fileSizeInMegabytes *= -1;
+
+                                // atimam is userio atitnkama kieki duomenu
+                                db.users.update({
+                                    username: req.session.authUser.username.toLowerCase()
+                                }, {
+                                    $inc: {
+                                        remainingSpace: decrement
+                                    }
+                                }, {}, function() {});
+                            }
+
+                        });
+
+                    }
+
+                }
+            }
+        });
+
+
+
+
+
     }
 
 });
