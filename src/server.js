@@ -1102,9 +1102,16 @@ app.post('/api/upload', function(req, res) {
     } else {
         // console.log(util.inspect(req.files.file, { showHidden: false, depth: null }))
 
-        var fileSizeInBytes = req.files.file.data.byteLength;
+        // PER-FILE HANDLINGas, kai finalizinsiu response
+        // for (var file in req.files) {
+        //     if (req.files.hasOwnProperty(file)) {
+        //         var fileSizeInBytes = file.data.byteLength;
+
+        //     }
+        // }
 
         // pasiverciam i megabaitus
+        var fileSizeInBytes = req.files.file.data.byteLength;
         var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
         console.log("size is " + fileSizeInMegabytes + "mb");
 
@@ -1180,6 +1187,12 @@ app.post('/api/upload', function(req, res) {
                                         if (error) {
                                             console.log(error);
                                         }
+                                    });
+
+                                    //returninu OK responsa
+                                    res.json({
+                                        error: 0,
+                                        thing1: "test"
                                     });
                                 });
                             });

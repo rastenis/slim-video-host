@@ -15,12 +15,12 @@
       </el-form>
     </el-card>
     <el-card class="uploadCard uploadForm clickableCard" v-else>
-        <el-upload ref="uploader" :multiple="false" :thumbnail-mode="true" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :show-file-list="false" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
+        <el-upload ref="uploader" :multiple="true" :thumbnail-mode="true" :on-success="onUploadSuccess" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
           <i class="el-icon-upload"></i>
           <div class="el-upload__text">Drop file here or
             <em>click to upload</em>
           </div>
-          <div class="el-upload__tip" slot="tip">.mp4 files with a size less than 100GB</div>
+          <div class="el-upload__tip" slot="tip">.mp4 files with a size less than 5GB</div>
         </el-upload>
       </el-card>
     </div>
@@ -63,6 +63,11 @@ export default {
     }
   },
   methods: {
+    onUploadSuccess(res, file, fileList){
+      console.log(res);
+      console.log(file);
+      console.log(fileList);
+    },
     beforeVideoUpload(file) {
       this.uploading = true;
       if (!this.$store.state.authUser) {
@@ -151,7 +156,6 @@ export default {
 
               this.dialog.input.disabled = false;
 
-
               if (res.data.error == 0) {
                 this.uploadedNotification(res.data.msg, res.data.msgType);
                 this.progressBar.status = "";
@@ -192,7 +196,6 @@ export default {
         this.dialog.input.disabled = true;
       }
     }
-
   },
   created() {
     if (!this.$store.state.authUser) {
@@ -204,7 +207,6 @@ export default {
   transition:'mainTransition'
 }
 </script>
-
 
 <style>
 
