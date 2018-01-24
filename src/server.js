@@ -197,11 +197,18 @@ app.get('/api/checkToken/:token', function(req, res) {
     var returner = {};
     returner.valid = false;
     console.log("checking for token " + req.params.token);
-    db.users.find({ resetToken: req.params.token, tokenExpiry: { $gt: Date.now() } }, function(err, docs) {
+    db.users.find({
+        resetToken: req.params.token,
+        tokenExpiry: {
+            $gt: Date.now()
+        }
+    }, function(err, docs) {
         if (docs.length > 1) {
             console.log("duplicate tokens?? purge all");
             returner.error = true;
-            db.users.remove({}, { multi: true }, function(err, docs) {
+            db.users.remove({}, {
+                multi: true
+            }, function(err, docs) {
                 if (err) {
                     console.log(err);
                 }
@@ -227,7 +234,9 @@ app.post('/api/requestReset', function(req, res) {
     returner.error = true;
     returner.token = null;
     console.log(req.body.email);
-    db.users.find({ email: req.body.email }, function(err, docs) {
+    db.users.find({
+        email: req.body.email
+    }, function(err, docs) {
         if (docs.length > 1) {
             console.log(chalk.bgRed.white("duplicate account emails. CRITICAL"));
             returner.error = true;
@@ -267,7 +276,16 @@ app.post('/api/requestReset', function(req, res) {
             });
 
             //store token
-            db.users.update({ email: req.body.email }, { $set: { resetToken: token, tokenExpiry: Date.now() + defaultTokenExpiry } }, { upsert: false }, function(err, docs) {
+            db.users.update({
+                email: req.body.email
+            }, {
+                $set: {
+                    resetToken: token,
+                    tokenExpiry: Date.now() + defaultTokenExpiry
+                }
+            }, {
+                upsert: false
+            }, function(err, docs) {
                 returner.msg = "Success! Check your email for further instructions.";
                 returner.msgType = 'success';
                 returner.error = false;
@@ -333,7 +351,9 @@ app.post('/api/changePassword', function(req, res) {
             //del viso pikto is naujo paimu password is database
             async.waterfall([function(done) {
 
-                db.users.find({ username: req.session.authUser.username.toLowerCase() }, function(err, docs) {
+                db.users.find({
+                    username: req.session.authUser.username.toLowerCase()
+                }, function(err, docs) {
                     //useris prisijunges per login route'a, todel duplicates nera.
                     done(null, docs[0]);
                 });
@@ -516,7 +536,13 @@ app.post('/api/register', function(req, res) {
                             //got a matching code!
 
                             // settinu 'active' flag i false by default
-                            db.codes.update({ code: req.body.code }, { $set: { active: false } }, {}, function(err) {
+                            db.codes.update({
+                                code: req.body.code
+                            }, {
+                                $set: {
+                                    active: false
+                                }
+                            }, {}, function(err) {
                                 if (err) {
                                     console.log(err);
                                 }
@@ -617,7 +643,6 @@ app.post('/api/getVideos', function(req, res) {
                     if (index == (docs.length - 1)) {
                         returner.error = 0;
                         returner.videos = docs;
-                        console.log("RETURNINGGG at index " + index);
                         return res.json(returner);
                     }
                 });
@@ -689,7 +714,9 @@ app.post('/api/deleteAccount', function(req, res) {
         });
     } else {
         async.waterfall([function(done) {
-            db.users.find({ email: req.session.authUser.email }, function(err, docs) {
+            db.users.find({
+                email: req.session.authUser.email
+            }, function(err, docs) {
                 if (err) {
                     console.log(err);
                 } else {
@@ -723,7 +750,11 @@ app.post('/api/deleteAccount', function(req, res) {
                 returner.msgType = "error";
                 done();
             } else {
-                db.users.remove({ email: req.session.authUser.email }, { multi: true }, function(err) {
+                db.users.remove({
+                    email: req.session.authUser.email
+                }, {
+                    multi: true
+                }, function(err) {
                     if (err) {
                         console.log(err);
                         returner.error = 1;
@@ -1122,11 +1153,13 @@ app.post('/api/upload', function(req, res) {
                         }, function(err, res) {});
                         fs.unlink(storagePath + video.videoID + ".mp4");
                     });
-                    done(); //dar nebus visi subs pasibaige, bet naujai ikeltu vistiek nebelies deleteris
                 }
+                done(); //dar nebus visi subs pasibaige, bet naujai ikeltu vistiek nebelies deleteris
             });
         }], function(err) {
-            // PER-FILE HANDLINGas, kai finalizinsiu response            
+            // PER-FILE HANDLINGas, kai finalizinsiu response      
+            console.log("handling files ");
+
             for (const file in req.files) {
                 if (req.files.hasOwnProperty(file)) {
                     // filesize handlingas
@@ -1192,6 +1225,7 @@ app.post('/api/upload', function(req, res) {
 
                                             //prisegu prie returnerio
                                             returner[videoID] = newDoc;
+                                            console.log("yeah ok opCount is " + opCount);
 
                                             if (opCount == Object.keys(req.files).length - 1) {
                                                 console.log("RETURNING UPLOAD CALLBACK");
