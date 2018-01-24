@@ -1135,6 +1135,7 @@ app.post('/api/upload', function(req, res) {
         let returner = {},
             opCount = 0;
         returner.error = 0;
+        returner.newVideos = [];
 
 
         //tiesiai i one huge waterfall
@@ -1224,7 +1225,7 @@ app.post('/api/upload', function(req, res) {
                                             });
 
                                             //prisegu prie returnerio
-                                            returner[videoID] = newDoc;
+                                            returner.newVideos.push(newDoc);
 
                                             if (opCount >= Object.keys(req.files).length) {
                                                 console.log("RETURNING UPLOAD CALLBACK w/ " + opCount + " items");
