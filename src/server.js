@@ -1225,10 +1225,9 @@ app.post('/api/upload', function(req, res) {
 
                                             //prisegu prie returnerio
                                             returner[videoID] = newDoc;
-                                            console.log("yeah ok opCount is " + opCount);
 
-                                            if (opCount == Object.keys(req.files).length - 1) {
-                                                console.log("RETURNING UPLOAD CALLBACK");
+                                            if (opCount >= Object.keys(req.files).length) {
+                                                console.log("RETURNING UPLOAD CALLBACK w/ " + opCount + " items");
                                                 res.json(returner);
                                             }
                                         });
