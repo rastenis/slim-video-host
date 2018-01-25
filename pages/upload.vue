@@ -9,15 +9,15 @@
         <el-form>
           <div v-if="uploadedFileList" v-for="(video, index) in uploadedFileList" :item="video" :index="index" :key="video.videoID">
             <el-form-item :label="video.name">
-              <el-input v-model="newNames[video.name]" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(currentVidName,0,false)"></el-input>
+              <el-input v-model="newNames[video.name]" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(0,false)"></el-input>
             </el-form-item> <!-- TODO: update enter shortcut to validate all video names and submit -->
           </div>
 
           <!-- <el-form-item label="Video name">
             <el-input v-model="currentVidName" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(currentVidName,0,false)"></el-input>
           </el-form-item> -->
-          <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(currentVidName,0,false)">Finish upload</el-button>
-          <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(currentVidName,1,false)">Cancel</el-button>
+          <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(0,false)">Finish upload</el-button>
+          <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(1,false)">Cancel</el-button>
         </el-form>
     </el-card>
     <el-card class="uploadCard uploadForm clickableCard" v-else>
@@ -123,7 +123,7 @@ export default {
           }, 1000);
         }
       }
-      this.progressBar.percentage = parseFloat(event.percent.toFixed(2));
+      this.progressBar.percentage = parseFloat(event.percent.toFixed(1));
     },
     uploadedNotification(msg, type) {
       this.$notify({
@@ -133,7 +133,7 @@ export default {
         duration: 4000
       });
     },
-    finishUpload(name, status, specialPass) {
+    finishUpload(status, specialPass) {
       console.log(this.newNames);
       if (!this.$store.state.authUser) {
         this.$message.error("You are not signed in!");

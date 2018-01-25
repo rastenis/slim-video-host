@@ -942,12 +942,15 @@ app.post('/api/finalizeUpload', function(req, res) {
         returner.error = 1;
         returner.msgType = "danger";
         returner.msg = "You have cancelled the upload.";
-        return res.json(returner);
+        res.json(returner);
     }
 
     //jei ne cancelled, proceedinam prie renaming
     async.waterfall([function(done) {
 
+        if (req.body.cancelled) {
+            done();
+        }
         for (const oldName in req.body.newNames) {
             if (req.body.newNames.hasOwnProperty(oldName)) {
                 console.log("got new name " + req.body.newNames[oldName] + " for " + oldName);
