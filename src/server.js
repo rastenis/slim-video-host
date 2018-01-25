@@ -34,7 +34,7 @@ db.users = new Datastore({
 db.codes = new Datastore({
     filename: process.env.DB_CODES_PATH,
     autoload: true,
-    corruptAlertThreshold: 0.6 //truputis headway manually pridetiems kodams
+    corruptAlertThreshold: 1 // headway manually pridetiems kodams
 });
 db.videos = new Datastore({
     filename: process.env.DB_VIDEOS_PATH,
@@ -926,64 +926,115 @@ app.post('/api/rename', function(req, res) {
 app.post('/api/finalizeUpload', function(req, res) {
 
     console.log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username);
-    var returner = {};
+    let returner = {},
+        opCount = 0;
     if (!req.session.authUser) {
-        res.json({
+        return res.json({
             error: true,
             msg: "No authentication. Please sign in.",
             msgType: "error"
         });
-    } else {
-        if (req.body.video.finalizationStatus == 0) { //video was successfully uploaded and named
-            db.videos.update({
-                confirmed: false,
-                username: req.session.authUser.username.toLowerCase()
-            }, {
-                $set: {
-                    name: req.body.video.name,
-                    confirmed: true,
-                    uploadDate: new Date()
-                }
-            }, {}, function(err) {
+    }
+
+    if (req.body.cancelled) {
+        console.log(chalk.red("upload(s) cancelled"));
+
+        returner.error = 1;
+        returner.msgType = "danger";
+        returner.msg = "You have cancelled the upload.";
+        return res.json(returner);
+    }
+
+    //jei ne cancelled, proceedinam prie renaming
+    async.waterfall([function(done) {
+        for (const oldName in req.body.newNames) {
+            if (req.body.newNames.hasOwnProperty(oldName)) {
+                opCount++;
+                const newName = req.body.newNames[oldName];
+                db.videos.update({
+                    confirmed: false,
+                    username: req.session.authUser.username.toLowerCase(),
+                    name: oldName
+                }, {
+                    $set: {
+                        name: newName,
+                        confirmed: true,
+                        uploadDate: new Date()
+                    }
+                }, {}, function(err) {
+                    if (err) {
+                        console.log(chalk.bgRed.white(err));
+                        returner.error = 1;
+                    }
+
+                    if (opCount >= Object.keys(req.body.newNames).length) {
+                        console.log("RETURNING FINALIZATION CALLBACK w/ " + opCount + " items");
+                        returner.error = 0;
+                        returner.msg = "You successfully uploaded the video.";
+                        returner.msgType = "success";
+                        res.json(returner);
+                        done();
+                    }
+                });
+            }
+        }
+
+    }, function(done) {
+        //unnamed (old unconfirmed) video removal 
+        db.videos.find({
+            username: req.session.authUser.username,
+            confirmed: false
+        }, function(err, docs) {
+            done(null, docs);
+        });
+    }, function(unconfirmedvideos, done) {
+        unconfirmedvideos.forEach(selection => {
+            db.videos.find({
+                videoID: selection.videoID
+            }, function(err, docs) {
                 if (err) {
                     console.log(chalk.bgRed.white(err));
-                    returner.error = 1;
-                }
-
-                returner.error = 0;
-                returner.msg = "You successfully uploaded the video.";
-                returner.msgType = "success";
-                return res.json(returner);
-            });
-        } else if (req.body.video.finalizationStatus == 1) { //video was not successfully uploaded (canceled)
-            //non-multi removal (gal ir praverstu multi false check, TODO)
-            console.log(chalk.red("cancelled " + req.body.video.name));
-
-            db.videos.find({
-                confirmed: false,
-                username: req.session.authUser.username.toLowerCase()
-            }, function(err, docs) {
-                if (docs.length == 0) {
-                    console.log("video hasnt been uploaded yet, not cancelling");
                 } else {
-                    docs.forEach(function(video) {
-                        console.log(chalk.red("removing unconfirmed video " + video.name));
-                        // removing video from both database and storage
-                        db.videos.remove({
-                            videoID: video.videoID
-                        }, function(err, res) {});
-                        fs.unlink(storagePath + video.videoID + ".mp4");
+                    db.users.update({
+                        username: req.session.authUser.username
+                    }, {
+                        $inc: { //pridedamas atgal storage space useriui
+                            remainingSpace: Math.abs(docs[0].size)
+                        }
+                    }, {}, function() {
+                        //taip pat ir istrinamas pats video is storage
+                        try {
+                            fs.unlink(storagePath + selection.videoID + ".mp4");
+                        } catch (err) {
+                            console.log(err);
+                        }
+                        //istrinamas ir thumbnailas
+                        try {
+                            fs.unlink(storagePath + "thumbs/" + selection.videoID + ".jpg");
+                        } catch (err) {
+                            console.log(err);
+                        }
+                    });
+
+                    db.videos.remove({
+                        videoID: selection.videoID
+                    }, function(err, docs) {
+                        if (err) {
+                            console.log(chalk.bgRed.white(err));
+                        }
+                        //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
+                        //return errors from foreach async operations.
                     });
                 }
             });
+        });
 
-            returner.error = 2;
-            returner.msgType = "info";
-            returner.msg = "You have cancelled the upload.";
-            return res.json(returner);
+        done(); //foreach bus +- synced up
+    }], function(err) {
+        if (err) {
+            console.log(err);
         }
-    }
-
+    });
 
 });
 
@@ -1131,7 +1182,6 @@ app.post('/api/upload', function(req, res) {
             error: 'User not signed in.'
         });
     } else {
-        // console.log(util.inspect(req.files.file, { showHidden: false, depth: null }))
         let returner = {},
             opCount = 0;
         returner.error = 0;
@@ -1141,33 +1191,19 @@ app.post('/api/upload', function(req, res) {
         //tiesiai i one huge waterfall
         async.waterfall([function(done) {
             //runninu very simple all-unconfirmed removal pries pradedant
-            db.videos.find({
-                confirmed: false
-            }, function(err, docs) {
-                if (docs.length != 0) {
-                    //removing all unconfirmed videos
-                    docs.forEach(function(video) {
-                        console.log(chalk.red("removing unconfirmed video " + video.name));
-                        // removing video from both database and storage
-                        db.videos.remove({
-                            videoID: video.videoID
-                        }, function(err, res) {});
-                        fs.unlink(storagePath + video.videoID + ".mp4");
-                    });
-                }
-                done(); //dar nebus visi subs pasibaige, bet naujai ikeltu vistiek nebelies deleteris
-            });
+            done();
         }], function(err) {
             // PER-FILE HANDLINGas, kai finalizinsiu response      
-            console.log("handling files ");
+            console.log("handling file(s)...");
 
-            for (const file in req.files) {
+            for (const file in req.files) { //turetu tik po viena faila postai eit
                 if (req.files.hasOwnProperty(file)) {
                     // filesize handlingas
                     opCount++;
                     var fileSizeInBytes = req.files[file].data.byteLength;
                     var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
                     console.log("size is " + fileSizeInMegabytes + "mb");
+
 
                     if (fileSizeInMegabytes > 10000) { //hard limitas kad neikeltu didesniu uz 10gb failu
                         res.status(557).json({
@@ -1247,21 +1283,12 @@ app.post('/api/upload', function(req, res) {
                                     }
                                 }, {}, function() {});
                             }
-
                         });
-
                     }
-
                 }
             }
         });
-
-
-
-
-
     }
-
 });
 
 

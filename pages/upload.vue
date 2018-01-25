@@ -135,65 +135,66 @@ export default {
     },
     finishUpload(name, status, specialPass) {
       console.log(this.newNames);
-      return;
       if (!this.$store.state.authUser) {
         this.$message.error("You are not signed in!");
         this.$store.app.router.push("/");
         return false;
       }
       if (this.progressBar.percentage == 100 || specialPass == true) {
-        if (!name && status == 0) {
-          this.$message.error("Please enter a valid name!");
-        } else {
-          axios({
-            url: "https://cigari.ga/api/finalizeUpload",
-            method: "post",
-            credentials: "same-origin",
-            data: {
-              user: this.$store.state.authUser,
-              video: {
-                name: name,
-                finalizationStatus: status
-              }
+        // if (!name && status == 0) {
+        //   //validate form of all new video names
+        //   this.$message.error("Please enter a valid name!");
+        // }
+        axios({
+          url: "https://cigari.ga/api/finalizeUpload",
+          method: "post",
+          credentials: "same-origin",
+          data: {
+            user: this.$store.state.authUser,
+            video: {
+              newNames: this.newNames,
+              cancelled: status
+            }
+          }
+        })
+          .then(res => {
+            this.uploading = false;
+
+            if (status == 0) {
+              this.dialog.buttonConfirm.loading = false;
+              this.dialog.buttonCancel.disabled = false;
+              this.dialog.buttonConfirm.disabled = false;
+            } else {
+              this.dialog.buttonCancel.loading = false;
+              this.dialog.buttonConfirm.disabled = false;
+              this.dialog.buttonCancel.disabled = false;
+            }
+
+            this.dialog.input.disabled = false;
+
+            if (res.data.error == 0) {
+              this.uploadedNotification(res.data.msg, res.data.msgType);
+              this.progressBar.status = "";
+              this.progressBar.percentage = 0;
+            } else if (res.data.error == 2) {
+              this.progressBar.status = "";
+              this.progressBar.percentage = 0;
+              this.$message({
+                type: res.data.msgType,
+                message: res.data.msg
+              });
+              //removing naming storage
+              this.newNames = [];
+            } else {
+              this.$message({
+                type: res.data.msgType,
+                message: res.data.msg
+              });
             }
           })
-            .then(res => {
-              this.uploading = false;
-
-              if (status == 0) {
-                this.dialog.buttonConfirm.loading = false;
-                this.dialog.buttonCancel.disabled = false;
-                this.dialog.buttonConfirm.disabled = false;
-              } else {
-                this.dialog.buttonCancel.loading = false;
-                this.dialog.buttonConfirm.disabled = false;
-                this.dialog.buttonCancel.disabled = false;
-              }
-
-              this.dialog.input.disabled = false;
-
-              if (res.data.error == 0) {
-                this.uploadedNotification(res.data.msg, res.data.msgType);
-                this.progressBar.status = "";
-                this.progressBar.percentage = 0;
-              } else if (res.data.error == 2) {
-                this.progressBar.status = "";
-                this.progressBar.percentage = 0;
-                this.$message({
-                  type: res.data.msgType,
-                  message: res.data.msg
-                });
-              } else {
-                this.$message({
-                  type: res.data.msgType,
-                  message: res.data.msg
-                });
-              }
-            })
-            .catch(function(e) {
-              console.log(e);
-            });
-        }
+          .catch(function(e) {
+            console.log(e);
+          });
       } else {
         if (status == 0) {
           this.dialog.buttonConfirm.loading = true;
