@@ -151,10 +151,8 @@ export default {
           credentials: "same-origin",
           data: {
             user: this.$store.state.authUser,
-            video: {
-              newNames: this.newNames,
-              cancelled: status
-            }
+            newNames: this.newNames,
+            cancelled: status
           }
         })
           .then(res => {

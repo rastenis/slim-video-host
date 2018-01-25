@@ -947,35 +947,43 @@ app.post('/api/finalizeUpload', function(req, res) {
 
     //jei ne cancelled, proceedinam prie renaming
     async.waterfall([function(done) {
+
         for (const oldName in req.body.newNames) {
             if (req.body.newNames.hasOwnProperty(oldName)) {
+                console.log("got new name " + req.body.newNames[oldName] + " for " + oldName);
+
                 opCount++;
                 const newName = req.body.newNames[oldName];
                 db.videos.update({
-                    confirmed: false,
-                    username: req.session.authUser.username.toLowerCase(),
-                    name: oldName
-                }, {
-                    $set: {
-                        name: newName,
-                        confirmed: true,
-                        uploadDate: new Date()
-                    }
-                }, {}, function(err) {
-                    if (err) {
-                        console.log(chalk.bgRed.white(err));
-                        returner.error = 1;
-                    }
+                        confirmed: false,
+                        username: req.session.authUser.username.toLowerCase(),
+                        name: oldName
+                    }, {
+                        $set: {
+                            name: newName,
+                            confirmed: true,
+                            uploadDate: new Date()
+                        }
+                    }, {
+                        returnUpdatedDocs: true,
+                        multi: false
+                    },
+                    function(err, numAffected, affectedDocuments) {
+                        if (err) {
+                            console.log(chalk.bgRed.white(err));
+                            returner.error = 1;
+                        }
 
-                    if (opCount >= Object.keys(req.body.newNames).length) {
-                        console.log("RETURNING FINALIZATION CALLBACK w/ " + opCount + " items");
-                        returner.error = 0;
-                        returner.msg = "You successfully uploaded the video.";
-                        returner.msgType = "success";
-                        res.json(returner);
-                        done();
-                    }
-                });
+                        console.log("updated : " + affectedDocuments);
+                        if (opCount >= Object.keys(req.body.newNames).length) {
+                            console.log("RETURNING FINALIZATION CALLBACK w/ " + opCount + " items");
+                            returner.error = 0;
+                            returner.msg = "You successfully uploaded the video.";
+                            returner.msgType = "success";
+                            res.json(returner);
+                            done();
+                        }
+                    });
             }
         }
 
@@ -989,6 +997,7 @@ app.post('/api/finalizeUpload', function(req, res) {
         });
     }, function(unconfirmedvideos, done) {
         unconfirmedvideos.forEach(selection => {
+            console.log(chalk.red("removing unconfirmed"));
             db.videos.find({
                 videoID: selection.videoID
             }, function(err, docs) {
