@@ -953,11 +953,14 @@ app.post('/api/finalizeUpload', function(req, res) {
                 console.log("got new name " + req.body.newNames[oldName] + " for " + oldName);
 
                 opCount++;
-                const newName = req.body.newNames[oldName];
+                const newName = req.body.newNames[oldName].replace(/[^a-z0-9\s]/gi, ""); //turetu jau but clean is client
+                let cleanedName = oldName.replace(/[^a-z0-9\s]/gi, "");
+                console.log("VIDEO IS NAMED:" + cleanedName);
+
                 db.videos.update({
                         confirmed: false,
-                        username: req.session.authUser.username.toLowerCase(),
-                        name: oldName
+                        username: req.session.authUser.username,
+                        name: cleanedName
                     }, {
                         $set: {
                             name: newName,
