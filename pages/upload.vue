@@ -9,7 +9,7 @@
         <el-form>
           <div v-if="uploadedFileList" v-for="(video, index) in uploadedFileList" :item="video" :index="index" :key="video.videoID">
             <el-form-item :label="video.name">
-              <el-input v-model="newNames[video.videoID]" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(currentVidName,0,false)"></el-input>
+              <el-input v-model="newNames[video.name]" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(currentVidName,0,false)"></el-input>
             </el-form-item> <!-- TODO: update enter shortcut to validate all video names and submit -->
           </div>
 
