@@ -109,11 +109,12 @@ export default {
       }
     },
     uploadProgress(event, file, fileList) {
+      this.uploadedFileList = fileList;
+
       if (event.percent >= 100) {
         // this.uploading=false;
         this.progressBar.status = "success";
         // todo effect for finished upload
-        this.uploadedFileList = fileList;
         console.log(fileList);
 
         if (this.upload.ready) {
@@ -231,7 +232,6 @@ export default {
   right: 0;
   bottom: 0;
   left: 0;
-  height: 40vh;
   width: 60vw;
 }
 

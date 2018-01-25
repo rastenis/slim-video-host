@@ -955,7 +955,6 @@ app.post('/api/finalizeUpload', function(req, res) {
             if (req.body.newNames.hasOwnProperty(oldName)) {
                 console.log("got new name " + req.body.newNames[oldName] + " for " + oldName);
 
-                opCount++;
                 const newName = req.body.newNames[oldName].replace(/[^a-z0-9\s]/gi, ""); //turetu jau but clean is client
                 let cleanedName = oldName.replace(/[^a-z0-9\s]/gi, "");
                 console.log("VIDEO IS NAMED:" + cleanedName);
@@ -980,14 +979,16 @@ app.post('/api/finalizeUpload', function(req, res) {
                             returner.error = 1;
                         }
 
-                        console.log("updated : " + affectedDocuments);
-                        if (opCount >= Object.keys(req.body.newNames).length) {
+                        console.log("keyss : " + opCount + " vs " + Object.keys(req.body.newNames).length);
+                        if (opCount === Object.keys(req.body.newNames).length - 1) {
                             console.log("RETURNING FINALIZATION CALLBACK w/ " + opCount + " items");
                             returner.error = 0;
                             returner.msg = "You successfully uploaded the video.";
                             returner.msgType = "success";
                             res.json(returner);
                             done();
+                        } else {
+                            opCount++;
                         }
                     });
             }
@@ -1214,7 +1215,6 @@ app.post('/api/upload', function(req, res) {
             for (const file in req.files) { //turetu tik po viena faila postai eit
                 if (req.files.hasOwnProperty(file)) {
                     // filesize handlingas
-                    opCount++;
                     var fileSizeInBytes = req.files[file].data.byteLength;
                     var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
                     console.log("size is " + fileSizeInMegabytes + "mb");
@@ -1278,9 +1278,11 @@ app.post('/api/upload', function(req, res) {
                                             //prisegu prie returnerio
                                             returner.newVideos.push(newDoc);
 
-                                            if (opCount >= Object.keys(req.files).length) {
+                                            if (opCount >= Object.keys(req.files).length - 1) {
                                                 console.log("RETURNING UPLOAD CALLBACK w/ " + opCount + " items");
                                                 res.json(returner);
+                                            } else {
+                                                opCount++;
                                             }
                                         });
                                     }
