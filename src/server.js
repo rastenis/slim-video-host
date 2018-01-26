@@ -22,7 +22,7 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 var exec = require('child_process').exec;
 
-//isemu - ir _ is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
+//isemu _ ir - is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
 
 //uzkraunam DB
@@ -981,7 +981,7 @@ app.post('/api/finalizeUpload', function(req, res) {
 
                         console.log("keyss : " + opCount + " vs " + Object.keys(req.body.newNames).length);
                         if (opCount === Object.keys(req.body.newNames).length - 1) {
-                            console.log("RETURNING FINALIZATION CALLBACK w/ " + opCount + " items");
+                            console.log("RETURNING FINALIZATION CALLBACK w/ " + opCount + 1 + " items");
                             returner.error = 0;
                             returner.msg = "You successfully uploaded the video.";
                             returner.msgType = "success";
@@ -1267,13 +1267,18 @@ app.post('/api/upload', function(req, res) {
                                     } else {
                                         req.files[file].mv(storagePath + videoID + extension, function(err) {
                                             //savinu thumbnail
-                                            exec('ffmpeg -i ../' + storagePath + videoID + extension + ' -ss 0 -vframes 1 ../' + storagePath + "thumbs/" + videoID + '.jpg', {
-                                                cwd: __dirname
-                                            }, function(error, stdout, stderr) {
-                                                if (error) {
-                                                    console.log(error);
-                                                }
-                                            });
+                                            try {
+                                                exec('ffmpeg -i ../' + storagePath + videoID + extension + ' -ss 0 -vframes 1 ../' + storagePath + "thumbs/" + videoID + '.jpg', {
+                                                    cwd: __dirname
+                                                }, function(error, stdout, stderr) {
+                                                    if (error) {
+                                                        console.log(error);
+                                                    }
+                                                });
+                                            } catch (e) {
+                                                console.log(chalk.bgYellow.black("WARN") + "failed to save thumbnail ");
+                                            }
+
 
                                             //prisegu prie returnerio
                                             returner.newVideos.push(newDoc);
