@@ -955,9 +955,8 @@ app.post('/api/finalizeUpload', function(req, res) {
             if (req.body.newNames.hasOwnProperty(oldName)) {
                 console.log("got new name " + req.body.newNames[oldName] + " for " + oldName);
 
-                const newName = req.body.newNames[oldName].replace(/[^a-z0-9\s]/gi, ""); //turetu jau but clean is client
-                let cleanedName = oldName.replace(/[^a-z0-9\s]/gi, "");
-                console.log("VIDEO IS NAMED:" + cleanedName);
+                const newName = req.body.newNames[oldName].replace(/[^a-z0-9]/gi, ""); //turetu jau but clean is client
+                let cleanedName = oldName.replace(/[^a-z0-9]/gi, "");
 
                 db.videos.update({
                         confirmed: false,
@@ -979,9 +978,7 @@ app.post('/api/finalizeUpload', function(req, res) {
                             returner.error = 1;
                         }
 
-                        console.log("keyss : " + opCount + " vs " + Object.keys(req.body.newNames).length);
                         if (opCount === Object.keys(req.body.newNames).length - 1) {
-                            console.log("RETURNING FINALIZATION CALLBACK w/ " + opCount + 1 + " items");
                             returner.error = 0;
                             returner.msg = "You successfully uploaded the video.";
                             returner.msgType = "success";
