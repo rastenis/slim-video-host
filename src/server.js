@@ -349,7 +349,6 @@ app.post('/api/changePassword', function(req, res) {
                 db.users.find({
                     username: req.session.authUser.username.toLowerCase()
                 }, function(err, docs) {
-                    //useris prisijunges per login route'a, todel duplicates nera.
                     done(null, docs[0]);
                 });
             }, function(fetchedUser, done) {
@@ -362,10 +361,10 @@ app.post('/api/changePassword', function(req, res) {
                 });
             }, function(valid, done) {
                 if (valid) { //all fine
-                    //hashinam new password
+                    // hashing the new password
                     var hashedPass = hashUpPass(req.body.newPassword);
 
-                    //password keiciamas
+                    // changing the password
                     db.users.update({
                         email: req.session.authUser.email
                     }, {
@@ -417,9 +416,9 @@ app.post('/api/act', function(req, res) {
                     userRatings.liked = false;
                     userRatings.disliked = false;
 
-                    //assigning likes/dislikes
+                    // assigning likes/dislikes
                     docs.forEach(doc => {
-                        if (doc.action == 0) //disliked
+                        if (doc.action == 0) // disliked
                         {
                             userRatings.disliked = true;
                         } else if (doc.action == 1) {
@@ -434,23 +433,22 @@ app.post('/api/act', function(req, res) {
                 var prep = {};
                 prep.action = req.body.action;
                 prep.revert = false;
-                if (prep.action) { //like
-                    if (userRatings.liked) { //revert
+                if (prep.action) { // like
+                    if (userRatings.liked) { // revert
                         prep.revert = true;
                         prep.increment = -1;
-                    } else { //just like
+                    } else { // just like
                         prep.increment = 1
                     }
-                } else { //dislike
-                    if (userRatings.disliked) { //revert
+                } else { // dislike
+                    if (userRatings.disliked) { // revert
                         prep.revert = true;
                         prep.increment = -1;
-                    } else { //just dislike
+                    } else { // just dislike
                         prep.increment = 1;
                     }
                 }
-                console.log("revert is " + prep.revert);
-                //updating rating DB
+                // updating rating DB
                 if (prep.revert) {
                     db.ratings.remove({
                         username: req.session.authUser.username,
@@ -500,19 +498,18 @@ app.post('/api/register', function(req, res) {
         });
     }, function(docs, enoughSpace, done) {
 
-        //checkai del duplicate usernames
-        if (docs.length != 0) { //rado useri su tokiu paciu username
+        // checks for duplicate usernames
+        if (docs.length != 0) { // user with duplicate username exists
             console.log(chalk.bgRed("Failed account creation (duplicate username)"));
             res.status(599).json({
                 error: 'An account with that username already exists.',
             });
-            //TODO: add handle for this in vuex
         } else if (!enoughSpace) {
             console.log(chalk.bgRed("Failed account creation (TOTAL_SPACE exceeded)"));
             res.status(598).json({
                 error: 'The server cannot accept new registrations at this moment.'
             });
-        } else { //ok, dedam i DB ir prikabinam prie session kad nereiktu loginintisb
+        } else { //ok, proceeding with the creation
             var storageSpace = defaultStorageSpace;
             var userStatus = defaultUserStatus;
             console.log(chalk.bgRed(chalk.bgCyanBright.black("no duplicate account! proceeding with the creation of the account.")));
@@ -531,19 +528,18 @@ app.post('/api/register', function(req, res) {
                         }
                     });
                 },
-                function(done) { //tikrinimas ar yra atitinkanciu privelegiju kodu
+                function(done) { // checking for matching privelege codes
                     db.codes.find({
                         code: req.body.code,
                         active: true,
                         type: "reg"
                     }, function(err, docs) {
-                        if (docs.length == 0) { //rado useri su tokiu paciu username
+                        if (docs.length == 0) {
                             //no matching code, go on
                             done(null, null);
                         } else {
-                            //got a matching code!
-
-                            // settinu 'active' flag i false by default
+                            // got a matching code!
+                            // setting the code to 'inactive' state
                             db.codes.update({
                                 code: req.body.code
                             }, {
@@ -562,9 +558,9 @@ app.post('/api/register', function(req, res) {
                 function(code, done) {
                     // adding code benefits
                     if (code !== null) { // got code
-                        if (code.benefit == 0) { // daugiau base space
+                        if (code.benefit == 0) { // increase base storage space
                             storageSpace = code.space;
-                        } else if (code.benefit == 1) { //grant admin status
+                        } else if (code.benefit == 1) { // grant admin status
                             userStatus = 1;
                         }
                     }
@@ -577,7 +573,7 @@ app.post('/api/register', function(req, res) {
                         docs.forEach(function(doc) {
                             userCount++;
                         });
-                        if (userCount == 0) { //ADMINAS DAR NEPRISIREGISTRAVES; settinam admin flag to true
+                        if (userCount == 0) { // no users; first one will become an admin
                             userStatus = 1
                         } else {
                             userStatus = 0;
@@ -586,7 +582,7 @@ app.post('/api/register', function(req, res) {
                     });
                 },
                 function(done) {
-                    //inserting the actual new user
+                    //inserting the new user
                     let hashedPass = hashUpPass(req.body.password);
                     db.users.insert({
                         username: req.body.username.toLowerCase(),
@@ -597,12 +593,12 @@ app.post('/api/register', function(req, res) {
                         userStatus: userStatus
                     }, function(err, doc) {
                         console.log(chalk.bgCyanBright.black("successfully inserted user " + doc.username));
-                        req.session.authUser = doc; //kabinam visa user ant authUser
+                        req.session.authUser = doc; // attaching to session for easy access
                         return res.json(doc);
                     });
                 }
             ], function(err, res) {
-                if (err) { //catchas jei pareitu koks unexpected error
+                if (err) {
                     console.log(chalk.bgRed.white(err));
                 }
             });
@@ -614,7 +610,7 @@ app.post('/api/register', function(req, res) {
     });
 });
 
-// postas userio video paimimui
+// route for getting user's videos
 app.post('/api/getVideos', function(req, res) {
 
     var returner = {};
@@ -676,7 +672,7 @@ app.post('/api/getVideos', function(req, res) {
 
 });
 
-// postas vietos upgrade'ui
+// route for storage upgrades
 app.post('/api/upgradeStorage', function(req, res) {
 
     var returner = {};
@@ -723,7 +719,7 @@ app.post('/api/upgradeStorage', function(req, res) {
     });
 });
 
-// account deletion
+// route for account deletion
 app.post('/api/deleteAccount', function(req, res) {
     console.log("ACCOUNT DELETION | requester: " + req.session.authUser.username);
     var returner = {};
@@ -749,7 +745,7 @@ app.post('/api/deleteAccount', function(req, res) {
                     } else if (docs.length > 1) {
                         console.log(chalk.bgReg.white("CRITICAL! delete reqest matches multiple accounts!"));
                         returner.error = 1;
-                    } else { //all fine, atskidiu find ir remove nes tai nera easily reversible, geriau patikrinsiu del multiple acc nei tikesiuos, jog istrins tinkama(jei multiple yra for some reason)
+                    } else { //all fine, re-fetching to make sure there are no duplicates and that this exact account gets deleted.
                         done(null, docs[0]);
                     }
                 }
@@ -759,7 +755,7 @@ app.post('/api/deleteAccount', function(req, res) {
                 if (err) {
                     console.log(err);
                 } else {
-                    returner.error = !valid; //jei valid, error nera.
+                    returner.error = !valid;
                     done(null, valid);
                 }
             });
@@ -768,7 +764,7 @@ app.post('/api/deleteAccount', function(req, res) {
                 returner.msg = "The confirmation password is incorrect! Try again.";
                 returner.msgType = "error";
                 done();
-            } else if (returner.error) { //erorras su findais
+            } else if (returner.error) {
                 returner.msg = "An error occured when deleting your account. Please try again later.";
                 returner.msgType = "error";
                 done();
@@ -791,7 +787,6 @@ app.post('/api/deleteAccount', function(req, res) {
                     done();
                 });
             }
-
             //TODO: cycle-remove all videos, thumbnails. Export video deletion to a promise probably
         }], function(err) {
             res.json(returner);
@@ -845,7 +840,7 @@ app.post('/api/newLink', function(req, res) {
                 done();
 
             }, function(done) {
-                //updating likes/dislikes 
+                // updating likes/dislikes 
                 db.ratings.update({
                     videoID: sel.videoID
                 }, {
@@ -862,7 +857,7 @@ app.post('/api/newLink', function(req, res) {
 
                 });
             }, function(done) {
-                //removinu video file
+                // video file removal
                 if (!returner.error) {
                     fs.rename(storagePath + sel.videoID + ".mp4", storagePath + newVideoID + ".mp4", function(err) {
                         if (err) {
@@ -874,7 +869,7 @@ app.post('/api/newLink', function(req, res) {
                 }
 
             }, function(done) {
-                //removinu thumbnail
+                // thumbnail removal
                 if (!returner.error) {
                     fs.rename(storagePath + "thumbs/" + sel.videoID + ".jpg", storagePath + "thumbs/" + newVideoID + ".jpg", function(err) {
                         if (err) {
@@ -888,13 +883,11 @@ app.post('/api/newLink', function(req, res) {
                 if (err) {
                     console.log(err);
                 }
-
                 if (opCount == req.body.selection.length - 1) {
                     if (!returner.error) {
                         returner.msgType = "success";
                         returner.msg = "Links successfully updated!";
                     }
-
                     return res.json(returner);
                 } else {
                     opCount++;
@@ -906,7 +899,7 @@ app.post('/api/newLink', function(req, res) {
     }
 });
 
-// vardo pakeitimas
+// route for video name changes
 app.post('/api/rename', function(req, res) {
     console.log("RENAME | requester: " + req.session.authUser.username);
 
@@ -945,7 +938,7 @@ app.post('/api/rename', function(req, res) {
     }
 });
 
-// postas video ikelimo uzbaigimui (cancel or finalize)
+// route for video upload finalization (cancel or confirm)
 app.post('/api/finalizeUpload', function(req, res) {
 
     console.log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username);
@@ -968,7 +961,7 @@ app.post('/api/finalizeUpload', function(req, res) {
         res.json(returner);
     }
 
-    //jei ne cancelled, proceedinam prie renaming
+    // proceeding to name assignment, if the upload wasn't cancelled
     async.waterfall([function(done) {
 
         if (req.body.cancelled) {
@@ -978,7 +971,7 @@ app.post('/api/finalizeUpload', function(req, res) {
             if (req.body.newNames.hasOwnProperty(oldName)) {
                 console.log("got new name " + req.body.newNames[oldName] + " for " + oldName);
 
-                const newName = req.body.newNames[oldName].replace(/[^a-z0-9\s]/gi, ""); //turetu jau but clean is client
+                const newName = req.body.newNames[oldName].replace(/[^a-z0-9\s]/gi, ""); // should already be clean coming from the client, redundancy
                 let cleanedName = oldName.replace(/[^a-z0-9]/gi, "");
 
                 db.videos.update({
@@ -1015,7 +1008,7 @@ app.post('/api/finalizeUpload', function(req, res) {
         }
 
     }, function(done) {
-        //unnamed (old unconfirmed) video removal 
+        // unnamed (old unconfirmed) video removal 
         db.videos.find({
             username: req.session.authUser.username,
             confirmed: false
@@ -1034,17 +1027,17 @@ app.post('/api/finalizeUpload', function(req, res) {
                     db.users.update({
                         username: req.session.authUser.username
                     }, {
-                        $inc: { //pridedamas atgal storage space useriui
+                        $inc: { // restoring user's storage space
                             remainingSpace: Math.abs(docs[0].size)
                         }
                     }, {}, function() {
-                        //taip pat ir istrinamas pats video is storage
+                        // removing video from storage
                         try {
                             fs.unlink(storagePath + selection.videoID + ".mp4");
                         } catch (err) {
                             console.log(err);
                         }
-                        //istrinamas ir thumbnailas
+                        // removing thumbnail
                         try {
                             fs.unlink(storagePath + "thumbs/" + selection.videoID + ".jpg");
                         } catch (err) {
@@ -1065,7 +1058,7 @@ app.post('/api/finalizeUpload', function(req, res) {
             });
         });
 
-        done(); //foreach bus +- synced up
+        done(); //foreach will be +- synced up
     }], function(err) {
         if (err) {
             console.log(err);
@@ -1163,17 +1156,17 @@ app.post('/api/removeVideo', function(req, res) {
                     db.users.update({
                         username: req.session.authUser.username
                     }, {
-                        $inc: { //pridedamas atgal storage space useriui
+                        $inc: { // restoring user's storage space
                             remainingSpace: Math.abs(docs[0].size)
                         }
                     }, {}, function() {
-                        //taip pat ir istrinamas pats video is storage
+                        // rm cached vid
                         try {
                             fs.unlink(storagePath + selection.videoID + ".mp4");
                         } catch (err) {
                             console.log(err);
                         }
-                        //istrinamas ir thumbnailas
+                        // rm thumbnail
                         try {
                             fs.unlink(storagePath + "thumbs/" + selection.videoID + ".jpg");
                         } catch (err) {
@@ -1209,7 +1202,7 @@ app.post('/api/removeVideo', function(req, res) {
     }
 });
 
-// postas video ikelimui
+// route for video uploads
 app.post('/api/upload', function(req, res) {
 
     if (!req.session.authUser) {
@@ -1222,21 +1215,19 @@ app.post('/api/upload', function(req, res) {
         returner.error = 0;
         returner.newVideos = [];
 
-        //tiesiai i one huge waterfall
         async.waterfall([function(done) {
-            //runninu very simple all-unconfirmed removal pries pradedant
+            // runnign all-unconfirmed removal before starting
+            // TODO: where's this go?
             done();
         }], function(err) {
-            // PER-FILE HANDLINGas, kai finalizinsiu response      
-            console.log("handling file(s)...");
+            // PER-FILE handling  
 
             for (const file in req.files) { //turetu tik po viena faila postai eit
                 if (req.files.hasOwnProperty(file)) {
                     // filesize handlingas
                     var fileSizeInBytes = req.files[file].data.byteLength;
                     var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
-                    console.log("size is " + fileSizeInMegabytes + "mb");
-
+                    console.log("uploaded video size is " + fileSizeInMegabytes + "mb");
 
                     if (fileSizeInMegabytes > 10000) { //hard limitas kad neikeltu didesniu uz 10gb failu
                         res.status(557).json({
@@ -1257,7 +1248,7 @@ app.post('/api/upload', function(req, res) {
                             username: req.session.authUser.username.toLowerCase()
                         }, function(err, docs) {
                             var cleanedName = req.files[file].name.replace(/[^a-z0-9\s]/gi, "");
-                            // patikrinam, ar useriui pakanka storage space
+                            // checking if user's storage space is sufficient
                             if (docs[0].remainingSpace < fileSizeInMegabytes) {
                                 res.status(557).json({
                                     error: 'You do not have enough space remaining to upload this file.'
@@ -1267,7 +1258,6 @@ app.post('/api/upload', function(req, res) {
                                 var videoID = shortid.generate();
                                 var vidLink = config.video_link_prefix + videoID;
                                 console.log(chalk.bgGreen.black("storing video!"));
-
 
                                 db.videos.insert({
                                     username: req.session.authUser.username.toLowerCase(),
@@ -1297,8 +1287,6 @@ app.post('/api/upload', function(req, res) {
                                                 console.log(chalk.bgYellow.black("WARN") + "failed to save thumbnail ");
                                             }
 
-
-                                            //prisegu prie returnerio
                                             returner.newVideos.push(newDoc);
 
                                             if (opCount >= Object.keys(req.files).length - 1) {
@@ -1314,7 +1302,7 @@ app.post('/api/upload', function(req, res) {
 
                                 var decrement = fileSizeInMegabytes *= -1;
 
-                                // atimam is userio atitnkama kieki duomenu
+                                // reducing user's storage space
                                 db.users.update({
                                     username: req.session.authUser.username.toLowerCase()
                                 }, {
@@ -1332,8 +1320,7 @@ app.post('/api/upload', function(req, res) {
 });
 
 
-
-// removinam useri is req.session on logout
+// removing usre from req.session on logout
 app.post('/api/logout', function(req, res) {
     delete req.session.authUser;
     res.json({
@@ -1360,7 +1347,7 @@ app.listen(10700);
 console.log('Server is listening on http://localhost:10700');
 
 function performSecurityChecks(docs) {
-    if (docs.length == 0) { //nerado userio su tokiu username
+    if (docs.length == 0) { // no user with that username
         console.log(chalk.bgRed("No matching account."));
         throw {
             status: 555,
@@ -1368,7 +1355,7 @@ function performSecurityChecks(docs) {
         };
     }
 
-    if (docs.length > 1) { //rado daugiau nei 1 useri su tokiu username
+    if (docs.length > 1) { // duplicate username users
         console.log(chalk.bgRed("==DUPLICATE ACCOUNTS FOUND=="));
         throw {
             status: 556,
@@ -1376,6 +1363,7 @@ function performSecurityChecks(docs) {
         };
     }
 }
+
 
 function hashUpPass(pass) {
     var hash = bcrypt.hashSync(pass, 10);
