@@ -101,12 +101,8 @@ app.post('/api/login', function(req, res) {
             } else {
                 //stay silent
             }
-
         }
-
-
     });
-
 });
 
 
@@ -298,10 +294,8 @@ app.post('/api/requestReset', function(req, res) {
                 returner.error = false;
                 res.json(returner);
             });
-
         }
     });
-
 });
 
 app.post('/api/changePassword', function(req, res) {
@@ -343,7 +337,6 @@ app.post('/api/changePassword', function(req, res) {
                 returner.msgType = "success";
                 returner.error = 0;
                 res.json(returner);
-
             }
         });
     } else { //regular reset
@@ -353,11 +346,9 @@ app.post('/api/changePassword', function(req, res) {
             returner.error = 1;
             res.json(returner);
         } else { //useris prisijunges
-
             //patikrinamas password confirmation
             //del viso pikto is naujo paimu password is database
             async.waterfall([function(done) {
-
                 db.users.find({
                     username: req.session.authUser.username.toLowerCase()
                 }, function(err, docs) {
@@ -530,7 +521,9 @@ app.post('/api/register', function(req, res) {
             console.log(chalk.bgRed(chalk.bgCyanBright.black("no duplicate account! proceeding with the creation of the account.")));
             async.waterfall([
                 function(done) {
-                    db.users.find({ email: req.body.email }, function(err, docs) {
+                    db.users.find({
+                        email: req.body.email
+                    }, function(err, docs) {
                         if (docs.length != 0) { //duplicate email
                             console.log(chalk.bgRed("Failed account creation (duplicate emails)"));
                             return res.status(597).json({
@@ -578,32 +571,37 @@ app.post('/api/register', function(req, res) {
                             userStatus = 1;
                         }
                     }
+                    done();
+                },
+                function(done) {
+                    //handling admin assignment for freshly run systems
                     db.users.find({}, function(err, docs) {
                         var userCount = 0;
                         docs.forEach(function(doc) {
                             userCount++;
                         });
-
                         if (userCount == 0) { //ADMINAS DAR NEPRISIREGISTRAVES; settinam admin flag to true
                             userStatus = 1
                         } else {
                             userStatus = 0;
                         }
-
-                        var hashedPass = hashUpPass(req.body.password);
-
-                        db.users.insert({
-                            username: req.body.username.toLowerCase(),
-                            password: hashedPass,
-                            email: req.body.email,
-                            totalSpace: storageSpace,
-                            remainingSpace: storageSpace,
-                            userStatus: userStatus
-                        }, function(err, doc) {
-                            console.log(chalk.bgCyanBright.black("successfully inserted user " + doc.username));
-                            req.session.authUser = doc; //kabinam visa user ant authUser
-                            return res.json(doc);
-                        });
+                        done();
+                    });
+                },
+                function(done) {
+                    //inserting the actual new user
+                    let hashedPass = hashUpPass(req.body.password);
+                    db.users.insert({
+                        username: req.body.username.toLowerCase(),
+                        password: hashedPass,
+                        email: req.body.email,
+                        totalSpace: storageSpace,
+                        remainingSpace: storageSpace,
+                        userStatus: userStatus
+                    }, function(err, doc) {
+                        console.log(chalk.bgCyanBright.black("successfully inserted user " + doc.username));
+                        req.session.authUser = doc; //kabinam visa user ant authUser
+                        return res.json(doc);
                     });
                 }
             ], function(err, res) {
