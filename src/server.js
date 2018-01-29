@@ -521,15 +521,28 @@ app.post('/api/register', function(req, res) {
             //TODO: add handle for this in vuex
         } else if (!enoughSpace) {
             console.log(chalk.bgRed("Failed account creation (TOTAL_SPACE exceeded)"));
-            res.status(401).json({
-                error: 'The server cannot accept new registratios at this moment.'
+            res.status(598).json({
+                error: 'The server cannot accept new registrations at this moment.'
             });
-        } else { //ok, dedam i DB ir prikabinam prie session kad nereiktu loginintis
+        } else { //ok, dedam i DB ir prikabinam prie session kad nereiktu loginintisb
             var storageSpace = defaultStorageSpace;
             var userStatus = defaultUserStatus;
             console.log(chalk.bgRed(chalk.bgCyanBright.black("no duplicate account! proceeding with the creation of the account.")));
 
             async.waterfall([
+                function(done) {
+                    db.users.find({ email: req.body.email }, function(err, docs) {
+                        if (docs.length != 0) { //duplicate email
+                            console.log(chalk.bgRed("Failed account creation (duplicate emails)"));
+
+                            return res.status(597).json({
+                                error: 'An account with that email already exists.'
+                            });
+                        } else {
+                            done();
+                        }
+                    });
+                },
                 function(done) { //tikrinimas ar yra atitinkanciu privelegiju kodu
                     db.codes.find({
                         code: req.body.code,

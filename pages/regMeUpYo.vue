@@ -109,8 +109,7 @@ export default {
         this.formPassword = ''
         this.formError = null
         this.$message.success("You have successfully created an account!");
-        this.$store.app.router.push("/")
-        
+        this.$nuxt._router.push('/')
       } catch (err) {
         this.$message({
           type: 'error',

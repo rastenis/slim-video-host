@@ -113,10 +113,15 @@ const store = () => new Vuex.Store({
                     })
                 })
                 .then((res) => {
-                    console.log(res);
                     switch (res.status) {
                         case 599:
                             throw { msg: "An account with that username already exists." }
+                            break;
+                        case 598:
+                            throw { msg: "The server cannot accept new registrations at this moment." }
+                            break;
+                        case 597:
+                            throw { msg: "An account with that email already exists." }
                             break;
                         default:
                             return res.json()
