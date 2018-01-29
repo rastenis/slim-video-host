@@ -1,0 +1,16 @@
+{
+    "file_path": "static/videos/",
+    "session_key": "very-secret-super-secure-key",
+    "video_link_prefix": "https://yourHostname.domain/v/",
+    "total_space": 100000000000,
+    "mail": {
+        "username": "something@gmail.com",
+        "password": "password"
+    },
+    "databases": {
+        "db_users_path": "db/users",
+        "db_videos_path": "db/videos",
+        "db_codes_path": "db/codes",
+        "db_ratings_path": "db/ratings"
+    }
+}
