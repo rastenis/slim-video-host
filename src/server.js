@@ -78,26 +78,32 @@ app.post('/api/login', function(req, res) {
         username: req.body.username.toLowerCase()
     }, function(err, docs) {
 
-        //checkai del duplicate usernames
         try {
+            //checkai del duplicate usernames
             performSecurityChecks(docs);
+
+            // useris egzistuoja ir nera duplicates, proceedinu su password checku
+            if (bcrypt.compareSync(req.body.password, docs[0].password)) { //passwordas atitinka
+                console.log(chalk.green("passwords match!"));
+                req.session.authUser = docs[0];
+                return res.json(docs[0]);
+            } else {
+                console.log(chalk.red("passwords don't match!"));
+                res.status(556).json({
+                    error: 'Bad credentials'
+                });
+            }
         } catch (e) {
-            res.status(e.status).json({
-                error: e.message
-            });
+            if (e.status) {
+                res.status(e.status).json({
+                    error: e.message
+                });
+            } else {
+                //stay silent
+            }
+
         }
 
-        // useris egzistuoja ir nera duplicates, proceedinu su password checku
-        if (bcrypt.compareSync(req.body.password, docs[0].password)) { //passwordas atitinka
-            console.log(chalk.green("passwords match!"));
-            req.session.authUser = docs[0];
-            return res.json(docs[0]);
-        } else {
-            console.log(chalk.red("passwords don't match!"));
-            res.status(556).json({
-                error: 'Bad credentials'
-            });
-        }
 
     });
 
