@@ -46,9 +46,9 @@ db.ratings = new Datastore({
     autoload: true
 });
 
-//default optionai
+//default options
 var defaultUserStatus = 0; //1 - admin
-var defaultStorageSpace = 10000; //megabaitais
+var defaultStorageSpace = 10000; // in megabytes
 var defaultTokenExpiry = 1800000; //30 mins
 
 // video storage path
@@ -71,7 +71,7 @@ app.use(session({
     }
 }));
 
-// postas loginui. Reikalingas, kad butu pasiekiama $store.state.authUser
+// post for the login procedure
 app.post('/api/login', function(req, res) {
     console.log("LOGGING IN | requester: " + req.body.username);
     db.users.find({
@@ -79,11 +79,10 @@ app.post('/api/login', function(req, res) {
     }, function(err, docs) {
 
         try {
-            //checkai del duplicate usernames
+            //checks for duplicate usernames
             performSecurityChecks(docs);
-
-            // useris egzistuoja ir nera duplicates, proceedinu su password checku
-            if (bcrypt.compareSync(req.body.password, docs[0].password)) { //passwordas atitinka
+            // user exists, no duplicates. Proceeding to the password check
+            if (bcrypt.compareSync(req.body.password, docs[0].password)) { //password matches
                 console.log(chalk.green("passwords match!"));
                 req.session.authUser = docs[0];
                 return res.json(docs[0]);
@@ -106,7 +105,7 @@ app.post('/api/login', function(req, res) {
 });
 
 
-//patikra ar yra toks video
+// video fetch route
 app.get('/api/cv/:id', function(req, res) {
 
     console.log("FETCHING VIDEO | id: " + req.params.id);
@@ -302,11 +301,10 @@ app.post('/api/changePassword', function(req, res) {
     console.log("PASSWORD CHANGE || " + (req.body.resetType == 1 ? "normal" : "token"));
     var returner = {};
     returner.error = 0;
-    //ir paprastas pakeitimas ir pass resetas po token gavimo.
+    // single route for both the standard password reset and the 'forgot password' token based reset
     if (req.body.resetType == 1) { //token reset
-        //neriam iskart i update
         var hashedPass = hashUpPass(req.body.newPass);
-
+        // updating right away
         db.users.update({
             resetToken: req.body.token,
             tokenExpiry: {
@@ -339,15 +337,14 @@ app.post('/api/changePassword', function(req, res) {
                 res.json(returner);
             }
         });
-    } else { //regular reset
-        if (!req.session.authUser) { //negali passwordo keisti neprisijunges
+    } else { // regular reset
+        if (!req.session.authUser) { // cannot initiate password change without logging in 
             returner.msg = "You are not authorized for this action.";
             returner.msgType = "error";
             returner.error = 1;
             res.json(returner);
-        } else { //useris prisijunges
-            //patikrinamas password confirmation
-            //del viso pikto is naujo paimu password is database
+        } else { // user is logged in 
+            // password checks
             async.waterfall([function(done) {
                 db.users.find({
                     username: req.session.authUser.username.toLowerCase()
@@ -1138,7 +1135,6 @@ app.post('/api/getAdminStats', function(req, res) {
             }
             return res.json(returner);
         });
-
     }
 });
 
@@ -1225,7 +1221,6 @@ app.post('/api/upload', function(req, res) {
             opCount = 0;
         returner.error = 0;
         returner.newVideos = [];
-
 
         //tiesiai i one huge waterfall
         async.waterfall([function(done) {
