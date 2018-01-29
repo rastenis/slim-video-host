@@ -109,10 +109,12 @@ export default {
         this.formPassword = ''
         this.formError = null
         this.$message.success("You have successfully created an account!");
-      } catch (e) {
+        this.$store.app.router.push("/")
+        
+      } catch (err) {
         this.$message({
-          type: res.data.msgType,
-          message: res.data.msg
+          type: 'error',
+          message: err.msg
         });
       }
     },
@@ -124,11 +126,11 @@ export default {
           console.log('validation error');
           return false;
         }
-        if (!this.$store.state.authUser) {
-          this.$store.app.router.push("/")
-        } else {
-          this.$store.state.activeTab = '2';
-        }
+        // if (!this.$store.state.authUser) {
+        //   this.$store.app.router.push("/")
+        // } else {
+        //   this.$store.state.activeTab = '2';
+        // }
       });
     },
     resetForm(formName) {
@@ -158,21 +160,21 @@ export default {
 
 
 <style>
-  .RegForm{
-    position: absolute;
-    margin: auto;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: 60%;
-    width: 40%;
-  }
+.RegForm {
+  position: absolute;
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 60%;
+  width: 40%;
+}
 
-  .title{
-    font-family: LatoLight;
-    font-size: 6vh;
-    padding-top:7vh;
-    padding-left:3vw;
-  }
+.title {
+  font-family: LatoLight;
+  font-size: 6vh;
+  padding-top: 7vh;
+  padding-left: 3vw;
+}
 </style>

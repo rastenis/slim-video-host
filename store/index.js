@@ -113,10 +113,14 @@ const store = () => new Vuex.Store({
                     })
                 })
                 .then((res) => {
-                    if (res.status === 401) {
-                        throw new Error('An account with that username already exists.')
-                    } else {
-                        return res.json()
+                    console.log(res);
+                    switch (res.status) {
+                        case 599:
+                            throw { msg: "An account with that username already exists." }
+                            break;
+                        default:
+                            return res.json()
+                            break;
                     }
                 })
                 .then((authUser) => {

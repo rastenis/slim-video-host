@@ -49,7 +49,7 @@ export default {
       },
       formError: null,
       showLogin: false,
-      gifTags:['illusion','psychedelic','trippy','abstract']
+      gifTags:['illusion','psychedelic','trippy','abstract','3d']
     }
   },
   computed:{

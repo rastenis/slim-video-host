@@ -515,8 +515,8 @@ app.post('/api/register', function(req, res) {
         //checkai del duplicate usernames
         if (docs.length != 0) { //rado useri su tokiu paciu username
             console.log(chalk.bgRed("Failed account creation (duplicate username)"));
-            res.status(401).json({
-                error: 'An account with that username already exists.'
+            res.status(599).json({
+                error: 'An account with that username already exists.',
             });
             //TODO: add handle for this in vuex
         } else if (!enoughSpace) {
