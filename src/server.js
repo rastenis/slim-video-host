@@ -623,50 +623,60 @@ app.post('/api/getVideos', function(req, res) {
     var returner = {};
     console.log("VIDEOS | requester : " + req.body.user.username);
 
-    db.videos.find({
-        username: req.body.user.username.toLowerCase()
-    }, function(err, docs) {
-        if (err) {
-            console.log(chalk.bgRed.white(err));
-            returner.error = 1;
-        }
-        if (docs.length > 0) {
-            docs.forEach(function(i, index) {
-                docs[index].thumbnailSrc = '/videos/thumbs/' + docs[index].videoID + '.jpg';
-                async.waterfall([
-                    function(done) {
-                        db.ratings.count({
-                            videoID: docs[index].videoID,
-                            action: 1
-                        }, function(err, count) {
-                            docs[index].likes = count;
-                            done();
-                        });
-                    },
-                    function(done) {
-                        db.ratings.count({
-                            videoID: docs[index].videoID,
-                            action: 0
-                        }, function(err, count) {
-                            docs[index].dislikes = count;
-                            done();
-                        });
-                    }
-                ], function(err) {
-                    if (err) {
-                        console.log(err);
-                    }
-                    if (index == (docs.length - 1)) {
-                        returner.error = 0;
-                        returner.videos = docs;
-                        return res.json(returner);
-                    }
-                });
+    async.waterfall([function(done) {
+        db.videos.find({
+            username: req.body.user.username.toLowerCase()
+        }, function(err, docs) {
+            if (err) {
+                console.log(chalk.bgRed.white(err));
+                returner.error = 1;
+                return res.json(null);
+            }
+            if (docs.length > 0) {
+                done(null, docs);
+            } else {
+                return res.json(null);
+            }
+        });
+    }, function(docs, done) {
+        docs.forEach(function(i, index) {
+            docs[index].thumbnailSrc = '/videos/thumbs/' + docs[index].videoID + '.jpg';
+            async.waterfall([
+                function(finished) {
+                    db.ratings.count({
+                        videoID: docs[index].videoID,
+                        action: 1
+                    }, function(err, count) {
+                        docs[index].likes = count;
+                        finished();
+                    });
+                },
+                function(finished) {
+                    db.ratings.count({
+                        videoID: docs[index].videoID,
+                        action: 0
+                    }, function(err, count) {
+                        docs[index].dislikes = count;
+                        finished();
+                    });
+                }
+            ], function(err) {
+                if (err) {
+                    console.log(err);
+                }
+                if (index == (docs.length - 1)) {
+                    returner.error = 0;
+                    returner.videos = docs;
+                    return res.json(returner);
+                }
             });
-        } else {
-            return res.json(null);
+        });
+    }], function(err) {
+        if (err) {
+            console.log(err);
         }
     });
+
 });
 
 // postas vietos upgrade'ui
