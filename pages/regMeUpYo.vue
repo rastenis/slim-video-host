@@ -24,7 +24,7 @@
           </el-form-item>
         </transition>
         <el-form-item>
-          <el-button @click="submitForm('regForm')">Register</el-button>
+          <el-button type="success" plain @click="submitForm('regForm')">Register</el-button>
         </el-form-item>
       </el-form> 
     </el-card>
@@ -160,14 +160,15 @@ export default {
 
 <style>
 .RegForm {
-  position: absolute;
+  position: relative;
   margin: auto;
+  margin-top: 5vh;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
   height: 60%;
-  width: 40%;
+  width: 80%;
 }
 
 .title {

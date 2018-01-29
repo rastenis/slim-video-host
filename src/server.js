@@ -528,13 +528,11 @@ app.post('/api/register', function(req, res) {
             var storageSpace = defaultStorageSpace;
             var userStatus = defaultUserStatus;
             console.log(chalk.bgRed(chalk.bgCyanBright.black("no duplicate account! proceeding with the creation of the account.")));
-
             async.waterfall([
                 function(done) {
                     db.users.find({ email: req.body.email }, function(err, docs) {
                         if (docs.length != 0) { //duplicate email
                             console.log(chalk.bgRed("Failed account creation (duplicate emails)"));
-
                             return res.status(597).json({
                                 error: 'An account with that email already exists.'
                             });
