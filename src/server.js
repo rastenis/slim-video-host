@@ -1210,7 +1210,6 @@ app.post('/api/removeVideo', function(req, res) {
                         }
                     });
 
-
                 }
             });
         });

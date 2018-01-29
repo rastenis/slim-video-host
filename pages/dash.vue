@@ -220,19 +220,27 @@ export default {
             }
           })
           .then((res) => {
-            console.log("res data is" + res.data);
-            if (res.data.error == 0) {
-                let hasVideos=false;
-                if(res.data.videos.length!=0){
-                  hasVideos=true;
+            try{
+              if (res.data.error == 0) {
+                  let hasVideos=false;
+                  if(res.data.videos.length!=0){
+                    hasVideos=true;
+                  }
+                return {
+                  videos: res.data.videos,
+                  loading: false,
+                  hasVideos:hasVideos
                 }
+              } else if (res.data.error == 1) {
+                console.log("error while fetching videos");
+              }
+            }catch(err){
+              // null videos(no videos)
               return {
                 videos: res.data.videos,
                 loading: false,
-                hasVideos:hasVideos
+                hasVideos:false
               }
-            } else if (res.data.error == 1) {
-              console.log("error while fetching videos");
             }
           }).catch(function (e) {
             console.log(e);
