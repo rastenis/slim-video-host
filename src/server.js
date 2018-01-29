@@ -21,7 +21,7 @@ const du = require('du');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const exec = require('child_process').exec;
-const config = require('./config.json');
+const config = require('../config');
 
 //isemu _ ir - is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
@@ -1100,7 +1100,7 @@ app.post('/api/getAdminStats', function(req, res) {
 
                     returner.error = 0;
                     returner.stats.totalViews = totalViews;
-                    returner.stats.totalSpaceA = process.env.TOTAL_SPACE;
+                    returner.stats.totalSpaceA = config.total_space;
                     returner.stats.usedSpaceA = usedSpace;
                     returner.videos = docs;
                     done();
@@ -1245,7 +1245,7 @@ app.post('/api/upload', function(req, res) {
                             } else {
                                 // dedam video i storage
                                 var videoID = shortid.generate();
-                                var vidLink = process.env.VIDEO_LINK_PRE + videoID;
+                                var vidLink = config.video_link_prefix + videoID;
                                 console.log(chalk.bgGreen.black("storing video!"));
 
 
@@ -1324,12 +1324,12 @@ app.post('/api/logout', function(req, res) {
 //TODO: recalculate user remaining space each start?
 
 //nuxt config
-let config = require('./nuxt.config.js');
-config.dev = !(process.env.NODE_ENV === 'production');
-const nuxt = new Nuxt(config);
+let nuxt_config = require('./nuxt.config.js');
+nuxt_config.dev = !(process.env.NODE_ENV === 'production');
+const nuxt = new Nuxt(nuxt_config);
 
 //nuxt build
-if (config.dev) {
+if (nuxt_config.dev) {
     const builder = new Builder(nuxt);
     builder.build();
 };
