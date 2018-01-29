@@ -955,7 +955,7 @@ app.post('/api/finalizeUpload', function(req, res) {
             if (req.body.newNames.hasOwnProperty(oldName)) {
                 console.log("got new name " + req.body.newNames[oldName] + " for " + oldName);
 
-                const newName = req.body.newNames[oldName].replace(/[^a-z0-9]/gi, ""); //turetu jau but clean is client
+                const newName = req.body.newNames[oldName].replace(/[^a-z0-9\s]/gi, ""); //turetu jau but clean is client
                 let cleanedName = oldName.replace(/[^a-z0-9]/gi, "");
 
                 db.videos.update({
