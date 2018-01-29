@@ -1265,7 +1265,7 @@ app.post('/api/upload', function(req, res) {
                                         req.files[file].mv(storagePath + videoID + extension, function(err) {
                                             //savinu thumbnail
                                             try {
-                                                exec('ffmpeg -i ../' + storagePath + videoID + extension + ' -ss 0 -vframes 1 ../' + storagePath + "thumbs/" + videoID + '.jpg', {
+                                                exec("ffmpeg -i '../" + storagePath + videoID + extension + "' -ss 0 -vframes 1 '../" + storagePath + "thumbs/" + videoID + ".jpg'", {
                                                     cwd: __dirname
                                                 }, function(error, stdout, stderr) {
                                                     if (error) {
