@@ -39,26 +39,26 @@
       handleSelect(key, keyPath) {
         switch (key) {
           case "1":
-            this.$store.app.router.push("/")
+            this.$nuxt._router.push("/")
             break;
           case "2":
             if (this.$store.state.authUser) {
-              this.$store.app.router.push("/dash")
+              this.$nuxt._router.push("/dash")
               this.$store.state.activeTab = '2';
             } else {
-              this.$store.app.router.push("/regg")
+              this.$nuxt._router.push("/regg")
               this.$store.state.activeTab = '2';
             }
             break;
           case "3":
-            this.$store.app.router.push("/upload")
+            this.$nuxt._router.push("/upload")
             this.$store.state.activeTab = '3';
             break;
           case "4":
             this.logout();
             break;
           case "5":
-            this.$store.app.router.push("/profile")
+            this.$nuxt._router.push("/profile")
             this.$store.state.activeTab = '5';
             break;
           default:
@@ -69,7 +69,7 @@
       async logout() {
         try {
           await this.$store.dispatch('logout');
-          this.$store.app.router.push("/")
+          this.$nuxt._router.push("/")
         } catch (e) {
           this.formError = e.message
         }
@@ -83,81 +83,79 @@
 
 
 <style scoped>
+.el-menu-item {
+  font-size: 2.5vh;
+  font-family: LatoLight;
+}
 
-  .el-menu-item {
-    font-size: 2.5vh;
-    font-family: LatoLight;
-  }
-  
-  .main {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    min-height: 100%;
-    background: #f0f1e7;
-  }
+.main {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 100%;
+  background: #f0f1e7;
+}
 
-  .container{
-    min-height:100vh;
-    max-width: 70vw;
-    display: block;
-    background: #e6e7e8;
-    margin-left: auto;
-    margin-right: auto;
-  }
+.container {
+  min-height: 100vh;
+  max-width: 70vw;
+  display: block;
+  background: #e6e7e8;
+  margin-left: auto;
+  margin-right: auto;
+}
 
+.pRight {
+  float: right;
+}
 
-  .pRight{
-    float: right;
-  }
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  font-size: larger;
+  z-index: 999;
+}
 
-  .nav{
-    position: fixed;
-    top: 0;
-    left: 0;
-    min-width: 100%;
-    font-size: larger;
-    z-index: 999;
-  }
-
-  nuxt-link{
-    text-decoration: none;
-  }
+nuxt-link {
+  text-decoration: none;
+}
 </style>
 
 
 <style>
-
-
-  @font-face {
-    font-family: "LatoRegular";
-    src: url("/fonts/LatoRegular/Lato-Regular.eot"),
+@font-face {
+  font-family: "LatoRegular";
+  src: url("/fonts/LatoRegular/Lato-Regular.eot"),
     url("/fonts/LatoRegular/Lato-Regular.woff") format("woff"),
     url("/fonts/LatoRegular/Lato-Regular.ttf") format("truetype");
-    font-style: normal;
-    font-weight: normal;
-  }
-  @font-face {
-    font-family: "LatoLight";
-    src: url("/fonts/LatoLight/Lato-Light.eot"), url("/fonts/LatoLight/Lato-Light.woff") format("woff"), url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
-    font-style: normal;
-    font-weight: normal;
-  }
-  body{
-    font-family: LatoRegular, sans-serif;
-    overflow:scroll;
-  }
+  font-style: normal;
+  font-weight: normal;
+}
+@font-face {
+  font-family: "LatoLight";
+  src: url("/fonts/LatoLight/Lato-Light.eot"),
+    url("/fonts/LatoLight/Lato-Light.woff") format("woff"),
+    url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
+  font-style: normal;
+  font-weight: normal;
+}
+body {
+  font-family: LatoRegular, sans-serif;
+  overflow: scroll;
+}
 
-  ::-webkit-scrollbar { 
-    display: none; 
-  }
+::-webkit-scrollbar {
+  display: none;
+}
 
-  a:link{
-    color:#008fbf
-  }
-  a:visited{
-    color:#008fbf
-  }
+a:link {
+  color: #008fbf;
+}
+a:visited {
+  color: #008fbf;
+}
 </style>
 

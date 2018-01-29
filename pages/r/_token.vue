@@ -133,7 +133,7 @@ export default {
     if (!this.$store.state.authUser) {
       this.$store.state.activeTab = '9';
     } else { //if user has an account, push him to dashboard
-      this.$store.app.router.push("/dash")
+      this.$nuxt._router.push("/dash")
     }
   },
   layout: 'main',
@@ -143,26 +143,25 @@ export default {
 
 
 <style>
-  .ResetForm{
-    position: absolute;
-    margin: auto;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: 40%;
-    width: 40%;
-  }
+.ResetForm {
+  position: absolute;
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 40%;
+  width: 40%;
+}
 
-  .formText{
-    color:#707070;
-  }
+.formText {
+  color: #707070;
+}
 
-  .title{
-    font-family: LatoLight;
-    font-size: 6vh;
-    padding-top:10vh;
-    padding-left:3vw;
-  }
-
+.title {
+  font-family: LatoLight;
+  font-size: 6vh;
+  padding-top: 10vh;
+  padding-left: 3vw;
+}
 </style>

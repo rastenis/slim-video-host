@@ -159,7 +159,7 @@ export default {
     async logout() {
       try { //because apparently i can't access the lyaout's logout
         await this.$store.dispatch('logout');
-        this.$store.app.router.push("/")
+        this.$nuxt._router.push("/")
       } catch (e) {
         this.formError = e.message
       }
@@ -169,7 +169,7 @@ export default {
     if (this.$store.state.authUser) {
       this.$store.state.activeTab = '5';
     } else { // non-logged in users have no right to be here
-      this.$store.app.router.push("/")
+      this.$nuxt._router.push("/")
     }
   },
   layout: 'main',
@@ -179,23 +179,22 @@ export default {
 
 
 <style>
+.ProfileForm {
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 80%;
+}
 
-  .ProfileForm{
-    margin: auto;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    width: 80%;
-  }
-
-  .spaced{
-    margin-top:5vh;
-  }
-  .title{
-    font-family: LatoLight;
-    font-size: 6vh;
-    padding-top:10vh;
-    padding-left:3vw;
-  }
+.spaced {
+  margin-top: 5vh;
+}
+.title {
+  font-family: LatoLight;
+  font-size: 6vh;
+  padding-top: 10vh;
+  padding-left: 3vw;
+}
 </style>

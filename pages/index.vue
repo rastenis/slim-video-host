@@ -80,12 +80,12 @@ export default {
       if (!this.$store.state.authUser) {
         this.showLogin = bool;
       } else { //user pressed welcome back. Redirect to dashboard
-        this.$store.app.router.push("/dash")
+        this.$nuxt._router.push("/dash")
         this.$store.state.activeTab = '2';
       }
     },
     async redirectToRegister() {
-      this.$store.app.router.push("/regg")
+      this.$nuxt._router.push("/regg")
       this.$store.state.activeTab = '2';
     },
     async login() {
@@ -97,7 +97,7 @@ export default {
         this.form.username = ''
         this.form.password = ''
         this.formError = null
-        this.$store.app.router.push("/dash")
+        this.$nuxt._router.push("/dash")
         this.$store.state.activeTab = '2';
       } catch (e) {
         this.$message.error(e.message);

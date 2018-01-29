@@ -84,7 +84,7 @@ export default {
       this.uploading = true;
       if (!this.$store.state.authUser) {
         this.$message.error("You are not signed in!");
-        this.$store.app.router.push("/");
+        this.$nuxt._router.push("/");
         return false;
       }
 
@@ -94,7 +94,7 @@ export default {
         this.$message.error(
           "You do not have enough space remaining to upload this video! Delete some existing videos or request a storage upgrade."
         );
-        this.$store.app.router.push("/");
+        this.$nuxt._router.push("/");
         return false;
       } else if (mbFilesize > 10240) {
         this.$message.error("Video size can not exceed 10GB!");
@@ -138,7 +138,7 @@ export default {
       console.log(this.newNames);
       if (!this.$store.state.authUser) {
         this.$message.error("You are not signed in!");
-        this.$store.app.router.push("/");
+        this.$nuxt._router.push("/");
         return false;
       }
       if (this.progressBar.percentage == 100 || specialPass == true) {
@@ -215,7 +215,7 @@ export default {
   },
   created() {
     if (!this.$store.state.authUser) {
-      this.$store.app.router.push("/");
+      this.$nuxt._router.push("/");
     } else {
       this.$store.state.activeTab = "3";
     }

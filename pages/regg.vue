@@ -109,7 +109,7 @@ export default {
         this.formPassword = ''
         this.formError = null
         this.$message.success("You have successfully created an account!");
-        this.$nuxt._router.push('/')
+        this.$nuxt._router.push('/');
       } catch (err) {
         this.$message({
           type: 'error',
@@ -125,11 +125,6 @@ export default {
           console.log('validation error');
           return false;
         }
-        // if (!this.$store.state.authUser) {
-        //   this.$store.app.router.push("/")
-        // } else {
-        //   this.$store.state.activeTab = '2';
-        // }
       });
     },
     resetForm(formName) {
@@ -149,7 +144,7 @@ export default {
     if (!this.$store.state.authUser) {
       this.$store.state.activeTab = '2';
     } else { //if user has an account, push him to dashboard
-      this.$store.app.router.push("/dash")
+      this.$nuxt._router.push("/dash");
     }
   },
   layout: 'main',

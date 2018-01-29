@@ -74,7 +74,7 @@ export default {
     if (!this.$store.state.authUser) {
       this.$store.state.activeTab = '9';
     } else { //if user has an account, push him to dashboard
-      this.$store.app.router.push("/dash")
+      this.$nuxt._router.push("/dash")
     }
   },
   layout: 'main',

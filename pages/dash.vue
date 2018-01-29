@@ -250,7 +250,7 @@ export default {
   },
   created() {
     if (!this.$store.state.authUser) {
-      this.$store.app.router.push("/")
+      this.$nuxt._router.push("/")
     } else {
       this.$store.state.activeTab = '2';
     }
@@ -477,148 +477,145 @@ export default {
 
 <style scoped>
 img {
-    max-width: 90%;
-    max-height: 90%;
+  max-width: 90%;
+  max-height: 90%;
 }
 
 .el-form-item--mini.el-form-item,
 .el-form-item--small.el-form-item {
-    margin-bottom: 3px
+  margin-bottom: 3px;
 }
 </style>
 
 <style>
+body {
+  overflow: scroll;
+}
 
-  body{
-    overflow:scroll;
-  }
+.searchField {
+  max-width: 40%;
+  float: right !important;
+  margin-bottom: 1vh;
+}
+.multiSelectActions {
+  margin-top: vh;
+  height: 10vh;
+  margin-bottom: 5vh;
+}
+.videoList {
+  padding-top: 5vh;
+  position: relative;
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 80%;
+  width: 90%;
+}
 
-  .searchField{
-    max-width: 40%;
-    float: right !important;
-    margin-bottom:1vh;
-  }
-  .multiSelectActions{
-    margin-top:vh;
-    height:10vh;
-    margin-bottom:5vh;
-  }
-  .videoList{
-    padding-top:5vh;
-    position: relative;
-    margin: auto;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: 80%;
-    width: 90%;
-  }
+.ratingColumn {
+  display: inline-block;
+}
 
-  .ratingColumn{
-    display: inline-block;
-  }
-  
-  .videoCard{
-    width:80%;
-  }
-  .subtitle1{
-    font-weight: 300;
-  }
+.videoCard {
+  width: 80%;
+}
+.subtitle1 {
+  font-weight: 300;
+}
 
-  .headerOfStatCard{
-    font-size:3vh;
-  }
+.headerOfStatCard {
+  font-size: 3vh;
+}
 
-  .statCard{
-    width:19vw;
-    margin-right:3vw;
-  }
+.statCard {
+  width: 19vw;
+  margin-right: 3vw;
+}
 
-  .adminStatCard{
-    width:35vw;
-    margin-right:3vw;
-  }
+.adminStatCard {
+  width: 35vw;
+  margin-right: 3vw;
+}
 
+.cards {
+  display: flex;
+}
 
-  .cards{
-    display: flex;
-  }
+.centeredUploadVideoSuggestion {
+  text-align: center;
+  position: absolute;
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 30%;
+  width: 30%;
+  content: center;
+  font-size: 2vh;
+}
 
-  .centeredUploadVideoSuggestion{
-    text-align: center;
-    position: absolute;
-    margin: auto;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: 30%;
-    width: 30%;
-    content: center;
-    font-size: 2vh; 
-  }
+.title {
+  font-family: LatoLight;
+  font-size: 50px;
+  padding-top: 10vh;
+  padding-left: 3vw;
+}
 
-  .title{
-    font-family: LatoLight;
-    font-size: 50px;
-    padding-top:10vh;
-    padding-left:3vw;
-  }
+.subtitle1 {
+  font-family: LatoRegular;
+  padding-top: 2vh;
+}
+.renameIcon {
+  cursor: pointer;
+  display: none;
+}
 
-  .subtitle1{
-    font-family: LatoRegular;
-    padding-top:2vh;
-  }
-  .renameIcon{
-    cursor: pointer;
-    display: none;
-  }
+.nameColumn:hover .renameIcon {
+  display: inline;
+}
 
-  .nameColumn:hover .renameIcon {
-    display: inline;
-  }
-  
-  .copyIcon{
-    cursor: pointer;
-    display: none;
-    margin-left:1vh;
-  }
+.copyIcon {
+  cursor: pointer;
+  display: none;
+  margin-left: 1vh;
+}
 
-  .linkColumn:hover .copyIcon {
-    display: inline;
-  }
+.linkColumn:hover .copyIcon {
+  display: inline;
+}
 
-  .adminVideoPanel{
-    background: #d3dce6;
-  }
+.adminVideoPanel {
+  background: #d3dce6;
+}
 
-  .videoPanelExpander{
-    background: #d8cdd7;
-  }
+.videoPanelExpander {
+  background: #d8cdd7;
+}
 
-  .adminStatsPanel{
-    background: #cbcad0;
-    
-  }
+.adminStatsPanel {
+  background: #cbcad0;
+}
 
-  .adminPanelText{
-    text-align: center;
-    font-family: LatoLight;
-    font-size:20px;
-  }
+.adminPanelText {
+  text-align: center;
+  font-family: LatoLight;
+  font-size: 20px;
+}
 
-  .panel{
-    border-radius: 15px;
-    min-height: 40vh;
-  }
+.panel {
+  border-radius: 15px;
+  min-height: 40vh;
+}
 
-  .pads{
-    padding:3vh;
-  }
+.pads {
+  padding: 3vh;
+}
 
-  .stats{
-    padding: 1vh;
-    font-family: LatoLight;
-  }
+.stats {
+  padding: 1vh;
+  font-family: LatoLight;
+}
 </style>
