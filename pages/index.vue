@@ -85,7 +85,7 @@ export default {
       }
     },
     async redirectToRegister() {
-      this.$store.app.router.push("/regMeUpYo")
+      this.$store.app.router.push("/regg")
       this.$store.state.activeTab = '2';
     },
     async login() {
@@ -125,21 +125,20 @@ export default {
 <style scoped>
 .el-button {
   font-weight: bold !important;
-  border:none !important;
-  background: rgba(0, 0, 0, 0.801)  !important;
+  border: none !important;
+  background: rgba(0, 0, 0, 0.801) !important;
   color: #ffffff !important;
-  -webkit-transition: .1s;
+  -webkit-transition: 0.1s;
   transition: 0.2s !important;
   transition-property: color, background-color;
   width: 21vw;
   height: 8vh;
-  margin-bottom:2vh;  
+  margin-bottom: 2vh;
 }
-
 
 .el-form-item--mini.el-form-item,
 .el-form-item--small.el-form-item {
-    margin-bottom: 3px
+  margin-bottom: 3px;
 }
 
 ::selection {
@@ -149,98 +148,102 @@ export default {
 .el-button:hover,
 .el-button:focus,
 .el-button:active {
-  background: rgba(255, 255, 255, 0.801)  !important;
+  background: rgba(255, 255, 255, 0.801) !important;
   color: black !important;
 }
 
 @keyframes fadeUp {
   0% {
-      transform: translateY(30px);
-      opacity: 0;
+    transform: translateY(30px);
+    opacity: 0;
   }
   100% {
-      transform: translateY(0);
-      opacity:0.7;
+    transform: translateY(0);
+    opacity: 0.7;
   }
 }
 
 .fadeUp-enter-active {
   animation: fadeUp 1s;
 }
-
 </style>
 
 
 <style>
-.postLogin{
-  margin-top:10vh;
-  text-align:center;
-  font-size:1.5vh;
+.postLogin {
+  margin-top: 10vh;
+  text-align: center;
+  font-size: 1.5vh;
 }
 
 ::-webkit-scrollbar {
-display: none;
+  display: none;
 }
 
-.bottomField{
-  margin-bottom:3.5vh !important;
+.bottomField {
+  margin-bottom: 3.5vh !important;
 }
 
-.forgotPasswordLink{
+.forgotPasswordLink {
   position: absolute;
-  margin-top:-2vh !important; 
+  margin-top: -2vh !important;
   cursor: pointer;
   margin: auto;
   font-family: LatoRegular;
-
 }
 
-.forgotPasswordLink:hover{
-  color:black;
-  font-weight:bold;
-  font-size:150%;
-  border-bottom:solid 2 px white;
+.forgotPasswordLink:hover {
+  color: black;
+  font-weight: bold;
+  font-size: 150%;
+  border-bottom: solid 2 px white;
 }
- 
+
 .substituteInput {
   font-family: LatoRegular !important;
-  background: rgba(0,0,0,0.5)  !important;
+  background: rgba(0, 0, 0, 0.5) !important;
   color: white !important;
   font-weight: bold;
   padding: 0 4px !important;
   font-size: 4vh !important;
   height: 7vh !important;
   width: 20vw !important;
-  border: solid 5px white !important; 
-  clip-path: polygon( 
-    calc(0%) calc(0% + 5px), /* top left */
-    calc(100% - 5px) calc(0% + 5px), /* top right */
-    calc(100% - 5px) calc(100% - 5px), /* bottom right */
-    calc(0%) calc(100% - 5px) /* bottom left */
+  border: solid 5px white !important;
+  clip-path: polygon(
+    calc(0%) calc(0% + 5px),
+    calc(100% - 5px) calc(0% + 5px),
+    calc(100% - 5px) calc(100% - 5px),
+    calc(0%) calc(100% - 5px)
   );
   transition: clip-path 0.2s ease;
 }
 
-.substituteInput:focus{
-    outline: none;
-    clip-path: polygon(calc(0%+5px) calc(0%+5px), calc(100%-5px) calc(0%+5px), calc(100%-5px) calc(100%), calc(0%+5px) 100%);
+.substituteInput:focus {
+  outline: none;
+  clip-path: polygon(
+    calc(0%+5px) calc(0%+5px),
+    calc(100%-5px) calc(0%+5px),
+    calc(100%-5px) calc(100%),
+    calc(0%+5px) 100%
+  );
 }
 
 @font-face {
   font-family: "LatoRegular";
-  src: url("/fonts/LatoRegular/Lato-Regular.eot"), url("/fonts/LatoRegular/Lato-Regular.woff") format("woff"), url("/fonts/LatoRegular/Lato-Regular.ttf") format("truetype");
+  src: url("/fonts/LatoRegular/Lato-Regular.eot"),
+    url("/fonts/LatoRegular/Lato-Regular.woff") format("woff"),
+    url("/fonts/LatoRegular/Lato-Regular.ttf") format("truetype");
   font-style: normal;
   font-weight: normal;
 }
 
 a {
   text-decoration: none;
-  transition: 0.6s;  
+  transition: 0.6s;
 }
 
-
-a:hover{
-  color:black;
+a:hover {
+  color: black;
 }
 
 .nudge {
@@ -297,8 +300,8 @@ a:hover{
   color: white;
 }
 
-.minif{
-  margin-top:12vh;
+.minif {
+  margin-top: 12vh;
   font-size: 10vh;
 }
 
@@ -324,7 +327,8 @@ a:hover{
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
 
 .inputField {
@@ -338,9 +342,8 @@ body {
 
 .loginButton {
   margin: 0 auto;
-  font-size:3vh !important;
+  font-size: 3vh !important;
 }
-
 </style>
 
 

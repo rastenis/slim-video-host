@@ -7,7 +7,7 @@
           <el-input v-model="resetForm.email"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button @click="askForToken">Request reset</el-button>
+          <el-button type="primary" plain @click="askForToken">Request reset</el-button>
         </el-form-item>
       </el-form> 
     </el-card>
@@ -84,27 +84,25 @@ export default {
 
 
 <style>
+.ResetForm {
+  position: relative;
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin-top: 4vh;
+  width: 60%;
+}
 
+.title {
+  font-family: LatoLight;
+  font-size: 6vh;
+  padding-top: 10vh;
+  padding-left: 3vw;
+}
 
-  .ResetForm{
-    position: absolute;
-    margin: auto;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: 30%;
-    width: 40%;
-  }
-
-  .title{
-    font-family: LatoLight;
-    font-size: 6vh;
-    padding-top:10vh;
-    padding-left:3vw;
-  }
-
-   .formText{
-    color:#707070;
-  }
+.formText {
+  color: #707070;
+}
 </style>
