@@ -22,7 +22,7 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 var exec = require('child_process').exec;
 
-//isemu - ir _ is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
+//isemu _ ir - is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
 
 //uzkraunam DB
@@ -34,7 +34,7 @@ db.users = new Datastore({
 db.codes = new Datastore({
     filename: process.env.DB_CODES_PATH,
     autoload: true,
-    corruptAlertThreshold: 0.6 //truputis headway manually pridetiems kodams
+    corruptAlertThreshold: 1 // headway manually pridetiems kodams
 });
 db.videos = new Datastore({
     filename: process.env.DB_VIDEOS_PATH,
@@ -197,11 +197,18 @@ app.get('/api/checkToken/:token', function(req, res) {
     var returner = {};
     returner.valid = false;
     console.log("checking for token " + req.params.token);
-    db.users.find({ resetToken: req.params.token, tokenExpiry: { $gt: Date.now() } }, function(err, docs) {
+    db.users.find({
+        resetToken: req.params.token,
+        tokenExpiry: {
+            $gt: Date.now()
+        }
+    }, function(err, docs) {
         if (docs.length > 1) {
             console.log("duplicate tokens?? purge all");
             returner.error = true;
-            db.users.remove({}, { multi: true }, function(err, docs) {
+            db.users.remove({}, {
+                multi: true
+            }, function(err, docs) {
                 if (err) {
                     console.log(err);
                 }
@@ -227,7 +234,9 @@ app.post('/api/requestReset', function(req, res) {
     returner.error = true;
     returner.token = null;
     console.log(req.body.email);
-    db.users.find({ email: req.body.email }, function(err, docs) {
+    db.users.find({
+        email: req.body.email
+    }, function(err, docs) {
         if (docs.length > 1) {
             console.log(chalk.bgRed.white("duplicate account emails. CRITICAL"));
             returner.error = true;
@@ -267,7 +276,16 @@ app.post('/api/requestReset', function(req, res) {
             });
 
             //store token
-            db.users.update({ email: req.body.email }, { $set: { resetToken: token, tokenExpiry: Date.now() + defaultTokenExpiry } }, { upsert: false }, function(err, docs) {
+            db.users.update({
+                email: req.body.email
+            }, {
+                $set: {
+                    resetToken: token,
+                    tokenExpiry: Date.now() + defaultTokenExpiry
+                }
+            }, {
+                upsert: false
+            }, function(err, docs) {
                 returner.msg = "Success! Check your email for further instructions.";
                 returner.msgType = 'success';
                 returner.error = false;
@@ -333,7 +351,9 @@ app.post('/api/changePassword', function(req, res) {
             //del viso pikto is naujo paimu password is database
             async.waterfall([function(done) {
 
-                db.users.find({ username: req.session.authUser.username.toLowerCase() }, function(err, docs) {
+                db.users.find({
+                    username: req.session.authUser.username.toLowerCase()
+                }, function(err, docs) {
                     //useris prisijunges per login route'a, todel duplicates nera.
                     done(null, docs[0]);
                 });
@@ -516,7 +536,13 @@ app.post('/api/register', function(req, res) {
                             //got a matching code!
 
                             // settinu 'active' flag i false by default
-                            db.codes.update({ code: req.body.code }, { $set: { active: false } }, {}, function(err) {
+                            db.codes.update({
+                                code: req.body.code
+                            }, {
+                                $set: {
+                                    active: false
+                                }
+                            }, {}, function(err) {
                                 if (err) {
                                     console.log(err);
                                 }
@@ -617,7 +643,6 @@ app.post('/api/getVideos', function(req, res) {
                     if (index == (docs.length - 1)) {
                         returner.error = 0;
                         returner.videos = docs;
-                        console.log("RETURNINGGG at index " + index);
                         return res.json(returner);
                     }
                 });
@@ -689,7 +714,9 @@ app.post('/api/deleteAccount', function(req, res) {
         });
     } else {
         async.waterfall([function(done) {
-            db.users.find({ email: req.session.authUser.email }, function(err, docs) {
+            db.users.find({
+                email: req.session.authUser.email
+            }, function(err, docs) {
                 if (err) {
                     console.log(err);
                 } else {
@@ -723,7 +750,11 @@ app.post('/api/deleteAccount', function(req, res) {
                 returner.msgType = "error";
                 done();
             } else {
-                db.users.remove({ email: req.session.authUser.email }, { multi: true }, function(err) {
+                db.users.remove({
+                    email: req.session.authUser.email
+                }, {
+                    multi: true
+                }, function(err) {
                     if (err) {
                         console.log(err);
                         returner.error = 1;
@@ -895,64 +926,128 @@ app.post('/api/rename', function(req, res) {
 app.post('/api/finalizeUpload', function(req, res) {
 
     console.log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username);
-    var returner = {};
+    let returner = {},
+        opCount = 0;
     if (!req.session.authUser) {
-        res.json({
+        return res.json({
             error: true,
             msg: "No authentication. Please sign in.",
             msgType: "error"
         });
-    } else {
-        if (req.body.video.finalizationStatus == 0) { //video was successfully uploaded and named
-            db.videos.update({
-                confirmed: false,
-                username: req.session.authUser.username.toLowerCase()
-            }, {
-                $set: {
-                    name: req.body.video.name,
-                    confirmed: true,
-                    uploadDate: new Date()
-                }
-            }, {}, function(err) {
+    }
+
+    if (req.body.cancelled) {
+        console.log(chalk.red("upload(s) cancelled"));
+
+        returner.error = 1;
+        returner.msgType = "danger";
+        returner.msg = "You have cancelled the upload.";
+        res.json(returner);
+    }
+
+    //jei ne cancelled, proceedinam prie renaming
+    async.waterfall([function(done) {
+
+        if (req.body.cancelled) {
+            done();
+        }
+        for (const oldName in req.body.newNames) {
+            if (req.body.newNames.hasOwnProperty(oldName)) {
+                console.log("got new name " + req.body.newNames[oldName] + " for " + oldName);
+
+                const newName = req.body.newNames[oldName].replace(/[^a-z0-9\s]/gi, ""); //turetu jau but clean is client
+                let cleanedName = oldName.replace(/[^a-z0-9]/gi, "");
+
+                db.videos.update({
+                        confirmed: false,
+                        username: req.session.authUser.username,
+                        name: cleanedName
+                    }, {
+                        $set: {
+                            name: newName,
+                            confirmed: true,
+                            uploadDate: new Date()
+                        }
+                    }, {
+                        returnUpdatedDocs: true,
+                        multi: false
+                    },
+                    function(err, numAffected, affectedDocuments) {
+                        if (err) {
+                            console.log(chalk.bgRed.white(err));
+                            returner.error = 1;
+                        }
+
+                        if (opCount === Object.keys(req.body.newNames).length - 1) {
+                            returner.error = 0;
+                            returner.msg = "You successfully uploaded the video.";
+                            returner.msgType = "success";
+                            res.json(returner);
+                            done();
+                        } else {
+                            opCount++;
+                        }
+                    });
+            }
+        }
+
+    }, function(done) {
+        //unnamed (old unconfirmed) video removal 
+        db.videos.find({
+            username: req.session.authUser.username,
+            confirmed: false
+        }, function(err, docs) {
+            done(null, docs);
+        });
+    }, function(unconfirmedvideos, done) {
+        unconfirmedvideos.forEach(selection => {
+            console.log(chalk.red("removing unconfirmed"));
+            db.videos.find({
+                videoID: selection.videoID
+            }, function(err, docs) {
                 if (err) {
                     console.log(chalk.bgRed.white(err));
-                    returner.error = 1;
-                }
-
-                returner.error = 0;
-                returner.msg = "You successfully uploaded the video.";
-                returner.msgType = "success";
-                return res.json(returner);
-            });
-        } else if (req.body.video.finalizationStatus == 1) { //video was not successfully uploaded (canceled)
-            //non-multi removal (gal ir praverstu multi false check, TODO)
-            console.log(chalk.red("cancelled " + req.body.video.name));
-
-            db.videos.find({
-                confirmed: false,
-                username: req.session.authUser.username.toLowerCase()
-            }, function(err, docs) {
-                if (docs.length == 0) {
-                    console.log("video hasnt been uploaded yet, not cancelling");
                 } else {
-                    docs.forEach(function(video) {
-                        console.log(chalk.red("removing unconfirmed video " + video.name));
-                        // removing video from both database and storage
-                        db.videos.remove({
-                            videoID: video.videoID
-                        }, function(err, res) {});
-                        fs.unlink(storagePath + video.videoID + ".mp4");
+                    db.users.update({
+                        username: req.session.authUser.username
+                    }, {
+                        $inc: { //pridedamas atgal storage space useriui
+                            remainingSpace: Math.abs(docs[0].size)
+                        }
+                    }, {}, function() {
+                        //taip pat ir istrinamas pats video is storage
+                        try {
+                            fs.unlink(storagePath + selection.videoID + ".mp4");
+                        } catch (err) {
+                            console.log(err);
+                        }
+                        //istrinamas ir thumbnailas
+                        try {
+                            fs.unlink(storagePath + "thumbs/" + selection.videoID + ".jpg");
+                        } catch (err) {
+                            console.log(err);
+                        }
+                    });
+
+                    db.videos.remove({
+                        videoID: selection.videoID
+                    }, function(err, docs) {
+                        if (err) {
+                            console.log(chalk.bgRed.white(err));
+                        }
+                        //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
+                        //return errors from foreach async operations.
                     });
                 }
             });
+        });
 
-            returner.error = 2;
-            returner.msgType = "info";
-            returner.msg = "You have cancelled the upload.";
-            return res.json(returner);
+        done(); //foreach bus +- synced up
+    }], function(err) {
+        if (err) {
+            console.log(err);
         }
-    }
-
+    });
 
 });
 
@@ -1100,109 +1195,119 @@ app.post('/api/upload', function(req, res) {
             error: 'User not signed in.'
         });
     } else {
-        // console.log(util.inspect(req.files.file, { showHidden: false, depth: null }))
+        let returner = {},
+            opCount = 0;
+        returner.error = 0;
+        returner.newVideos = [];
 
-        var fileSizeInBytes = req.files.file.data.byteLength;
 
-        // pasiverciam i megabaitus
-        var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
-        console.log("size is " + fileSizeInMegabytes + "mb");
+        //tiesiai i one huge waterfall
+        async.waterfall([function(done) {
+            //runninu very simple all-unconfirmed removal pries pradedant
+            done();
+        }], function(err) {
+            // PER-FILE HANDLINGas, kai finalizinsiu response      
+            console.log("handling file(s)...");
 
-        if (fileSizeInMegabytes > 100000) { //hard limitas kad neikeltu didesniu uz 100gb failu
-            res.status(557).json({
-                error: 'File too big.'
-            });
-        } else {
-            var extension = ".mp4";
-            // if (req.files.file.mimetype == "video/avi") {
-            //     extension = ".avi";
-            // } else if (req.files.file.mimetype == "video/webm") {
-            //     extension = ".webm";
-            // }
+            for (const file in req.files) { //turetu tik po viena faila postai eit
+                if (req.files.hasOwnProperty(file)) {
+                    // filesize handlingas
+                    var fileSizeInBytes = req.files[file].data.byteLength;
+                    var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
+                    console.log("size is " + fileSizeInMegabytes + "mb");
 
-            //TODO: support for more formats
 
-            db.users.find({
-                username: req.session.authUser.username.toLowerCase()
-            }, function(err, docs) {
+                    if (fileSizeInMegabytes > 10000) { //hard limitas kad neikeltu didesniu uz 10gb failu
+                        res.status(557).json({
+                            error: 'File too big.'
+                        });
+                    } else {
 
-                // checkai del duplicate usernames
-                try {
-                    performSecurityChecks(docs);
-                } catch (e) {
-                    res.status(e.status).json({
-                        error: e.message
-                    });
-                }
+                        var extension = ".mp4";
+                        // if (req.files.file.mimetype == "video/avi") {
+                        //     extension = ".avi";
+                        // } else if (req.files.file.mimetype == "video/webm") {
+                        //     extension = ".webm";
+                        // }
 
-                var cleanedName = req.files.file.name.replace(/[^a-z0-9\s]/gi, "");
-                // patikrinam, ar useriui pakanka storage space
-                if (docs[0].remainingSpace < fileSizeInMegabytes) {
-                    res.status(557).json({
-                        error: 'You do not have enough space remaining to upload this file.'
-                    });
-                } else {
-                    // dedam video i storage
-                    var videoID = shortid.generate();
-                    var vidLink = process.env.VIDEO_LINK_PRE + videoID;
-                    console.log(chalk.bgGreen.black("storing video!"));
+                        //TODO: support for more formats
 
-                    db.videos.find({
-                        confirmed: false
-                    }, function(err, docs) {
-                        if (docs.length != 0) {
-                            //removing all unconfirmed videos
-                            docs.forEach(function(video) {
-                                console.log(chalk.red("removing unconfirmed video " + video.name));
-                                // removing video from both database and storage
-                                db.videos.remove({
-                                    videoID: video.videoID
-                                }, function(err, res) {});
-                                fs.unlink(storagePath + video.videoID + ".mp4");
-                            });
-                        } else {
-                            db.videos.insert({
-                                username: req.session.authUser.username.toLowerCase(),
-                                link: vidLink,
-                                name: cleanedName,
-                                videoID: videoID,
-                                views: 0,
-                                likes: 0,
-                                dislikes: 0,
-                                size: fileSizeInMegabytes,
-                                confirmed: false
-                            }, function() {
-                                req.files.file.mv(storagePath + videoID + extension, function(err) {
-                                    //savinu thumbnail
-                                    exec('ffmpeg -i ../' + storagePath + videoID + extension + ' -ss 0 -vframes 1 ../' + storagePath + "thumbs/" + videoID + '.jpg', {
-                                        cwd: __dirname
-                                    }, function(error, stdout, stderr) {
-                                        if (error) {
-                                            console.log(error);
-                                        }
-                                    });
+                        db.users.find({
+                            username: req.session.authUser.username.toLowerCase()
+                        }, function(err, docs) {
+                            var cleanedName = req.files[file].name.replace(/[^a-z0-9\s]/gi, "");
+                            // patikrinam, ar useriui pakanka storage space
+                            if (docs[0].remainingSpace < fileSizeInMegabytes) {
+                                res.status(557).json({
+                                    error: 'You do not have enough space remaining to upload this file.'
                                 });
-                            });
-                        }
-                    });
+                            } else {
+                                // dedam video i storage
+                                var videoID = shortid.generate();
+                                var vidLink = process.env.VIDEO_LINK_PRE + videoID;
+                                console.log(chalk.bgGreen.black("storing video!"));
 
-                    var decrement = fileSizeInMegabytes *= -1;
 
-                    // atimam is userio atitnkama kieki duomenu
-                    db.users.update({
-                        username: req.session.authUser.username.toLowerCase()
-                    }, {
-                        $inc: {
-                            remainingSpace: decrement
-                        }
-                    }, {}, function() {});
+                                db.videos.insert({
+                                    username: req.session.authUser.username.toLowerCase(),
+                                    link: vidLink,
+                                    name: cleanedName,
+                                    videoID: videoID,
+                                    views: 0,
+                                    likes: 0,
+                                    dislikes: 0,
+                                    size: fileSizeInMegabytes,
+                                    confirmed: false
+                                }, function(err, newDoc) {
+                                    if (err) {
+                                        console.log(err);
+                                    } else {
+                                        req.files[file].mv(storagePath + videoID + extension, function(err) {
+                                            //savinu thumbnail
+                                            try {
+                                                exec("ffmpeg -i '../" + storagePath + videoID + extension + "' -ss 0 -vframes 1 '../" + storagePath + "thumbs/" + videoID + ".jpg'", {
+                                                    cwd: __dirname
+                                                }, function(error, stdout, stderr) {
+                                                    if (error) {
+                                                        console.log(error);
+                                                    }
+                                                });
+                                            } catch (e) {
+                                                console.log(chalk.bgYellow.black("WARN") + "failed to save thumbnail ");
+                                            }
+
+
+                                            //prisegu prie returnerio
+                                            returner.newVideos.push(newDoc);
+
+                                            if (opCount >= Object.keys(req.files).length - 1) {
+                                                console.log("RETURNING UPLOAD CALLBACK w/ " + opCount + " items");
+                                                res.json(returner);
+                                            } else {
+                                                opCount++;
+                                            }
+                                        });
+                                    }
+
+                                });
+
+                                var decrement = fileSizeInMegabytes *= -1;
+
+                                // atimam is userio atitnkama kieki duomenu
+                                db.users.update({
+                                    username: req.session.authUser.username.toLowerCase()
+                                }, {
+                                    $inc: {
+                                        remainingSpace: decrement
+                                    }
+                                }, {}, function() {});
+                            }
+                        });
+                    }
                 }
-
-            });
-
-        }
+            }
+        });
     }
-
 });
 
 
