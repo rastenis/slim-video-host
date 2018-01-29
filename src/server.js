@@ -1153,49 +1153,64 @@ app.post('/api/removeVideo', function(req, res) {
                     returner.error = 1;
                     returner.msg = "Internal error. Try again.";
                 } else {
-                    db.users.update({
-                        username: req.session.authUser.username
-                    }, {
-                        $inc: { // restoring user's storage space
-                            remainingSpace: Math.abs(docs[0].size)
-                        }
-                    }, {}, function() {
-                        // rm cached vid
-                        try {
-                            fs.unlink(storagePath + selection.videoID + ".mp4");
-                        } catch (err) {
-                            console.log(err);
-                        }
-                        // rm thumbnail
-                        try {
-                            fs.unlink(storagePath + "thumbs/" + selection.videoID + ".jpg");
-                        } catch (err) {
-                            console.log(err);
-                        }
-                    });
 
-                    db.videos.remove({
-                        videoID: selection.videoID
-                    }, function(err, docs) {
+                    async.waterfall([function(done) {
+                        db.users.update({
+                            username: req.session.authUser.username
+                        }, {
+                            $inc: { // restoring user's storage space
+                                remainingSpace: Math.abs(docs[0].size)
+                            }
+                        }, {}, function(err) {
+
+                            if (err) {
+                                console.log(err);
+                            }
+                            // rm cached vid
+                            try {
+                                fs.unlink(storagePath + selection.videoID + ".mp4");
+                            } catch (err) {
+                                console.log(err);
+                            }
+                            // rm thumbnail
+                            try {
+                                fs.unlink(storagePath + "thumbs/" + selection.videoID + ".jpg");
+                            } catch (err) {
+                                console.log(err);
+                            }
+
+                            done();
+                        });
+                    }, function(done) {
+
+                        db.videos.remove({
+                            videoID: selection.videoID
+                        }, function(err, docs) {
+                            if (err) {
+                                console.log(chalk.bgRed.white(err));
+                                returner.error = 1;
+                                returner.msg = "Internal error. Try again.";
+                                res.json(returner);
+                            }
+
+                            if (opCount == req.body.selection.length - 1) {
+                                returner.msgType = "info";
+                                returner.error = 0;
+                                returner.msg = "Successfully deleted video(s)!";
+                                return res.json(returner);
+                            } else {
+                                opCount++;
+                            }
+                            //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
+                            //return errors from foreach async operations.
+                        });
+                    }], function(err) {
                         if (err) {
-                            console.log(chalk.bgRed.white(err));
-                            returner.error = 1;
-                            returner.msg = "Internal error. Try again.";
-                            res.json(returner);
+                            console.log(err);
                         }
-
-                        if (opCount == req.body.selection.length - 1) {
-                            returner.msgType = "info";
-                            returner.error = 0;
-                            returner.msg = "Successfully deleted video!";
-                            res.json(returner);
-                        } else {
-                            opCount++;
-                        }
-                        //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
-                        //return errors from foreach async operations.
-
                     });
+
+
                 }
             });
         });
@@ -1363,7 +1378,6 @@ function performSecurityChecks(docs) {
         };
     }
 }
-
 
 function hashUpPass(pass) {
     var hash = bcrypt.hashSync(pass, 10);
