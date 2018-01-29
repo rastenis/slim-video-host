@@ -20,7 +20,8 @@ const helmet = require('helmet');
 const du = require('du');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-var exec = require('child_process').exec;
+const exec = require('child_process').exec;
+const config = require('./config.json');
 
 //isemu _ ir - is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
@@ -28,20 +29,20 @@ shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX
 //uzkraunam DB
 db = {};
 db.users = new Datastore({
-    filename: process.env.DB_USERS_PATH,
+    filename: config.databases.db_users_path,
     autoload: true
 });
 db.codes = new Datastore({
-    filename: process.env.DB_CODES_PATH,
+    filename: config.databases.db_codes_path,
     autoload: true,
     corruptAlertThreshold: 1 // headway manually pridetiems kodams
 });
 db.videos = new Datastore({
-    filename: process.env.DB_VIDEOS_PATH,
+    filename: config.databases.db_videos_path,
     autoload: true
 });
 db.ratings = new Datastore({
-    filename: process.env.DB_RATINGS_PATH,
+    filename: config.databases.db_ratings_path,
     autoload: true
 });
 
@@ -51,7 +52,7 @@ var defaultStorageSpace = 10000; //megabaitais
 var defaultTokenExpiry = 1800000; //30 mins
 
 // video storage path
-const storagePath = process.env.FILE_PATH;
+const storagePath = config.file_path;
 
 app.use(helmet());
 app.use(fileUpload({
@@ -62,7 +63,7 @@ app.use(fileUpload({
 }));
 app.use(bodyParser.json());
 app.use(session({
-    secret: process.env.SESSION_KEY,
+    secret: config.session_key,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -253,8 +254,8 @@ app.post('/api/requestReset', function(req, res) {
             var nmlTrans = nodemailer.createTransport({
                 service: 'Gmail',
                 auth: {
-                    user: process.env.MAIL_UN,
-                    pass: process.env.MAIL_PASS
+                    user: config.mail.username,
+                    pass: config.mail.password
                 }
             });
 
@@ -497,7 +498,7 @@ app.post('/api/register', function(req, res) {
         }, function(err, docs) {
             du('static/videos', function(err, size) {
                 console.log('The size of the video folder is:', size, 'bytes')
-                if (size >= process.env.TOTAL_SPACE) {
+                if (size >= config.total_space) {
                     enoughSpace = false;
                 }
                 done(null, docs, enoughSpace);
@@ -793,7 +794,7 @@ app.post('/api/newLink', function(req, res) {
         returner.newData = req.body.selection;
         req.body.selection.forEach((sel, index) => {
             var newVideoID = shortid.generate();
-            var newVidLink = process.env.VIDEO_LINK_PRE + newVideoID;
+            var newVidLink = config.video_link_prefix + newVideoID;
 
             async.waterfall([function(done) {
                 db.videos.update({
