@@ -46,7 +46,7 @@
               this.$store.app.router.push("/dash")
               this.$store.state.activeTab = '2';
             } else {
-              this.$store.app.router.push("/regMeUpYo")
+              this.$store.app.router.push("/regg")
               this.$store.state.activeTab = '2';
             }
             break;
