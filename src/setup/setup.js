@@ -1,12 +1,12 @@
 const jsonfile = require('jsonfile');
 const chalk = require('chalk');
+const prompt = require('prompt-sync')();
 const configPath = 'config.json';
 
 //base values (example config)
 let config = {
     "file_path": "static/videos/",
-    "session_key": "very-secret-super-secure-key",
-    "video_link_prefix": "https://yourHostname.domain/v/",
+    "host_prefix": "https://yourHostname.domain/v/",
     "total_space": 100000000000,
     "mail": {
         "username": "something@gmail.com",
@@ -25,5 +25,11 @@ console.log(chalk.bold.bgYellow.black("                          "));
 console.log(chalk.underline.bold.bgYellow.black("SUCCESS! Starting setup..."));
 console.log(chalk.bold.bgYellow.black("                          "));
 
+config.file_path = prompt('Enter video storage path (ENTER for default):', config.file_path);
+console.log(config.file_path);
+console.log("Enter video link generation prefix,");
+config.host_prefix = prompt('(Example: https://yourHostname.domain/):');
+config.total_space = prompt('Enter total space in bytes (ENTER for 100GB as default):');
 
-jsonfile.writeFileSync(file, obj);
+
+//jsonfile.writeFileSync(configPath, config);
