@@ -1262,14 +1262,11 @@ app.post('/api/upload', function(req, res) {
                         let extension;
 
                         switch (req.files[file].mimetype) {
-                            case "video/avi":
-                                extension = ".avi";
-                                break;
                             case "video/webm":
                                 extension = ".webm";
                                 break;
-                            case "video/mpeg":
-                                extension = ".mpeg";
+                            case "video/ogg":
+                                extension = ".ogg";
                                 break;
                             case "video/mp4":
                                 extension = ".mp4";
