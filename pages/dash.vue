@@ -116,7 +116,7 @@
           <el-button :disabled="multipleSelection.length==0" type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
           <el-input @keyup.native="updateFilter" class="searchField" v-model="searchTerm" placeholder="Search videos..."></el-input>
         </el-card>
-        <el-table :data="videos" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
+        <el-table :data="videos" v-loading="loading" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
           <el-table-column type="selection" width="40">
           </el-table-column>
           <el-table-column prop="thumbnail" label="Thumbnail">
@@ -270,6 +270,7 @@ export default {
         cancelButtonText: 'Cancel',
         type: 'warning'
       }).then(() => {
+        this.loading=true;
         axios({
             url: 'https://cigari.ga/api/removeVideo',
             method: 'post',
@@ -298,7 +299,7 @@ export default {
             } else if (res.data.error == 1) {
               console.log("error while bulk deleting videos");
             }
-
+            this.loading=false;
             this.$message({
               type: res.data.msgType,
               message: res.data.msg
