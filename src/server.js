@@ -115,82 +115,95 @@ app.get('/api/cv/:id', function(req, res) {
     returner.userRatings = {};
 
     if (!req.params.id) {} else {
-        var path = storagePath + req.params.id + '.mp4';
 
-        //check if requested video exists
-        if (fs.existsSync(path)) {
+        async.waterfall([function(done) {
+            //immedately calling an update, won't add a view if the video doesn't exist.
+            db.videos.update({
+                videoID: req.params.id
+            }, {
+                $inc: {
+                    views: 1
+                }
+            }, {
+                returnUpdatedDocs: true,
+                multi: false
+            }, function(err, numAffected, affectedDocument, upsert) {
 
-            async.waterfall([function(done) {
-                db.videos.update({
-                    videoID: req.params.id
-                }, {
-                    $inc: {
-                        views: 1
-                    }
-                }, {
-                    returnUpdatedDocs: true
-                }, function(err, numAffected, affectedDocument, upsert) {
-                    console.log("added a view to video " + affectedDocument.videoID);
-                    affectedDocument.src = '/videos/' + req.params.id + '.mp4';
+                if (!affectedDocument) {
+                    console.log("FETCHING VIDEO | no such video!");
+                    returner.video = affectedDocument;
+                    returner.error = 1;
+                } else {
+                    console.log("FETCHING VIDEO | added a view to video " + affectedDocument.videoID);
+                    affectedDocument.src = '/videos/' + req.params.id + affectedDocument.extension;
                     returner.video = affectedDocument;
                     returner.error = 0;
-                    done();
-                });
-            }, function(done) {
-                if (req.body.user) {
-                    db.ratings.find({
-                        username: req.body.user.username,
-                        videoID: req.params.id
-                    }, {}, function(err, docs) {
-                        if (docs.length > 2 || docs.length < 0) {
-                            console.log("RATING ERROR===========");
+                }
+                done();
+            });
+        }, function(done) {
+            //check if requested video exists
+            try {
+                var path = storagePath + req.params.id + returner.video.extension;
+            } catch (e) {}
+
+            if (returner.video && fs.existsSync(path)) {
+                done();
+            } else {
+                //else just return it; no point in going forward
+                return res.json(returner);
+            }
+        }, function(done) {
+            if (req.body.user) {
+                db.ratings.find({
+                    username: req.body.user.username,
+                    videoID: req.params.id
+                }, {}, function(err, docs) {
+                    if (docs.length > 2 || docs.length < 0) {
+                        console.log(chalk.yellow("FETCHING VIDEO | RATING ERROR==========="));
+                    }
+                    returner.userRatings.liked = false;
+                    returner.userRatings.disliked = false;
+
+                    //assigning likes/dislikes
+                    docs.forEach(doc => {
+                        if (doc.action == 0) //disliked
+                        {
+                            returner.userRatings.disliked = true;
+                        } else if (doc.action == 1) {
+                            returner.userRatings.liked = true;
                         }
-                        returner.userRatings.liked = false;
-                        returner.userRatings.disliked = false;
-
-                        //assigning likes/dislikes
-                        docs.forEach(doc => {
-                            if (doc.action == 0) //disliked
-                            {
-                                returner.userRatings.disliked = true;
-                            } else if (doc.action == 1) {
-                                returner.userRatings.liked = true;
-                            }
-                        });
-
-                        done();
                     });
-                } else {
-                    console.log("NO USER LEEEE");;
-                    done();
-                }
-            }, function(done) {
-                db.ratings.count({
-                    action: 1, //like
-                    videoID: returner.video.videoID
-                }, function(err, count) {
-                    returner.ratings.likes = count;
+
                     done();
                 });
-            }, function(done) {
-                db.ratings.count({
-                    action: 0, //dislike
-                    videoID: returner.video.videoID
-                }, function(err, count) {
-                    returner.ratings.dislikes = count;
-                    done();
-                });
-            }], function(err) {
-                if (err) {
-                    console.log(err);
-                }
-                res.json(returner);
+            } else {
+                console.log("FETCHING VIDEO | anonymous viewer");;
+                done();
+            }
+        }, function(done) {
+            db.ratings.count({
+                action: 1, //like
+                videoID: returner.video.videoID
+            }, function(err, count) {
+                returner.ratings.likes = count;
+                done();
             });
-        } else {
-            res.json({
-                error: 1
+        }, function(done) {
+            db.ratings.count({
+                action: 0, //dislike
+                videoID: returner.video.videoID
+            }, function(err, count) {
+                returner.ratings.dislikes = count;
+                done();
             });
-        }
+        }], function(err) {
+            if (err) {
+                console.log(err);
+            }
+            return res.json(returner);
+        });
+
     }
 });
 
@@ -1301,6 +1314,7 @@ app.post('/api/upload', function(req, res) {
                                     dislikes: 0,
                                     size: fileSizeInMegabytes,
                                     mimetype: req.files[file].mimetype,
+                                    extension: extension,
                                     confirmed: false
                                 }, function(err, newDoc) {
                                     if (err) {
