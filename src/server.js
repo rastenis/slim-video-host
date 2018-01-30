@@ -1266,7 +1266,7 @@ app.post('/api/upload', function(req, res) {
                                 extension = ".webm";
                                 break;
                             case "video/ogg":
-                                extension = ".ogg";
+                                extension = ".ogv";
                                 break;
                             case "video/mp4":
                                 extension = ".mp4";
