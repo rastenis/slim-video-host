@@ -26,7 +26,7 @@
           <div class="el-upload__text">Drop file here or
             <em>click to upload</em>
           </div>
-          <div class="el-upload__tip" slot="tip">.mp4 files with a size less than 5GB</div>
+          <div class="el-upload__tip" slot="tip">.mp4, .ogg, .webm files with a size less than 5GB</div>
         </el-upload>
       </el-card>
     </div>
@@ -78,8 +78,6 @@ export default {
       console.log(fileList);
     },
     beforeVideoUpload(file) {
-      console.log("marking file");
-      file.namingID = 153;
 
       this.uploading = true;
       if (!this.$store.state.authUser) {
@@ -102,10 +100,18 @@ export default {
         return false;
       }
 
-      if (file.type !== "video/mp4") {
-        this.$message.error("Invalid video format!");
-        this.uploading = false;
-        return false;
+      switch (file.type) {
+        case "video/webm":
+            break;
+        case "video/ogg":
+            break;
+        case "video/mp4":
+            break;
+        default:
+          this.$message.error("Invalid video format!");
+          this.uploading = false;
+          return false;
+          break;
       }
     },
     uploadProgress(event, file, fileList) {

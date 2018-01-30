@@ -115,82 +115,95 @@ app.get('/api/cv/:id', function(req, res) {
     returner.userRatings = {};
 
     if (!req.params.id) {} else {
-        var path = storagePath + req.params.id + '.mp4';
 
-        //check if requested video exists
-        if (fs.existsSync(path)) {
+        async.waterfall([function(done) {
+            //immedately calling an update, won't add a view if the video doesn't exist.
+            db.videos.update({
+                videoID: req.params.id
+            }, {
+                $inc: {
+                    views: 1
+                }
+            }, {
+                returnUpdatedDocs: true,
+                multi: false
+            }, function(err, numAffected, affectedDocument, upsert) {
 
-            async.waterfall([function(done) {
-                db.videos.update({
-                    videoID: req.params.id
-                }, {
-                    $inc: {
-                        views: 1
-                    }
-                }, {
-                    returnUpdatedDocs: true
-                }, function(err, numAffected, affectedDocument, upsert) {
-                    console.log("added a view to video " + affectedDocument.videoID);
-                    affectedDocument.src = '/videos/' + req.params.id + '.mp4';
+                if (!affectedDocument) {
+                    console.log("FETCHING VIDEO | no such video!");
+                    returner.video = affectedDocument;
+                    returner.error = 1;
+                } else {
+                    console.log("FETCHING VIDEO | added a view to video " + affectedDocument.videoID);
+                    affectedDocument.src = '/videos/' + req.params.id + affectedDocument.extension;
                     returner.video = affectedDocument;
                     returner.error = 0;
-                    done();
-                });
-            }, function(done) {
-                if (req.body.user) {
-                    db.ratings.find({
-                        username: req.body.user.username,
-                        videoID: req.params.id
-                    }, {}, function(err, docs) {
-                        if (docs.length > 2 || docs.length < 0) {
-                            console.log("RATING ERROR===========");
+                }
+                done();
+            });
+        }, function(done) {
+            //check if requested video exists
+            try {
+                var path = storagePath + req.params.id + returner.video.extension;
+            } catch (e) {}
+
+            if (returner.video && fs.existsSync(path)) {
+                done();
+            } else {
+                //else just return it; no point in going forward
+                return res.json(returner);
+            }
+        }, function(done) {
+            if (req.body.user) {
+                db.ratings.find({
+                    username: req.body.user.username,
+                    videoID: req.params.id
+                }, {}, function(err, docs) {
+                    if (docs.length > 2 || docs.length < 0) {
+                        console.log(chalk.yellow("FETCHING VIDEO | RATING ERROR==========="));
+                    }
+                    returner.userRatings.liked = false;
+                    returner.userRatings.disliked = false;
+
+                    //assigning likes/dislikes
+                    docs.forEach(doc => {
+                        if (doc.action == 0) //disliked
+                        {
+                            returner.userRatings.disliked = true;
+                        } else if (doc.action == 1) {
+                            returner.userRatings.liked = true;
                         }
-                        returner.userRatings.liked = false;
-                        returner.userRatings.disliked = false;
-
-                        //assigning likes/dislikes
-                        docs.forEach(doc => {
-                            if (doc.action == 0) //disliked
-                            {
-                                returner.userRatings.disliked = true;
-                            } else if (doc.action == 1) {
-                                returner.userRatings.liked = true;
-                            }
-                        });
-
-                        done();
                     });
-                } else {
-                    console.log("NO USER LEEEE");;
-                    done();
-                }
-            }, function(done) {
-                db.ratings.count({
-                    action: 1, //like
-                    videoID: returner.video.videoID
-                }, function(err, count) {
-                    returner.ratings.likes = count;
+
                     done();
                 });
-            }, function(done) {
-                db.ratings.count({
-                    action: 0, //dislike
-                    videoID: returner.video.videoID
-                }, function(err, count) {
-                    returner.ratings.dislikes = count;
-                    done();
-                });
-            }], function(err) {
-                if (err) {
-                    console.log(err);
-                }
-                res.json(returner);
+            } else {
+                console.log("FETCHING VIDEO | anonymous viewer");;
+                done();
+            }
+        }, function(done) {
+            db.ratings.count({
+                action: 1, //like
+                videoID: returner.video.videoID
+            }, function(err, count) {
+                returner.ratings.likes = count;
+                done();
             });
-        } else {
-            res.json({
-                error: 1
+        }, function(done) {
+            db.ratings.count({
+                action: 0, //dislike
+                videoID: returner.video.videoID
+            }, function(err, count) {
+                returner.ratings.dislikes = count;
+                done();
             });
-        }
+        }], function(err) {
+            if (err) {
+                console.log(err);
+            }
+            return res.json(returner);
+        });
+
     }
 });
 
@@ -857,25 +870,22 @@ app.post('/api/newLink', function(req, res) {
 
                 });
             }, function(done) {
-                // video file removal
+                // video file renaming
                 if (!returner.error) {
-                    fs.rename(storagePath + sel.videoID + ".mp4", storagePath + newVideoID + ".mp4", function(err) {
+                    fs.rename(storagePath + sel.videoID + sel.extension, storagePath + newVideoID + sel.extension, function(err) {
                         if (err) {
                             console.log(err);
                         }
-
                         done();
                     });
                 }
-
             }, function(done) {
-                // thumbnail removal
+                // thumbnail renaming
                 if (!returner.error) {
                     fs.rename(storagePath + "thumbs/" + sel.videoID + ".jpg", storagePath + "thumbs/" + newVideoID + ".jpg", function(err) {
                         if (err) {
                             console.log(err);
                         }
-
                         done();
                     });
                 }
@@ -1033,7 +1043,7 @@ app.post('/api/finalizeUpload', function(req, res) {
                     }, {}, function() {
                         // removing video from storage
                         try {
-                            fs.unlink(storagePath + selection.videoID + ".mp4");
+                            fs.unlink(storagePath + selection.videoID + selection.extension);
                         } catch (err) {
                             console.log(err);
                         }
@@ -1057,7 +1067,7 @@ app.post('/api/finalizeUpload', function(req, res) {
                 }
             });
         });
-
+        //FIXME ?
         done(); //foreach will be +- synced up
     }], function(err) {
         if (err) {
@@ -1168,7 +1178,7 @@ app.post('/api/removeVideo', function(req, res) {
                             }
                             // rm cached vid
                             try {
-                                fs.unlink(storagePath + selection.videoID + ".mp4");
+                                fs.unlink(storagePath + selection.videoID + selection.extension);
                             } catch (err) {
                                 console.log(err);
                             }
@@ -1239,8 +1249,8 @@ app.post('/api/upload', function(req, res) {
             for (const file in req.files) { //turetu tik po viena faila postai eit
                 if (req.files.hasOwnProperty(file)) {
                     // filesize handlingas
-                    var fileSizeInBytes = req.files[file].data.byteLength;
-                    var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
+                    let fileSizeInBytes = req.files[file].data.byteLength;
+                    let fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
                     console.log("uploaded video size is " + fileSizeInMegabytes + "mb");
 
                     if (fileSizeInMegabytes > 10000) { //hard limitas kad neikeltu didesniu uz 10gb failu
@@ -1249,18 +1259,33 @@ app.post('/api/upload', function(req, res) {
                         });
                     } else {
 
-                        var extension = ".mp4";
-                        // if (req.files.file.mimetype == "video/avi") {
-                        //     extension = ".avi";
-                        // } else if (req.files.file.mimetype == "video/webm") {
-                        //     extension = ".webm";
-                        // }
+                        let extension;
 
-                        //TODO: support for more formats
+                        switch (req.files[file].mimetype) {
+                            case "video/webm":
+                                extension = ".webm";
+                                break;
+                            case "video/ogg":
+                                extension = ".ogv";
+                                break;
+                            case "video/mp4":
+                                extension = ".mp4";
+                                break;
+                            default:
+                                console.log("unsupported video format!");
+                                res.status(557).json({
+                                    error: 'That video format cannot be uploaded.'
+                                });
+                                break;
+                        }
 
-                        db.users.find({
-                            username: req.session.authUser.username.toLowerCase()
-                        }, function(err, docs) {
+                        async.waterfall([function(done) {
+                            db.users.find({
+                                username: req.session.authUser.username.toLowerCase()
+                            }, function(err, docs) {
+                                done(null, docs);
+                            });
+                        }, function(docs, done) {
                             var cleanedName = req.files[file].name.replace(/[^a-z0-9\s]/gi, "");
                             // checking if user's storage space is sufficient
                             if (docs[0].remainingSpace < fileSizeInMegabytes) {
@@ -1282,6 +1307,8 @@ app.post('/api/upload', function(req, res) {
                                     likes: 0,
                                     dislikes: 0,
                                     size: fileSizeInMegabytes,
+                                    mimetype: req.files[file].mimetype,
+                                    extension: extension,
                                     confirmed: false
                                 }, function(err, newDoc) {
                                     if (err) {
@@ -1315,15 +1342,21 @@ app.post('/api/upload', function(req, res) {
                                 });
 
                                 var decrement = fileSizeInMegabytes *= -1;
+                                done(null, decrement);
 
-                                // reducing user's storage space
-                                db.users.update({
-                                    username: req.session.authUser.username.toLowerCase()
-                                }, {
-                                    $inc: {
-                                        remainingSpace: decrement
-                                    }
-                                }, {}, function() {});
+                            }
+                        }, function(decrement, done) {
+                            // reducing user's storage space
+                            db.users.update({
+                                username: req.session.authUser.username.toLowerCase()
+                            }, {
+                                $inc: {
+                                    remainingSpace: decrement
+                                }
+                            }, {}, function() {});
+                        }], function(err) {
+                            if (err) {
+                                console.log(err);
                             }
                         });
                     }
