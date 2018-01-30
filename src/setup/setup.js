@@ -21,15 +21,23 @@ let config = {
 };
 
 // all of this will be more or less sync
-console.log(chalk.bold.bgYellow.black("                          "));
-console.log(chalk.underline.bold.bgYellow.black("SUCCESS! Starting setup..."));
-console.log(chalk.bold.bgYellow.black("                          "));
+console.log(chalk.bold.bgYellow.black("                                                    "));
+console.log(chalk.underline.bold.bgYellow.black("SUCCESS! Starting setup...                          "));
+console.log(chalk.bold.bgYellow.black("                                                    "));
 
 config.file_path = prompt('Enter video storage path (ENTER for default):', config.file_path);
-console.log(config.file_path);
+
 console.log("Enter video link generation prefix,");
 config.host_prefix = prompt('(Example: https://yourHostname.domain/):');
-config.total_space = prompt('Enter total space in bytes (ENTER for 100GB as default):');
 
+config.total_space = prompt('Enter total space in bytes (ENTER for 100GB as default):', config.total_space);
 
-//jsonfile.writeFileSync(configPath, config);
+config.mail.username = prompt('Enter gmail username:');
+
+config.mail.password = prompt('Enter gmail password:', null, { echo: "*" });
+
+console.log(chalk.bold.bgYellow.black("                                                    "));
+console.log(chalk.underline.bold.bgYellow.black("SETUP DONE!                                         "));
+console.log(chalk.bold.bgYellow.black("                                                    "));
+
+jsonfile.writeFileSync(configPath, config);
