@@ -1239,8 +1239,8 @@ app.post('/api/upload', function(req, res) {
             for (const file in req.files) { //turetu tik po viena faila postai eit
                 if (req.files.hasOwnProperty(file)) {
                     // filesize handlingas
-                    var fileSizeInBytes = req.files[file].data.byteLength;
-                    var fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
+                    let fileSizeInBytes = req.files[file].data.byteLength;
+                    let fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
                     console.log("uploaded video size is " + fileSizeInMegabytes + "mb");
 
                     if (fileSizeInMegabytes > 10000) { //hard limitas kad neikeltu didesniu uz 10gb failu
@@ -1249,18 +1249,36 @@ app.post('/api/upload', function(req, res) {
                         });
                     } else {
 
-                        var extension = ".mp4";
-                        // if (req.files.file.mimetype == "video/avi") {
-                        //     extension = ".avi";
-                        // } else if (req.files.file.mimetype == "video/webm") {
-                        //     extension = ".webm";
-                        // }
+                        let extension;
 
-                        //TODO: support for more formats
+                        switch (req.files[file].mimetype) {
+                            case "video/avi":
+                                extension = ".avi";
+                                break;
+                            case "video/webm":
+                                extension = ".webm";
+                                break;
+                            case "video/mpeg":
+                                extension = ".mpeg";
+                                break;
+                            case "video/mp4":
+                                extension = ".mp4";
+                                break;
+                            default:
+                                console.log("unsupported video format!");
+                                res.status(557).json({
+                                    error: 'That video format cannot be uploaded.'
+                                });
+                                break;
+                        }
 
-                        db.users.find({
-                            username: req.session.authUser.username.toLowerCase()
-                        }, function(err, docs) {
+                        async.waterfall([function(done) {
+                            db.users.find({
+                                username: req.session.authUser.username.toLowerCase()
+                            }, function(err, docs) {
+                                done(null, docs);
+                            });
+                        }, function(docs, done) {
                             var cleanedName = req.files[file].name.replace(/[^a-z0-9\s]/gi, "");
                             // checking if user's storage space is sufficient
                             if (docs[0].remainingSpace < fileSizeInMegabytes) {
@@ -1282,6 +1300,7 @@ app.post('/api/upload', function(req, res) {
                                     likes: 0,
                                     dislikes: 0,
                                     size: fileSizeInMegabytes,
+                                    mimetype: req.files[file].mimetype,
                                     confirmed: false
                                 }, function(err, newDoc) {
                                     if (err) {
@@ -1315,15 +1334,21 @@ app.post('/api/upload', function(req, res) {
                                 });
 
                                 var decrement = fileSizeInMegabytes *= -1;
+                                done(null, decrement);
 
-                                // reducing user's storage space
-                                db.users.update({
-                                    username: req.session.authUser.username.toLowerCase()
-                                }, {
-                                    $inc: {
-                                        remainingSpace: decrement
-                                    }
-                                }, {}, function() {});
+                            }
+                        }, function(decrement, done) {
+                            // reducing user's storage space
+                            db.users.update({
+                                username: req.session.authUser.username.toLowerCase()
+                            }, {
+                                $inc: {
+                                    remainingSpace: decrement
+                                }
+                            }, {}, function() {});
+                        }], function(err) {
+                            if (err) {
+                                console.log(err);
                             }
                         });
                     }
