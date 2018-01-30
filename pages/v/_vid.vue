@@ -37,7 +37,7 @@
     </div>
     <div class="vidDiv">
       <video onclick="this.paused ? this.play() : this.pause();" fluid v-if="video.src!=''" id="mainPlayer" class="videoDiv" v-loading="loading" controls preload="auto" autoplay >
-        <source :src="video.src" type="video/mp4"></source>
+        <source :src="video.src" :type="video.mimetype"></source>
       </video>
     </div>
   </div>
@@ -186,7 +186,9 @@ body {
 
 @font-face {
   font-family: "LatoLight";
-  src: url("/fonts/LatoLight/Lato-Light.eot"), url("/fonts/LatoLight/Lato-Light.woff") format("woff"), url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
+  src: url("/fonts/LatoLight/Lato-Light.eot"),
+    url("/fonts/LatoLight/Lato-Light.woff") format("woff"),
+    url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
   font-style: normal;
   font-weight: normal;
 }
@@ -239,9 +241,8 @@ template {
   margin-top: 20vh;
 }
 
-.iccTopBreaker{
+.iccTopBreaker {
   margin-top: 0.5vh;
-  
 }
 
 .shareNudge {
@@ -271,9 +272,9 @@ i {
   font-family: LatoLight;
   color: white;
   font-weight: bold;
-  position: absolute; 
-  margin-top:3vh;
-  bottom:0;
+  position: absolute;
+  margin-top: 3vh;
+  bottom: 0;
   left: 50%;
   transform: translate(-50%, 70%);
 }
@@ -307,5 +308,4 @@ i {
 .videoDiv {
   height: 80vh;
 }
-
 </style>
