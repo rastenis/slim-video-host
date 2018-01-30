@@ -870,25 +870,22 @@ app.post('/api/newLink', function(req, res) {
 
                 });
             }, function(done) {
-                // video file removal
+                // video file renaming
                 if (!returner.error) {
-                    fs.rename(storagePath + sel.videoID + ".mp4", storagePath + newVideoID + ".mp4", function(err) {
+                    fs.rename(storagePath + sel.videoID + sel.extension, storagePath + newVideoID + sel.extension, function(err) {
                         if (err) {
                             console.log(err);
                         }
-
                         done();
                     });
                 }
-
             }, function(done) {
-                // thumbnail removal
+                // thumbnail renaming
                 if (!returner.error) {
                     fs.rename(storagePath + "thumbs/" + sel.videoID + ".jpg", storagePath + "thumbs/" + newVideoID + ".jpg", function(err) {
                         if (err) {
                             console.log(err);
                         }
-
                         done();
                     });
                 }
@@ -1046,7 +1043,7 @@ app.post('/api/finalizeUpload', function(req, res) {
                     }, {}, function() {
                         // removing video from storage
                         try {
-                            fs.unlink(storagePath + selection.videoID + ".mp4");
+                            fs.unlink(storagePath + selection.videoID + selection.extension);
                         } catch (err) {
                             console.log(err);
                         }
@@ -1070,7 +1067,7 @@ app.post('/api/finalizeUpload', function(req, res) {
                 }
             });
         });
-
+        //FIXME ?
         done(); //foreach will be +- synced up
     }], function(err) {
         if (err) {
@@ -1181,7 +1178,7 @@ app.post('/api/removeVideo', function(req, res) {
                             }
                             // rm cached vid
                             try {
-                                fs.unlink(storagePath + selection.videoID + ".mp4");
+                                fs.unlink(storagePath + selection.videoID + selection.extension);
                             } catch (err) {
                                 console.log(err);
                             }
