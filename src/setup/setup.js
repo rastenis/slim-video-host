@@ -1,6 +1,6 @@
 const jsonfile = require('jsonfile');
 const chalk = require('chalk');
-const prompt = require('prompt-sync')();
+const prompt = require('prompt-sync')({ sigint: true });
 const configPath = 'config.json';
 
 //base values (example config)
@@ -21,9 +21,9 @@ let config = {
 };
 
 // all of this will be more or less sync
-console.log(chalk.bold.bgYellow.black("                                                    "));
-console.log(chalk.underline.bold.bgYellow.black("SUCCESS! Starting setup...                          "));
-console.log(chalk.bold.bgYellow.black("                                                    "));
+console.log(chalk.bgYellow.black("                                                    "));
+console.log(chalk.bold.bgYellow.black("SUCCESS! Starting setup...                          "));
+console.log(chalk.bgYellow.black("                                                    "));
 
 config.file_path = prompt('Enter video storage path (ENTER for default):', config.file_path);
 
@@ -36,8 +36,8 @@ config.mail.username = prompt('Enter gmail username:');
 
 config.mail.password = prompt('Enter gmail password:', null, { echo: "*" });
 
-console.log(chalk.bold.bgYellow.black("                                                    "));
-console.log(chalk.underline.bold.bgYellow.black("SETUP DONE!                                         "));
-console.log(chalk.bold.bgYellow.black("                                                    "));
+console.log(chalk.bgYellow.black("                                                    "));
+console.log(chalk.bgYellow.black.bold("SETUP DONE!                                         "));
+console.log(chalk.bgYellow.black("                                                    "));
 
 jsonfile.writeFileSync(configPath, config);
