@@ -1,6 +1,5 @@
 {
     "file_path": "static/videos/",
-    "session_key": "very-secret-super-secure-key",
     "video_link_prefix": "https://yourHostname.domain/v/",
     "total_space": 100000000000,
     "mail": {

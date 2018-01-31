@@ -2,6 +2,7 @@ const jsonfile = require('jsonfile');
 const chalk = require('chalk');
 const prompt = require('prompt-sync')({ sigint: true });
 const configPath = 'config.json';
+const figlet = require('figlet');
 
 //base values (example config)
 let config = {
@@ -21,8 +22,16 @@ let config = {
 };
 
 // all of this will be more or less sync
+
+// outputting intro splash
+console.log(chalk.yellow(figlet.textSync('S-VidHost', {
+    font: 'Doom',
+    horizontalLayout: 'default',
+    verticalLayout: 'default'
+})));
+
 console.log(chalk.bgYellow.black("                                                    "));
-console.log(chalk.bold.bgYellow.black("SUCCESS! Starting setup...                          "));
+console.log(chalk.bgYellow.black("SUCCESS! Starting setup...                          "));
 console.log(chalk.bgYellow.black("                                                    "));
 
 config.file_path = prompt('Enter video storage path (ENTER for default):', config.file_path);
