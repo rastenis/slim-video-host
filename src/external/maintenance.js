@@ -2,6 +2,7 @@ const fs = require('fs-extra');
 var db = require('../external/db.js');
 const chalk = require('chalk');
 const async = require('async');
+const exec = require('child_process').exec;
 
 
 function preLaunch(videoDir) {
@@ -41,10 +42,32 @@ function preLaunch(videoDir) {
                                 });
                             }
                             done();
-                        })
+                        });
                     },
                     function(done) {
+                        fs.pathExists(videoDir + "thumbs/" + video.videoID + ".jpg", (err, exists) => {
+                            if (err) {
+                                console.log(err);
+                            }
+                            if (!exists) {
+                                console.log(chalk.bgYellow.black("WARN! Video " + video.videoID + " has no thumbnail! Creating..."));
+                                //savinu thumbnail
+                                try {
+                                    exec("ffmpeg -i '../../" + videoDir + video.videoID + video.extension + "' -ss 0 -vframes 1 '../../" + videoDir + "thumbs/" + video.videoID + ".jpg'", {
+                                        cwd: __dirname
+                                    }, function(error, stdout, stderr) {
+                                        if (error) {
+                                            console.log(error);
+                                        }
+                                    });
+                                } catch (e) {
+                                    console.log(e);
+                                    console.log(chalk.bgYellow.black("WARN") + "failed to save thumbnail ");
+                                }
 
+                            }
+                            done();
+                        });
                     }
                 ], function(err) {
                     if (err) {
