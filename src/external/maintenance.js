@@ -5,6 +5,10 @@ const async = require('async');
 const exec = require('child_process').exec;
 
 
+Array.prototype.diff = function(a) {
+    return this.filter(function(i) { return a.indexOf(i) < 0; });
+};
+
 function preLaunch(videoDir) {
 
     // make sure the designated video directory is up
@@ -32,7 +36,7 @@ function preLaunch(videoDir) {
             docs.forEach((video) => {
 
                 // adding for further cleaning
-                videoNames.push(video.videoID + video.video.extension);
+                videoNames.push(video.videoID + video.extension);
                 thumbnailNames.push(video.videoID + ".jpg");
 
                 async.waterfall([
@@ -87,13 +91,24 @@ function preLaunch(videoDir) {
             fs.readdir(videoDir, (err, files) => {
                 if (docs.length < files.length - 1) {
                     //console.log("WARN! Detected undeleted video files.");
-                    if (files.includes(video.videoID + video.video.extension)) {
 
+                    // leaving the thumbs dir alone
+                    let index = files.indexOf("thumbs");
+                    files.splice(index, 1);
+
+                    let difference = files.diff(videoNames);
+                    if (difference.length != 0) {
+                        difference.forEach((item) => {
+                            //removing unneeded
+                            console.log("unlinking " + videoDir + item);
+                            fs.unlink(videoDir + item, function(err) {
+                                if (err) {
+                                    console.log(err);
+                                }
+                            });
+                        });
                     }
                 }
-                console.log(files);
-
-                console.log(files.length - 1 + " vs this(in db): " + docs.length);
             });
 
             fs.readdir(videoDir + "thumbs/", (err, files) => {
