@@ -63,7 +63,7 @@ app.use(fileUpload({
 }));
 app.use(bodyParser.json());
 app.use(session({
-    secret: config.session_key,
+    secret: crypto.randomBytes(23).toString('hex'),
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -824,7 +824,7 @@ app.post('/api/newLink', function(req, res) {
         returner.newData = req.body.selection;
         req.body.selection.forEach((sel, index) => {
             var newVideoID = shortid.generate();
-            var newVidLink = config.video_link_prefix + newVideoID;
+            var newVidLink = config.host_prefix + "v/" + newVideoID;
 
             async.waterfall([function(done) {
                 db.videos.update({
@@ -1295,7 +1295,7 @@ app.post('/api/upload', function(req, res) {
                             } else {
                                 // dedam video i storage
                                 var videoID = shortid.generate();
-                                var vidLink = config.video_link_prefix + videoID;
+                                var vidLink = config.host_prefix + "v/" + videoID;
                                 console.log(chalk.bgGreen.black("storing video!"));
 
                                 db.videos.insert({
