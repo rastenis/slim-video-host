@@ -21,12 +21,20 @@ function preLaunch(videoDir) {
         }
     });
 
+    let videoNames = [],
+        thumbnailNames = [];
+
     //checking through all thumbnails & the videos themselves
     db.videos.find({}, function(err, docs) {
         if (err) {
             console.log(err);
         } else {
             docs.forEach((video) => {
+
+                // adding for further cleaning
+                videoNames.push(video.videoID + video.video.extension);
+                thumbnailNames.push(video.videoID + ".jpg");
+
                 async.waterfall([
                     function(done) {
                         fs.pathExists(videoDir + video.videoID + video.extension, (err, exists) => {
@@ -34,7 +42,7 @@ function preLaunch(videoDir) {
                                 console.log(err);
                             }
                             if (!exists) {
-                                console.log(chalk.bgRed.black("ERROR! Video " + video.videoID + " has no file! Deleting..."));
+                                //console.log(chalk.bgRed.black("ERROR! Video " + video.videoID + " has no file! Deleting..."));
                                 db.videos.remove({ videoID: video.videoID }, {}, function(err) {
                                     if (err) {
                                         console.log(err);
@@ -50,7 +58,7 @@ function preLaunch(videoDir) {
                                 console.log(err);
                             }
                             if (!exists) {
-                                console.log(chalk.bgYellow.black("WARN! Video " + video.videoID + " has no thumbnail! Creating..."));
+                                //console.log(chalk.bgYellow.black("WARN! Video " + video.videoID + " has no thumbnail! Creating..."));
                                 //savinu thumbnail
                                 try {
                                     exec("ffmpeg -i '../../" + videoDir + video.videoID + video.extension + "' -ss 0 -vframes 1 '../../" + videoDir + "thumbs/" + video.videoID + ".jpg'", {
@@ -61,19 +69,38 @@ function preLaunch(videoDir) {
                                         }
                                     });
                                 } catch (e) {
-                                    console.log(e);
                                     console.log(chalk.bgYellow.black("WARN") + "failed to save thumbnail ");
                                 }
-
                             }
                             done();
                         });
                     }
+
                 ], function(err) {
                     if (err) {
                         console.log(err);
                     }
                 });
+            });
+
+
+            fs.readdir(videoDir, (err, files) => {
+                if (docs.length < files.length - 1) {
+                    //console.log("WARN! Detected undeleted video files.");
+                    if (files.includes(video.videoID + video.video.extension)) {
+
+                    }
+                }
+                console.log(files);
+
+                console.log(files.length - 1 + " vs this(in db): " + docs.length);
+            });
+
+            fs.readdir(videoDir + "thumbs/", (err, files) => {
+                if (docs.length < files.length) {
+                    //console.log("WARN! Detected undeleted video thumbnails.");
+                }
+                console.log(files.length + " vs this(in db): " + docs.length);
             });
         }
     });
