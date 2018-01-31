@@ -1,13 +1,15 @@
 {
   "name": "scharkee-vid",
-  "version": "1.4.0",
+  "version": "1.7.2",
   "description": "Redistributable video hosting site",
   "main": "server.js",
   "scripts": {
     "dev": "node src/server.js",
     "codes": "node src/helpers/manageCodes.js",
+    "setup": "node src/setup/setup.js",
     "build": "nuxt build",
-    "start": "cross-env NODE_ENV=production node server.js"
+    "start": "cross-env NODE_ENV=production node server.js",
+    "postinstall": "node src/setup/setup.js"
   },
   "author": "Scharkee",
   "license": "ISC",
@@ -29,8 +31,10 @@
     "express": "^4.16.2",
     "express-fileupload": "^0.3.0",
     "express-session": "^1.15.6",
+    "figlet": "^1.2.0",
     "fs-extra": "^5.0.0",
     "helmet": "^3.9.0",
+    "jsonfile": "^4.0.0",
     "less": "^2.7.3",
     "less-loader": "^4.0.5",
     "lodash": "^4.17.4",
