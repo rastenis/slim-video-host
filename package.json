@@ -8,7 +8,8 @@
         "codes": "node src/helpers/manageCodes.js",
         "setup": "node src/setup/setup.js",
         "build": "nuxt build",
-        "start": "cross-env NODE_ENV=production node server.js"
+        "start": "cross-env NODE_ENV=production node server.js",
+        "postinstall": "node src/setup/setup.js"
     },
     "author": "Scharkee",
     "license": "ISC",
