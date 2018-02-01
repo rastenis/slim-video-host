@@ -6,7 +6,9 @@ const exec = require('child_process').exec;
 
 
 Array.prototype.diff = function(a) {
-    return this.filter(function(i) { return a.indexOf(i) < 0; });
+    return this.filter(function(i) {
+        return a.indexOf(i) < 0;
+    });
 };
 
 function preLaunch(videoDir) {
@@ -47,7 +49,9 @@ function preLaunch(videoDir) {
                             }
                             if (!exists) {
                                 //console.log(chalk.bgRed.black("ERROR! Video " + video.videoID + " has no file! Deleting..."));
-                                db.videos.remove({ videoID: video.videoID }, {}, function(err) {
+                                db.videos.remove({
+                                    videoID: video.videoID
+                                }, {}, function(err) {
                                     if (err) {
                                         console.log(err);
                                     }
@@ -87,7 +91,6 @@ function preLaunch(videoDir) {
                 });
             });
 
-
             fs.readdir(videoDir, (err, files) => {
                 if (docs.length < files.length - 1) {
                     //console.log("WARN! Detected undeleted video files.");
@@ -100,7 +103,6 @@ function preLaunch(videoDir) {
                     if (difference.length != 0) {
                         difference.forEach((item) => {
                             //removing unneeded
-                            console.log("unlinking " + videoDir + item);
                             fs.unlink(videoDir + item, function(err) {
                                 if (err) {
                                     console.log(err);
@@ -110,12 +112,23 @@ function preLaunch(videoDir) {
                     }
                 }
             });
-
+            //LEFTOFF: remove uneeeded thumbs 
             fs.readdir(videoDir + "thumbs/", (err, files) => {
                 if (docs.length < files.length) {
                     //console.log("WARN! Detected undeleted video thumbnails.");
+
+                    let difference = files.diff(thumbnailNames);
+                    if (difference.length != 0) {
+                        difference.forEach((item) => {
+                            //removing unneeded
+                            fs.unlink(videoDir + "thumbs/" + item, function(err) {
+                                if (err) {
+                                    console.log(err);
+                                }
+                            });
+                        });
+                    }
                 }
-                console.log(files.length + " vs this(in db): " + docs.length);
             });
         }
     });
