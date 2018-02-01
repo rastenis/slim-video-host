@@ -21,16 +21,46 @@ mainLoop: while (true) {
             break;
         case "2":
             let conf = prompt('Are you sure? This is irreversible!(1=yes,0=no):');
-            if (conf) {
+            if (conf === "1") {
                 let path = "../../" + config.file_path;
-                fs.remove(path, err => {
+
+                async.waterfall([
+                    function(done) {
+                        //removing all videos + thumbnails
+                        fs.remove(path, err => {
+                            if (err) {
+                                console.log(err);
+                            } else {
+                                console.log('Wiped videos + thumbnails...');
+                            }
+                            done();
+                        });
+                    },
+                    function(done) {
+                        fs.remove("../../db", err => {
+                            if (err) {
+                                console.log(err);
+                            } else {
+                                console.log('Wiped databases...');
+                            }
+                            done();
+                        });
+                    },
+                    function(done) {
+                        fs.remove("../../config.json", err => {
+                            if (err) {
+                                console.log(err);
+                            } else {
+                                console.log('Wiped configuration...');
+                            }
+                            done();
+                        });
+                    }
+                ], function(err) {
                     if (err) {
                         console.log(err);
-                    } else {
-                        console.log('Success! The system has been wiped.');
                     }
-
-                })
+                });
             }
             break;
         case "":
