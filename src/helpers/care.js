@@ -2,11 +2,13 @@ const chalk = require('chalk');
 const prompt = require('prompt-sync')({});
 var maintenance = require('../external/maintenance.js');
 const fs = require('fs-extra');
-const config = require('../../config');
 const async = require('async');
+
+const config = require('../../config');
 
 
 mainLoop: while (true) {
+    console.log(" ");
     console.log(chalk.bgCyan.black("========MAINTENANCE========"));
     console.log("1. Perform maintenance");
     console.log("2. " + chalk.red("Delete all data (FULL RESET)"));
@@ -22,12 +24,11 @@ mainLoop: while (true) {
         case "2":
             let conf = prompt('Are you sure? This is irreversible!(1=yes,0=no):');
             if (conf === "1") {
-                let path = "../../" + config.file_path;
 
                 async.waterfall([
                     function(done) {
                         //removing all videos + thumbnails
-                        fs.remove(path, err => {
+                        fs.remove(config.file_path, err => {
                             if (err) {
                                 console.log(err);
                             } else {
@@ -37,7 +38,7 @@ mainLoop: while (true) {
                         });
                     },
                     function(done) {
-                        fs.remove("../../db", err => {
+                        fs.remove("db", err => {
                             if (err) {
                                 console.log(err);
                             } else {
@@ -47,7 +48,7 @@ mainLoop: while (true) {
                         });
                     },
                     function(done) {
-                        fs.remove("../../config.json", err => {
+                        fs.remove("config.json", err => {
                             if (err) {
                                 console.log(err);
                             } else {
@@ -60,12 +61,16 @@ mainLoop: while (true) {
                     if (err) {
                         console.log(err);
                     }
+                    console.log("FINISHED! Leaving maintenance....");
+                    leave();
                 });
+                break mainLoop;
             }
             break;
         case "":
             console.log("finishing up....");
             break mainLoop;
+            leave();
             break;
 
         default:
@@ -73,9 +78,12 @@ mainLoop: while (true) {
     }
 }
 
-setTimeout(() => {
-    // slight buffer
-    console.log(chalk.green("BYE!"));
-    process.exit(0);
 
-}, 1000);
+function leave() {
+    setTimeout(() => {
+        // slight buffer
+        console.log(chalk.green("BYE!"));
+        process.exit(0);
+
+    }, 1000);
+}
