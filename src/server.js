@@ -1,5 +1,4 @@
 //deps
-require('dotenv').config();
 process.env.DEBUG = 'nuxt:*'
 const bcrypt = require('bcrypt');
 const shortid = require('shortid');
