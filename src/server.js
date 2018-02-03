@@ -1,5 +1,4 @@
 //deps
-require('dotenv').config();
 process.env.DEBUG = 'nuxt:*'
 const bcrypt = require('bcrypt');
 const shortid = require('shortid');
@@ -20,11 +19,11 @@ const du = require('du');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const exec = require('child_process').exec;
-
+const NedbStore = require('nedb-session-store')(session);
 
 const config = require('../config');
 const maintenance = require('./external/maintenance.js');
-var db = require('./external/db.js');
+const db = require('./external/db.js');
 
 
 //isemu _ ir - is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
@@ -57,7 +56,10 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         maxAge: 6 * 60 * 60 * 1000
-    }
+    },
+    store: new NedbStore({
+        filename: 'db/persistance'
+    })
 }));
 
 // post for the login procedure
