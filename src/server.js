@@ -57,7 +57,7 @@ app.use(session({
 
 // post for the login procedure
 app.post('/api/login', function(req, res) {
-    console.log("LOGGING IN | requester: " + req.body.username);
+    log("LOGIN | requester: " + req.body.username, 0);
     db.users.find({
         username: req.body.username.toLowerCase()
     }, function(err, docs) {
@@ -67,11 +67,11 @@ app.post('/api/login', function(req, res) {
             performSecurityChecks(docs);
             // user exists, no duplicates. Proceeding to the password check
             if (bcrypt.compareSync(req.body.password, docs[0].password)) { //password matches
-                console.log(chalk.green("passwords match!"));
+                log(chalk.green("LOGIN | passwords match!"), 0);
                 req.session.authUser = docs[0];
                 return res.json(docs[0]);
             } else {
-                console.log(chalk.red("passwords don't match!"));
+                log(chalk.red("LOGIN | passwords don't match!"));
                 res.status(556).json({
                     error: 'Bad credentials'
                 });
@@ -92,7 +92,7 @@ app.post('/api/login', function(req, res) {
 // video fetch route
 app.get('/api/cv/:id', function(req, res) {
 
-    console.log("FETCHING VIDEO | id: " + req.params.id);
+    log("FETCHING VIDEO | id: " + req.params.id, 0);
 
     var returner = {};
     returner.ratings = {};
@@ -114,11 +114,11 @@ app.get('/api/cv/:id', function(req, res) {
             }, function(err, numAffected, affectedDocument, upsert) {
 
                 if (!affectedDocument) {
-                    console.log("FETCHING VIDEO | no such video!");
+                    log("FETCHING VIDEO | no such video!", 0);
                     returner.video = affectedDocument;
                     returner.error = 1;
                 } else {
-                    console.log("FETCHING VIDEO | added a view to video " + affectedDocument.videoID);
+                    log("FETCHING VIDEO | added a view to video " + affectedDocument.videoID, 0);
                     affectedDocument.src = '/videos/' + req.params.id + affectedDocument.extension;
                     returner.video = affectedDocument;
                     returner.error = 0;
@@ -144,7 +144,7 @@ app.get('/api/cv/:id', function(req, res) {
                     videoID: req.params.id
                 }, {}, function(err, docs) {
                     if (docs.length > 2 || docs.length < 0) {
-                        console.log(chalk.yellow("FETCHING VIDEO | RATING ERROR==========="));
+                        log(chalk.yellow("FETCHING VIDEO | RATING ERROR==========="), 1);
                     }
                     returner.userRatings.liked = false;
                     returner.userRatings.disliked = false;
@@ -162,7 +162,7 @@ app.get('/api/cv/:id', function(req, res) {
                     done();
                 });
             } else {
-                console.log("FETCHING VIDEO | anonymous viewer");;
+                log("FETCHING VIDEO | anonymous viewer", 0);;
                 done();
             }
         }, function(done) {
@@ -183,7 +183,7 @@ app.get('/api/cv/:id', function(req, res) {
             });
         }], function(err) {
             if (err) {
-                console.log(err);
+                log(err, 1);
             }
             return res.json(returner);
         });
@@ -191,11 +191,11 @@ app.get('/api/cv/:id', function(req, res) {
     }
 });
 
-
+// token checking route
 app.get('/api/checkToken/:token', function(req, res) {
     var returner = {};
     returner.valid = false;
-    console.log("checking for token " + req.params.token);
+    log("PASS RESET | checking for token " + req.params.token, 0);
     db.users.find({
         resetToken: req.params.token,
         tokenExpiry: {
@@ -203,21 +203,21 @@ app.get('/api/checkToken/:token', function(req, res) {
         }
     }, function(err, docs) {
         if (docs.length > 1) {
-            console.log("duplicate tokens?? purge all");
+            console.log("PASS RESET | duplicate tokens; purging all", 1);
             returner.error = true;
             db.users.remove({}, {
                 multi: true
             }, function(err, docs) {
                 if (err) {
-                    console.log(err);
+                    console.log("PASS RESET | " + err, 1);
                 }
             });
         } else if (docs.length < 1) {
-            console.log("no such token.");
+            console.log("PASS RESET | no such token.", 0);
             returner.token = null;
             returner.error = true;
         } else { //token found
-            console.log("found token!");
+            console.log("PASS RESET | found token!", 0);
             returner.token = docs[0].resetToken;
             returner.valid = true;
             returner.error = false;
