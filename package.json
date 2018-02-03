@@ -7,7 +7,9 @@
         "dev": "node src/server.js",
         "codes": "node src/helpers/manageCodes.js",
         "care": "node src/helpers/care.js",
+        "maintenance": "node src/helpers/care.js",
         "setup": "node src/setup/setup.js",
+        "config": "node src/setup/setup.js",
         "build": "nuxt build",
         "start": "cross-env NODE_ENV=production node server.js",
         "postinstall": "node src/setup/setup.js"

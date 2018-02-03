@@ -1,6 +1,5 @@
 const chalk = require('chalk');
 const prompt = require('prompt-sync')({});
-var maintenance = require('../external/maintenance.js');
 const fs = require('fs-extra');
 const async = require('async');
 
@@ -18,7 +17,7 @@ mainLoop: while (true) {
 
     switch (choice) {
         case "1":
-            maintenance.preLaunch(config.file_path);
+            require('../external/maintenance.js').preLaunch(config.file_path);
             console.log(chalk.green("DONE! Maintenance launched!"));
             break;
         case "2":
@@ -38,7 +37,7 @@ mainLoop: while (true) {
                         });
                     },
                     function(done) {
-                        fs.remove("db", err => {
+                        fs.remove("./db", err => {
                             if (err) {
                                 console.log(err);
                             } else {
