@@ -1369,7 +1369,7 @@ app.post('/api/logout', function(req, res) {
 //TODO: recalculate user remaining space each start?
 
 //nuxt config
-let nuxt_config = require('./nuxt.config.js');
+let nuxt_config = require('../nuxt.config.js');
 nuxt_config.dev = !(process.env.NODE_ENV === 'production');
 const nuxt = new Nuxt(nuxt_config);
 
