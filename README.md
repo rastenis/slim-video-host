@@ -1,4 +1,4 @@
-# [WIP] S-Vidhost
+# [WIP] s-vidhost
 
 ### a redistributable private video hosting platform.
 

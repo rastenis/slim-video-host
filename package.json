@@ -1,5 +1,5 @@
 {
-    "name": "scharkee-vid",
+    "name": "s-vidhost",
     "version": "1.8.1",
     "description": "Redistributable video hosting site",
     "main": "server.js",
