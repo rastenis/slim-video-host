@@ -228,26 +228,24 @@ app.get('/api/checkToken/:token', function(req, res) {
 });
 
 app.post('/api/requestReset', function(req, res) {
-    console.log("reset request");
+    console.log("PASS RESET | reset request", 0);
     var returner = {};
     returner.error = true;
     returner.token = null;
-    console.log(req.body.email);
     db.users.find({
         email: req.body.email
     }, function(err, docs) {
         if (docs.length > 1) {
-            console.log(chalk.bgRed.white("duplicate account emails. CRITICAL"));
+            console.log(chalk.bgRed.white("PASS RESET | duplicate account emails. CRITICAL"), 1);
             returner.error = true;
         } else if (docs.length < 1) {
-            console.log("no such user.");
+            console.log("PASS RESET | no such user.", 0);
             returner.error = true;
             returner.msg = "No account with that email.";
             returner.msgType = 'error';
             res.json(returner);
         } else { //token found
             let token = crypto.randomBytes(23).toString('hex');
-            console.log("generated token is " + token);
 
             var nmlTrans = nodemailer.createTransport({
                 service: 'Gmail',
@@ -270,7 +268,7 @@ app.post('/api/requestReset', function(req, res) {
             };
             nmlTrans.sendMail(mailOptions, function(err) {
                 if (err) {
-                    console.log(err);
+                    console.log("PASS RESET | " + err, 1);
                 }
             });
 
@@ -295,7 +293,7 @@ app.post('/api/requestReset', function(req, res) {
 });
 
 app.post('/api/changePassword', function(req, res) {
-    console.log("PASSWORD CHANGE || " + (req.body.resetType == 1 ? "normal" : "token"));
+    console.log("PASSWORD CHANGE || " + (req.body.resetType == 1 ? "normal" : "token"), 0);
     var returner = {};
     returner.error = 0;
     // single route for both the standard password reset and the 'forgot password' token based reset
@@ -316,18 +314,18 @@ app.post('/api/changePassword', function(req, res) {
             upsert: false,
             returnUpdatedDocs: true
         }, function(err, numAffected, affectedDocs) {
-            console.log("found the token");
+            console.log("PASSWORD CHANGE || found the token", 0);
             if (numAffected == 0) {
-                console.log("password was NOT successfully changed");
+                console.log("PASSWORD CHANGE || password was NOT successfully changed", 0);
                 returner.msg = "Password reset token is invalid or has expired.";
                 returner.msgType = "error";
                 returner.error = 1;
             } else if (numAffected > 1) {
                 //shouldnt ever happen, severe edge
-                console.log(chalk.bgRed.white("CRITICAL! ") + "multiple passwords updated somehow");
+                console.log(chalk.bgRed.white("PASSWORD CHANGE || CRITICAL! ") + "multiple passwords updated somehow", 1);
             } else {
                 //all ok
-                console.log("password was successfully changed");
+                console.log("PASSWORD CHANGE || password was successfully changed", 0);
                 returner.msg = "You have successfully changed your password!";
                 returner.msgType = "success";
                 returner.error = 0;
@@ -351,7 +349,7 @@ app.post('/api/changePassword', function(req, res) {
             }, function(fetchedUser, done) {
                 bcrypt.compare(req.body.currentPassword, fetchedUser.password, function(err, valid) {
                     if (err) {
-                        console.log(err);
+                        console.log("PASSWORD CHANGE || " + err, 1);
                     } else {
                         done(null, valid);
                     }
@@ -372,7 +370,7 @@ app.post('/api/changePassword', function(req, res) {
                         upsert: false
                     }, function(err) {
                         if (err) {
-                            console.log(err);
+                            console.log("PASSWORD CHANGE || " + err, 1);
                         } else {
                             returner.msg = "You have successfully changed your password!";
                             returner.msgType = "success";
@@ -386,7 +384,7 @@ app.post('/api/changePassword', function(req, res) {
                 }
             }], function(err) {
                 if (err) {
-                    console.log(err);
+                    console.log("PASSWORD CHANGE || " + err, 1);
                 } else {
                     res.json(returner);
                 }
@@ -399,7 +397,7 @@ app.post('/api/changePassword', function(req, res) {
 app.post('/api/act', function(req, res) {
     //ignore unauthorized acts
     if (req.session.authUser) {
-        console.log("ACT | requester: " + req.session.authUser.username);
+        console.log("ACT | requester: " + req.session.authUser.username, 0);
         async.waterfall([
             function(done) {
                 db.ratings.find({
@@ -407,7 +405,7 @@ app.post('/api/act', function(req, res) {
                     videoID: req.body.videoID
                 }, function(err, docs) {
                     if (docs.length > 2 || docs.length < 0) {
-                        console.log("RATING ERROR===========");
+                        console.log("ACT | CRITICAL! rating error.", 1);
                     }
                     var userRatings = {};
                     userRatings.liked = false;
@@ -426,7 +424,6 @@ app.post('/api/act', function(req, res) {
                 });
             },
             function(userRatings, done) {
-                console.log(userRatings.liked);
                 var prep = {};
                 prep.action = req.body.action;
                 prep.revert = false;
@@ -453,7 +450,7 @@ app.post('/api/act', function(req, res) {
                         action: prep.action
                     }, {}, function(err) {
                         if (err) {
-                            console.log(err);
+                            console.log("ACT | " + err, 1);
                         }
                         done();
                     });
@@ -464,7 +461,7 @@ app.post('/api/act', function(req, res) {
                         action: prep.action
                     }, function(err) {
                         if (err) {
-                            console.log(err);
+                            console.log("ACT | " + err, 1);
                         }
                         done();
                     });
@@ -472,7 +469,7 @@ app.post('/api/act', function(req, res) {
             }
         ], function(err) {
             if (err) {
-                console.log(err);
+                console.log("ACT | " + err, 1);
             }
         });
     }
@@ -486,7 +483,7 @@ app.post('/api/register', function(req, res) {
             username: req.body.username.toLowerCase()
         }, function(err, docs) {
             du('static/videos', function(err, size) {
-                console.log('The size of the video folder is:', size, 'bytes')
+                console.log('REGISTRATION | The size of the video folder is:', size, 'bytes', 0)
                 if (size >= config.total_space) {
                     enoughSpace = false;
                 }
@@ -497,26 +494,26 @@ app.post('/api/register', function(req, res) {
 
         // checks for duplicate usernames
         if (docs.length != 0) { // user with duplicate username exists
-            console.log(chalk.bgRed("Failed account creation (duplicate username)"));
+            console.log(chalk.bgRed("REGISTRATION | Failed account creation (duplicate username)"), 0);
             res.status(599).json({
                 error: 'An account with that username already exists.',
             });
         } else if (!enoughSpace) {
-            console.log(chalk.bgRed("Failed account creation (TOTAL_SPACE exceeded)"));
+            console.log(chalk.bgRed("REGISTRATION | Failed account creation (TOTAL_SPACE exceeded)"), 1);
             res.status(598).json({
                 error: 'The server cannot accept new registrations at this moment.'
             });
         } else { //ok, proceeding with the creation
             var storageSpace = defaultStorageSpace;
             var userStatus = defaultUserStatus;
-            console.log(chalk.bgRed(chalk.bgCyanBright.black("no duplicate account! proceeding with the creation of the account.")));
+            console.log(chalk.bgRed(chalk.bgCyanBright.black("REGISTRATION | no duplicate account! proceeding with the creation of the account.")), 0);
             async.waterfall([
                 function(done) {
                     db.users.find({
                         email: req.body.email
                     }, function(err, docs) {
                         if (docs.length != 0) { //duplicate email
-                            console.log(chalk.bgRed("Failed account creation (duplicate emails)"));
+                            console.log(chalk.bgRed("REGISTRATION | Failed account creation (duplicate emails)"), 0);
                             return res.status(597).json({
                                 error: 'An account with that email already exists.'
                             });
@@ -545,7 +542,7 @@ app.post('/api/register', function(req, res) {
                                 }
                             }, {}, function(err) {
                                 if (err) {
-                                    console.log(err);
+                                    console.log("REGISTRATION | " + err, 1);
                                 }
                             });
                             done(null, docs[0]);
@@ -589,20 +586,20 @@ app.post('/api/register', function(req, res) {
                         remainingSpace: storageSpace,
                         userStatus: userStatus
                     }, function(err, doc) {
-                        console.log(chalk.bgCyanBright.black("successfully inserted user " + doc.username));
+                        console.log(chalk.bgCyanBright.black("REGISTRATION | successfully inserted user " + doc.username), 0);
                         req.session.authUser = doc; // attaching to session for easy access
                         return res.json(doc);
                     });
                 }
             ], function(err, res) {
                 if (err) {
-                    console.log(chalk.bgRed.white(err));
+                    console.log(chalk.bgRed.white("REGISTRATION | " + err, 1));
                 }
             });
         }
     }], function(err) {
         if (err) {
-            console.log(err);
+            console.log("REGISTRATION | " + err, 1);
         }
     });
 });
@@ -611,14 +608,14 @@ app.post('/api/register', function(req, res) {
 app.post('/api/getVideos', function(req, res) {
 
     var returner = {};
-    console.log("VIDEOS | requester : " + req.body.user.username);
+    console.log("VIDEOS | requester : " + req.body.user.username, 0);
 
     async.waterfall([function(done) {
         db.videos.find({
             username: req.body.user.username.toLowerCase()
         }, function(err, docs) {
             if (err) {
-                console.log(chalk.bgRed.white(err));
+                console.log(chalk.bgRed.white("VIDEOS | " + err, 1));
                 returner.error = 1;
                 return res.json(null);
             }
@@ -652,7 +649,7 @@ app.post('/api/getVideos', function(req, res) {
                 }
             ], function(err) {
                 if (err) {
-                    console.log(err);
+                    console.log("VIDEOS | " + err, 1);
                 }
                 if (index == (docs.length - 1)) {
                     returner.error = 0;
@@ -663,7 +660,7 @@ app.post('/api/getVideos', function(req, res) {
         });
     }], function(err) {
         if (err) {
-            console.log(err);
+            console.log("VIDEOS | " + err, 1);
         }
     });
 
@@ -673,7 +670,7 @@ app.post('/api/getVideos', function(req, res) {
 app.post('/api/upgradeStorage', function(req, res) {
 
     var returner = {};
-    console.log("UPGRADE | requester : " + req.body.user.username + ", code:" + req.body.code);
+    console.log("UPGRADE | requester : " + req.body.user.username + ", code:" + req.body.code, 0);
 
     db.codes.find({
         code: req.body.code,
@@ -681,7 +678,7 @@ app.post('/api/upgradeStorage', function(req, res) {
         active: true
     }, function(err, docs) {
         if (err) {
-            console.log(chalk.bgRed.white(err));
+            console.log(chalk.bgRed.white("UPGRADE | " + err, 1));
             returner.error = 1;
             returner.msg = "server error :(";
             returner.msgType = "error";
@@ -690,7 +687,7 @@ app.post('/api/upgradeStorage', function(req, res) {
             returner.error = 1;
             returner.msg = "No such code exists.";
             returner.msgType = "error";
-            console.log("unsuccessfull no code upgrade");
+            console.log("UPGRADE | unsuccessful: no such code", 0);
         } else {
             db.users.update({
                 username: req.body.user.username.toLowerCase()
@@ -698,16 +695,24 @@ app.post('/api/upgradeStorage', function(req, res) {
                 $inc: {
                     totalSpace: docs[0].space
                 }
-            }, {}, function(err, doc) {});
+            }, {}, function(err, doc) {
+                if (err) {
+                    log("UPGRADE | " + err, 1);
+                }
+            });
             db.codes.update({
                 code: req.body.code
             }, {
                 $set: {
                     active: false
                 }
-            }, {}, function(err, doc) {});
+            }, {}, function(err, doc) {
+                if (err) {
+                    log("UPGRADE | " + err, 1);
+                }
+            });
 
-            console.log("successful upgrade");
+            console.log("UPGRADE | successful upgrade", 0);
             returner.error = 0;
             returner.msg = "You have successfully expanded your space limit!";
             returner.msgType = "success";
@@ -718,7 +723,7 @@ app.post('/api/upgradeStorage', function(req, res) {
 
 // route for account deletion
 app.post('/api/deleteAccount', function(req, res) {
-    console.log("ACCOUNT DELETION | requester: " + req.session.authUser.username);
+    console.log("ACCOUNT DELETION | requester: " + req.session.authUser.username, 0);
     var returner = {};
     returner.error = false;
     var opCount = 0;
@@ -734,13 +739,13 @@ app.post('/api/deleteAccount', function(req, res) {
                 email: req.session.authUser.email
             }, function(err, docs) {
                 if (err) {
-                    console.log(err);
+                    console.log("ACCOUNT DELETION | " + err, 1);
                 } else {
                     if (docs.length == 0) {
-                        console.log(chalk.bgReg.white("CRITICAL! delete reqests for non-existent accounts!"));
+                        console.log(chalk.bgReg.white("ACCOUNT DELETION | CRITICAL! delete reqests for non-existent accounts!"), 1);
                         returner.error = 1;
                     } else if (docs.length > 1) {
-                        console.log(chalk.bgReg.white("CRITICAL! delete reqest matches multiple accounts!"));
+                        console.log(chalk.bgReg.white("ACCOUNT DELETION | CRITICAL! delete reqest matches multiple accounts!"), 1);
                         returner.error = 1;
                     } else { //all fine, re-fetching to make sure there are no duplicates and that this exact account gets deleted.
                         done(null, docs[0]);
@@ -750,7 +755,7 @@ app.post('/api/deleteAccount', function(req, res) {
         }, function(fetchedUser, done) {
             bcrypt.compare(req.body.passwordConfirmation, fetchedUser.password, function(err, valid) {
                 if (err) {
-                    console.log(err);
+                    console.log("ACCOUNT DELETION | " + err, 1);
                 } else {
                     returner.error = !valid;
                     done(null, valid);
@@ -772,7 +777,7 @@ app.post('/api/deleteAccount', function(req, res) {
                     multi: true
                 }, function(err) {
                     if (err) {
-                        console.log(err);
+                        console.log("ACCOUNT DELETION | " + err, 1);
                         returner.error = 1;
                         returner.msg = "An internal error occured. Please try again later.";
                         returner.msgType = "error";
@@ -786,6 +791,9 @@ app.post('/api/deleteAccount', function(req, res) {
             }
             //TODO: cycle-remove all videos, thumbnails. Export video deletion to a promise probably
         }], function(err) {
+            if (err) {
+                log("ACCOUNT DELETION | " + err, 1);
+            }
             res.json(returner);
         });
     }
@@ -793,7 +801,7 @@ app.post('/api/deleteAccount', function(req, res) {
 
 // new link generation
 app.post('/api/newLink', function(req, res) {
-    console.log("NEW LINKS | requester: " + req.session.authUser.username);
+    console.log("NEW LINKS | requester: " + req.session.authUser.username, 0);
 
     var returner = {};
     returner.error = false;
@@ -848,7 +856,7 @@ app.post('/api/newLink', function(req, res) {
                     multi: true
                 }, function(err) {
                     if (err) {
-                        console.log(err);
+                        console.log("NEW LINKS | " + err, 1);
                     }
                     done();
 
@@ -858,7 +866,7 @@ app.post('/api/newLink', function(req, res) {
                 if (!returner.error) {
                     fs.rename(config.file_path + sel.videoID + sel.extension, config.file_path + newVideoID + sel.extension, function(err) {
                         if (err) {
-                            console.log(err);
+                            console.log("NEW LINKS | " + err, 1);
                         }
                         done();
                     });
@@ -868,14 +876,14 @@ app.post('/api/newLink', function(req, res) {
                 if (!returner.error) {
                     fs.rename(config.file_path + "thumbs/" + sel.videoID + ".jpg", config.file_path + "thumbs/" + newVideoID + ".jpg", function(err) {
                         if (err) {
-                            console.log(err);
+                            console.log("NEW LINKS | " + err, 1);
                         }
                         done();
                     });
                 }
             }], function(err) {
                 if (err) {
-                    console.log(err);
+                    console.log("NEW LINKS | " + err, 1);
                 }
                 if (opCount == req.body.selection.length - 1) {
                     if (!returner.error) {
@@ -895,7 +903,7 @@ app.post('/api/newLink', function(req, res) {
 
 // route for video name changes
 app.post('/api/rename', function(req, res) {
-    console.log("RENAME | requester: " + req.session.authUser.username);
+    console.log("RENAME | requester: " + req.session.authUser.username, 0);
 
     var returner = {};
     if (!req.session.authUser) {
@@ -916,6 +924,9 @@ app.post('/api/rename', function(req, res) {
         }, {
             upsert: false
         }, function(err, numAffected, affectedDocs) {
+            if (err) {
+                log("RENAME | " + err, 1);
+            }
             if (numAffected < 1) {
                 returner.error = true;
                 returner.msgType = "error";
@@ -935,7 +946,7 @@ app.post('/api/rename', function(req, res) {
 // route for video upload finalization (cancel or confirm)
 app.post('/api/finalizeUpload', function(req, res) {
 
-    console.log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username);
+    console.log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username, 0);
     let returner = {},
         opCount = 0;
     if (!req.session.authUser) {
@@ -947,7 +958,7 @@ app.post('/api/finalizeUpload', function(req, res) {
     }
 
     if (req.body.cancelled) {
-        console.log(chalk.red("upload(s) cancelled"));
+        console.log(chalk.red("UPLOAD FINALIZATION | upload(s) cancelled"), 0);
 
         returner.error = 1;
         returner.msgType = "danger";
@@ -963,7 +974,7 @@ app.post('/api/finalizeUpload', function(req, res) {
         }
         for (const oldName in req.body.newNames) {
             if (req.body.newNames.hasOwnProperty(oldName)) {
-                console.log("got new name " + req.body.newNames[oldName] + " for " + oldName);
+                console.log("UPLOAD FINALIZATION | got new name " + req.body.newNames[oldName] + " for " + oldName, 0);
 
                 const newName = req.body.newNames[oldName].replace(/[^a-z0-9\s]/gi, ""); // should already be clean coming from the client, redundancy
                 let cleanedName = oldName.replace(/[^a-z0-9]/gi, "");
@@ -984,7 +995,7 @@ app.post('/api/finalizeUpload', function(req, res) {
                     },
                     function(err, numAffected, affectedDocuments) {
                         if (err) {
-                            console.log(chalk.bgRed.white(err));
+                            console.log(chalk.bgRed.white("UPLOAD FINALIZATION | " + err, 1));
                             returner.error = 1;
                         }
 
@@ -1007,16 +1018,19 @@ app.post('/api/finalizeUpload', function(req, res) {
             username: req.session.authUser.username,
             confirmed: false
         }, function(err, docs) {
+            if (err) {
+                log("UPLOAD FINALIZATION | " + err, 1);
+            }
             done(null, docs);
         });
     }, function(unconfirmedvideos, done) {
         unconfirmedvideos.forEach(selection => {
-            console.log(chalk.red("removing unconfirmed"));
+            console.log(chalk.red("UPLOAD FINALIZATION | removing unconfirmed"), 0);
             db.videos.find({
                 videoID: selection.videoID
             }, function(err, docs) {
                 if (err) {
-                    console.log(chalk.bgRed.white(err));
+                    console.log(chalk.bgRed.white("UPLOAD FINALIZATION | " + err, 1));
                 } else {
                     db.users.update({
                         username: req.session.authUser.username
@@ -1029,13 +1043,13 @@ app.post('/api/finalizeUpload', function(req, res) {
                         try {
                             fs.unlink(config.file_path + selection.videoID + selection.extension);
                         } catch (err) {
-                            console.log(err);
+                            console.log("UPLOAD FINALIZATION | " + err, 1);
                         }
                         // removing thumbnail
                         try {
                             fs.unlink(config.file_path + "thumbs/" + selection.videoID + ".jpg");
                         } catch (err) {
-                            console.log(err);
+                            console.log("UPLOAD FINALIZATION | " + err, 1);
                         }
                     });
 
@@ -1043,7 +1057,7 @@ app.post('/api/finalizeUpload', function(req, res) {
                         videoID: selection.videoID
                     }, function(err, docs) {
                         if (err) {
-                            console.log(chalk.bgRed.white(err));
+                            console.log(chalk.bgRed.white("UPLOAD FINALIZATION | " + err, 1));
                         }
                         //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
                         //return errors from foreach async operations.
@@ -1055,7 +1069,7 @@ app.post('/api/finalizeUpload', function(req, res) {
         done(); //foreach will be +- synced up
     }], function(err) {
         if (err) {
-            console.log(err);
+            console.log("UPLOAD FINALIZATION | " + err, 1);
         }
     });
 
