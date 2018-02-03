@@ -1,5 +1,5 @@
 //deps
-process.env.DEBUG = 'nuxt:*'
+process.env.DEBUG = process.env.NODE_ENV === 'production' ? '' : 'nuxt:*'
 const bcrypt = require('bcrypt');
 const shortid = require('shortid');
 const chalk = require('chalk');
@@ -20,27 +20,20 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const exec = require('child_process').exec;
 const NedbStore = require('nedb-session-store')(session);
-
 const config = require('../config');
 const maintenance = require('./external/maintenance.js');
 const db = require('./external/db.js');
 
-
-//isemu _ ir - is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
+// removed _ and - from the generator because of issues with nuxt dynamic routing
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
 
-
-
-//default options
+// default options
 var defaultUserStatus = 0; //1 - admin
 var defaultStorageSpace = 10000; // in megabytes
-var defaultTokenExpiry = 1800000; //30 mins
+var defaultTokenExpiry = 1800000; // 30 mins
 
-// video storage path
-const storagePath = config.file_path;
-
-maintenance.preLaunch(storagePath);
-
+// on-start auto maintenance
+maintenance.preLaunch(config.file_path);
 
 app.use(helmet());
 app.use(fileUpload({
@@ -70,7 +63,7 @@ app.post('/api/login', function(req, res) {
     }, function(err, docs) {
 
         try {
-            //checks for duplicate usernames
+            // checks for duplicate usernames
             performSecurityChecks(docs);
             // user exists, no duplicates. Proceeding to the password check
             if (bcrypt.compareSync(req.body.password, docs[0].password)) { //password matches
@@ -89,7 +82,7 @@ app.post('/api/login', function(req, res) {
                     error: e.message
                 });
             } else {
-                //stay silent
+                // stay silent
             }
         }
     });
@@ -135,7 +128,7 @@ app.get('/api/cv/:id', function(req, res) {
         }, function(done) {
             //check if requested video exists
             try {
-                var path = storagePath + req.params.id + returner.video.extension;
+                var path = config.file_path + req.params.id + returner.video.extension;
             } catch (e) {}
 
             if (returner.video && fs.existsSync(path)) {
@@ -863,7 +856,7 @@ app.post('/api/newLink', function(req, res) {
             }, function(done) {
                 // video file renaming
                 if (!returner.error) {
-                    fs.rename(storagePath + sel.videoID + sel.extension, storagePath + newVideoID + sel.extension, function(err) {
+                    fs.rename(config.file_path + sel.videoID + sel.extension, config.file_path + newVideoID + sel.extension, function(err) {
                         if (err) {
                             console.log(err);
                         }
@@ -873,7 +866,7 @@ app.post('/api/newLink', function(req, res) {
             }, function(done) {
                 // thumbnail renaming
                 if (!returner.error) {
-                    fs.rename(storagePath + "thumbs/" + sel.videoID + ".jpg", storagePath + "thumbs/" + newVideoID + ".jpg", function(err) {
+                    fs.rename(config.file_path + "thumbs/" + sel.videoID + ".jpg", config.file_path + "thumbs/" + newVideoID + ".jpg", function(err) {
                         if (err) {
                             console.log(err);
                         }
@@ -1034,13 +1027,13 @@ app.post('/api/finalizeUpload', function(req, res) {
                     }, {}, function() {
                         // removing video from storage
                         try {
-                            fs.unlink(storagePath + selection.videoID + selection.extension);
+                            fs.unlink(config.file_path + selection.videoID + selection.extension);
                         } catch (err) {
                             console.log(err);
                         }
                         // removing thumbnail
                         try {
-                            fs.unlink(storagePath + "thumbs/" + selection.videoID + ".jpg");
+                            fs.unlink(config.file_path + "thumbs/" + selection.videoID + ".jpg");
                         } catch (err) {
                             console.log(err);
                         }
@@ -1169,13 +1162,13 @@ app.post('/api/removeVideo', function(req, res) {
                             }
                             // rm cached vid
                             try {
-                                fs.unlink(storagePath + selection.videoID + selection.extension);
+                                fs.unlink(config.file_path + selection.videoID + selection.extension);
                             } catch (err) {
                                 console.log(err);
                             }
                             // rm thumbnail
                             try {
-                                fs.unlink(storagePath + "thumbs/" + selection.videoID + ".jpg");
+                                fs.unlink(config.file_path + "thumbs/" + selection.videoID + ".jpg");
                             } catch (err) {
                                 console.log(err);
                             }
@@ -1305,10 +1298,10 @@ app.post('/api/upload', function(req, res) {
                                     if (err) {
                                         console.log(err);
                                     } else {
-                                        req.files[file].mv(storagePath + videoID + extension, function(err) {
+                                        req.files[file].mv(config.file_path + videoID + extension, function(err) {
                                             //savinu thumbnail
                                             try {
-                                                exec("ffmpeg -i '../" + storagePath + videoID + extension + "' -ss 0 -vframes 1 '../" + storagePath + "thumbs/" + videoID + ".jpg'", {
+                                                exec("ffmpeg -i '../" + config.file_path + videoID + extension + "' -ss 0 -vframes 1 '../" + config.file_path + "thumbs/" + videoID + ".jpg'", {
                                                     cwd: __dirname
                                                 }, function(error, stdout, stderr) {
                                                     if (error) {
@@ -1369,7 +1362,7 @@ app.post('/api/logout', function(req, res) {
 //TODO: recalculate user remaining space each start?
 
 //nuxt config
-let nuxt_config = require('./nuxt.config.js');
+let nuxt_config = require('../nuxt.config.js');
 nuxt_config.dev = !(process.env.NODE_ENV === 'production');
 const nuxt = new Nuxt(nuxt_config);
 
@@ -1405,4 +1398,12 @@ function performSecurityChecks(docs) {
 function hashUpPass(pass) {
     var hash = bcrypt.hashSync(pass, 10);
     return hash;
+}
+
+function log(message, type) {
+    if (config.production_logging === "all" || process.env.NODE_ENV !== 'production') {
+        console.log(message);
+    } else if (config.production_logging === "error" && type === 1) {
+        console.log(message);
+    }
 }
