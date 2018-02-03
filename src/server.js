@@ -5,7 +5,6 @@ const bcrypt = require('bcrypt');
 const shortid = require('shortid');
 const chalk = require('chalk');
 const async = require('async');
-var Datastore = require('nedb');
 const {
     Nuxt,
     Builder
@@ -21,30 +20,17 @@ const du = require('du');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const exec = require('child_process').exec;
+
+
 const config = require('../config');
+const maintenance = require('./external/maintenance.js');
+var db = require('./external/db.js');
+
 
 //isemu _ ir - is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
 
-//uzkraunam DB
-db = {};
-db.users = new Datastore({
-    filename: config.databases.db_users_path,
-    autoload: true
-});
-db.codes = new Datastore({
-    filename: config.databases.db_codes_path,
-    autoload: true,
-    corruptAlertThreshold: 1 // headway manually pridetiems kodams
-});
-db.videos = new Datastore({
-    filename: config.databases.db_videos_path,
-    autoload: true
-});
-db.ratings = new Datastore({
-    filename: config.databases.db_ratings_path,
-    autoload: true
-});
+
 
 //default options
 var defaultUserStatus = 0; //1 - admin
@@ -53,6 +39,9 @@ var defaultTokenExpiry = 1800000; //30 mins
 
 // video storage path
 const storagePath = config.file_path;
+
+maintenance.preLaunch(storagePath);
+
 
 app.use(helmet());
 app.use(fileUpload({
