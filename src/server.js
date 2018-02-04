@@ -35,6 +35,38 @@ var defaultTokenExpiry = 1800000; // 30 mins
 // on-start auto maintenance
 maintenance.preLaunch(config.file_path);
 
+//optional certs
+if (config.selfHost) {
+    // returns an instance of node-greenlock with additional helper methods
+    const lex = require('greenlock-express').create({
+        // set to https://acme-v01.api.letsencrypt.org/directory in production
+        server: 'staging',
+        challenges: { 'http-01': require('le-challenge-fs').create({ webrootPath: '/tmp/acme-challenges' }) },
+        store: require('le-store-certbot').create({ webrootPath: '/tmp/acme-challenges' }),
+        approveDomains: approveDomains
+    });
+
+    function approveDomains(opts, certs, callback) {
+        // This is where you check your database and associated
+        // email addresses with domains and agreements and such
+
+        // The domains being approved for the first time are listed in opts.domains
+        // Certs being renewed are listed in certs.altnames
+        if (certs) {
+            opts.domains = certs.altnames;
+        } else {
+            opts.email = 'john.doe@example.com';
+            opts.agreeTos = true;
+        }
+
+        // NOTE: you can also change other options such as `challengeType` and `challenge`
+        // opts.challengeType = 'http-01';
+        // opts.challenge = require('le-challenge-fs').create({});
+
+        callback(null, { options: opts, certs: certs });
+    }
+}
+
 app.use(helmet());
 app.use(fileUpload({
     limits: {
@@ -1391,8 +1423,16 @@ if (nuxt_config.dev) {
 
 app.use(nuxt.render);
 
-app.listen(10700);
-console.log('Server is listening on http://localhost:10700');
+if (config.selfHost) {
+    // handles acme-challenge and redirects to https
+    require('http').createServer(lex.middleware(require('redirect-https')())).listen(80, function() {
+        console.log("Listening for ACME http-01 challenges on", this.address());
+    });
+} else {
+    app.listen(10700);
+    console.log('Server is listening on http://localhost:10700');
+}
+
 
 // used once at login as a precaution 
 function performSecurityChecks(docs) {
