@@ -1390,6 +1390,7 @@ if (nuxt_config.dev) {
 // No build in production
 
 app.use(nuxt.render);
+
 app.listen(10700);
 console.log('Server is listening on http://localhost:10700');
 

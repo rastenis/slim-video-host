@@ -34,16 +34,16 @@ console.log(chalk.bgYellow.black("                                              
 console.log(chalk.bgYellow.black("SUCCESS! Starting setup...                          "));
 console.log(chalk.bgYellow.black("                                                    "));
 
-config.file_path = prompt('Enter video storage path (ENTER for default):', config.file_path);
+config.file_path = prompt('Enter video storage path (ENTER for default): ', config.file_path);
 
 console.log("Enter video link generation prefix,");
-config.host_prefix = prompt('(Example: https://yourHostname.domain/):');
+config.host_prefix = prompt('(Example: https://yourHostname.domain/): ');
 
-config.total_space = prompt('Enter total space in bytes (ENTER for 100GB as default):', config.total_space);
+config.total_space = prompt('Enter total space in bytes (ENTER for 100GB as default): ', config.total_space);
 
-config.mail.username = prompt('Enter gmail username:');
+config.mail.username = prompt('Enter gmail username: ');
 
-config.mail.password = prompt('Enter gmail password:', null, { echo: "*" });
+config.mail.password = prompt('Enter gmail password: ', null, { echo: "*" });
 
 console.log(chalk.bgYellow.black("                                                    "));
 console.log(chalk.bgYellow.black.bold("SETUP DONE!                                         "));
