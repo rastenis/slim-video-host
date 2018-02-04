@@ -6,7 +6,7 @@
     "self_hosted": true,
     "tls": {
         "email": "email@example.com",
-        "domains": []
+        "domains": ["domain1.com", "domain2.com"]
     },
     "mail": {
         "username": "something@gmail.com",

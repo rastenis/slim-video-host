@@ -54,7 +54,27 @@ config.production_logging = prompt('Select production logging mode (all/error/no
 console.log("Enter video link generation prefix,");
 config.host_prefix = prompt('(Example: https://yourHostname.domain/): ');
 
+config.self_hosted = prompt('Independant TLS (will require ports 80 and 443)? (1:yes, 0:no): ');
 
+if (config.self_hosted) {
+    console.log("Showing additional TLS options:");
+    config.tls.email = prompt('Enter Letsencrypt email (your email): ');
+    config.tls.agree_tos = prompt('Do you agree with the Letsencrypt TOS? (1:yes, 0:no): ');
+    if (config.tls.agree_tos == 0) {
+        config.self_hosted = false;
+        console.log("Reverting...");
+    } else {
+        let current = 0;
+        while (true) {
+            config.tls.domains[current] = prompt('Please enter domain ' + (current + 1) + ' (ENTER to cancel): ');
+            if (config.tls.domains[current] == "") {
+                break;
+            } else {
+                current++;
+            }
+        }
+    }
+}
 
 console.log(chalk.bgYellow.black("                                                    "));
 console.log(chalk.bgYellow.black.bold("SETUP DONE!                                         "));
