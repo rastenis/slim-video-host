@@ -57,17 +57,18 @@ config.host_prefix = prompt('(Example: https://yourHostname.domain/): ');
 config.self_hosted = prompt('Independant TLS (will require ports 80 and 443)? (1:yes, 0:no): ');
 
 if (config.self_hosted) {
-    console.log("Showing additional TLS options:");
+    console.log(chalk.yellow("Showing additional TLS options:"));
     config.tls.email = prompt('Enter Letsencrypt email (your email): ');
     config.tls.agree_tos = prompt('Do you agree with the Letsencrypt TOS? (1:yes, 0:no): ');
     if (config.tls.agree_tos == 0) {
         config.self_hosted = false;
-        console.log("Reverting...");
+        console.log(chalk.yellow("Reverting..."));
     } else {
         let current = 0;
         while (true) {
             config.tls.domains[current] = prompt('Please enter domain ' + (current + 1) + ' (ENTER to cancel): ');
             if (config.tls.domains[current] == "") {
+                config.tls.domains.splice(current, 1)
                 break;
             } else {
                 current++;
