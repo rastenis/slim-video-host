@@ -39,32 +39,28 @@ maintenance.preLaunch(config.file_path);
 if (config.selfHost) {
     // returns an instance of node-greenlock with additional helper methods
     const lex = require('greenlock-express').create({
-        // set to https://acme-v01.api.letsencrypt.org/directory in production
-        server: 'staging',
-        challenges: { 'http-01': require('le-challenge-fs').create({ webrootPath: '/tmp/acme-challenges' }) },
-        store: require('le-store-certbot').create({ webrootPath: '/tmp/acme-challenges' }),
-        approveDomains: approveDomains
-    });
-
-    function approveDomains(opts, certs, callback) {
-        // This is where you check your database and associated
-        // email addresses with domains and agreements and such
-
-        // The domains being approved for the first time are listed in opts.domains
-        // Certs being renewed are listed in certs.altnames
-        if (certs) {
-            opts.domains = certs.altnames;
-        } else {
-            opts.email = 'john.doe@example.com';
-            opts.agreeTos = true;
+        server: 'production',
+        challenges: {
+            'http-01': require('le-challenge-fs').create({
+                webrootPath: '/tmp/acme-challenges'
+            })
+        },
+        store: require('le-store-certbot').create({
+            webrootPath: '/tmp/acme-challenges'
+        }),
+        approveDomains: function(opts, certs, cb) {
+            if (certs) {
+                opts.domains = ['domain1.com', 'domain2.com']
+            } else {
+                opts.email = 'youremail@example.com',
+                    opts.agreeTos = true;
+            }
+            cb(null, {
+                options: opts,
+                certs: certs
+            });
         }
-
-        // NOTE: you can also change other options such as `challengeType` and `challenge`
-        // opts.challengeType = 'http-01';
-        // opts.challenge = require('le-challenge-fs').create({});
-
-        callback(null, { options: opts, certs: certs });
-    }
+    });
 }
 
 app.use(helmet());
