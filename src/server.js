@@ -187,7 +187,6 @@ app.get('/api/cv/:id', function(req, res) {
             }
             return res.json(returner);
         });
-
     }
 });
 
@@ -227,6 +226,7 @@ app.get('/api/checkToken/:token', function(req, res) {
 
 });
 
+// post to request a password reset
 app.post('/api/requestReset', function(req, res) {
     log("PASS RESET | reset request", 0);
     var returner = {};
@@ -236,7 +236,7 @@ app.post('/api/requestReset', function(req, res) {
         email: req.body.email
     }, function(err, docs) {
         if (docs.length > 1) {
-            log(chalk.bgRed.white("PASS RESET | duplicate account emails. CRITICAL"), 1);
+            log(chalk.bgRed.white("CRITICAL!") + chalk.bgRed.white("PASS RESET | duplicate account emails."), 1);
             returner.error = true;
         } else if (docs.length < 1) {
             log("PASS RESET | no such user.", 0);
@@ -292,6 +292,7 @@ app.post('/api/requestReset', function(req, res) {
     });
 });
 
+// post to actually change the password (both in-profile and token-based password reset)
 app.post('/api/changePassword', function(req, res) {
     log("PASSWORD CHANGE || " + (req.body.resetType == 1 ? "normal" : "token"), 0);
     var returner = {};
@@ -322,7 +323,7 @@ app.post('/api/changePassword', function(req, res) {
                 returner.error = 1;
             } else if (numAffected > 1) {
                 //shouldnt ever happen, severe edge
-                log(chalk.bgRed.white("PASSWORD CHANGE || CRITICAL! ") + "multiple passwords updated somehow", 1);
+                log(chalk.bgRed.white("CRITICAL!") + "PASSWORD CHANGE || multiple passwords updated somehow", 1);
             } else {
                 //all ok
                 log("PASSWORD CHANGE || password was successfully changed", 0);
@@ -405,7 +406,7 @@ app.post('/api/act', function(req, res) {
                     videoID: req.body.videoID
                 }, function(err, docs) {
                     if (docs.length > 2 || docs.length < 0) {
-                        log("ACT | CRITICAL! rating error.", 1);
+                        log(chalk.bgRed.white("CRITICAL!") + "ACT | rating error.", 1);
                     }
                     var userRatings = {};
                     userRatings.liked = false;
@@ -475,8 +476,8 @@ app.post('/api/act', function(req, res) {
     }
 });
 
+// registration post
 app.post('/api/register', function(req, res) {
-
     async.waterfall([function(done) {
         var enoughSpace = true;
         db.users.find({
@@ -742,10 +743,10 @@ app.post('/api/deleteAccount', function(req, res) {
                     log("ACCOUNT DELETION | " + err, 1);
                 } else {
                     if (docs.length == 0) {
-                        log(chalk.bgReg.white("ACCOUNT DELETION | CRITICAL! delete reqests for non-existent accounts!"), 1);
+                        log(chalk.bgRed.white("CRITICAL!") + "ACCOUNT DELETION | delete reqests for non-existent accounts!", 1);
                         returner.error = 1;
                     } else if (docs.length > 1) {
-                        log(chalk.bgReg.white("ACCOUNT DELETION | CRITICAL! delete reqest matches multiple accounts!"), 1);
+                        log(chalk.bgRed.white("CRITICAL!") + "ACCOUNT DELETION | delete reqest matches multiple accounts!", 1);
                         returner.error = 1;
                     } else { //all fine, re-fetching to make sure there are no duplicates and that this exact account gets deleted.
                         done(null, docs[0]);
@@ -1060,7 +1061,7 @@ app.post('/api/finalizeUpload', function(req, res) {
                             log(chalk.bgRed.white("UPLOAD FINALIZATION | " + err, 1));
                         }
                         //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
-                        //return errors from foreach async operations.
+                        //return errors from foreach async operations. 
                     });
                 }
             });
@@ -1139,6 +1140,7 @@ app.post('/api/getAdminStats', function(req, res) {
     }
 });
 
+// post to remove video
 app.post('/api/removeVideo', function(req, res) {
     if (!req.session.authUser) {
         res.json({
@@ -1391,6 +1393,7 @@ app.use(nuxt.render);
 app.listen(10700);
 console.log('Server is listening on http://localhost:10700');
 
+// used once at login as a precaution 
 function performSecurityChecks(docs) {
     if (docs.length == 0) { // no user with that username
         log(chalk.bgRed("No matching account."), 0);
@@ -1409,11 +1412,13 @@ function performSecurityChecks(docs) {
     }
 }
 
+// password hashing function
 function hashUpPass(pass) {
     var hash = bcrypt.hashSync(pass, 10);
     return hash;
 }
 
+// logger
 function log(message, type) {
     if (config.production_logging === "all" || process.env.NODE_ENV !== 'production') {
         console.log(message);
