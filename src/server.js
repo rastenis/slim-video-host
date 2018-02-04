@@ -1,5 +1,5 @@
 //deps
-process.env.DEBUG = 'nuxt:*'
+process.env.DEBUG = process.env.NODE_ENV === 'production' ? '' : 'nuxt:*'
 const bcrypt = require('bcrypt');
 const shortid = require('shortid');
 const chalk = require('chalk');
@@ -20,27 +20,20 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const exec = require('child_process').exec;
 const NedbStore = require('nedb-session-store')(session);
-
 const config = require('../config');
 const maintenance = require('./external/maintenance.js');
 const db = require('./external/db.js');
 
-
-//isemu _ ir - is generatoriaus, nes nuxtjs dynamic routing sistemai nepatinka jie
+// removed _ and - from the generator because of issues with nuxt dynamic routing
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
 
-
-
-//default options
+// default options
 var defaultUserStatus = 0; //1 - admin
 var defaultStorageSpace = 10000; // in megabytes
-var defaultTokenExpiry = 1800000; //30 mins
+var defaultTokenExpiry = 1800000; // 30 mins
 
-// video storage path
-const storagePath = config.file_path;
-
-maintenance.preLaunch(storagePath);
-
+// on-start auto maintenance
+maintenance.preLaunch(config.file_path);
 
 app.use(helmet());
 app.use(fileUpload({
@@ -64,21 +57,21 @@ app.use(session({
 
 // post for the login procedure
 app.post('/api/login', function(req, res) {
-    console.log("LOGGING IN | requester: " + req.body.username);
+    log("LOGIN | requester: " + req.body.username, 0);
     db.users.find({
         username: req.body.username.toLowerCase()
     }, function(err, docs) {
 
         try {
-            //checks for duplicate usernames
+            // checks for duplicate usernames
             performSecurityChecks(docs);
             // user exists, no duplicates. Proceeding to the password check
             if (bcrypt.compareSync(req.body.password, docs[0].password)) { //password matches
-                console.log(chalk.green("passwords match!"));
+                log(chalk.green("LOGIN | passwords match!"), 0);
                 req.session.authUser = docs[0];
                 return res.json(docs[0]);
             } else {
-                console.log(chalk.red("passwords don't match!"));
+                log(chalk.red("LOGIN | passwords don't match!"));
                 res.status(556).json({
                     error: 'Bad credentials'
                 });
@@ -89,7 +82,7 @@ app.post('/api/login', function(req, res) {
                     error: e.message
                 });
             } else {
-                //stay silent
+                // stay silent
             }
         }
     });
@@ -99,7 +92,7 @@ app.post('/api/login', function(req, res) {
 // video fetch route
 app.get('/api/cv/:id', function(req, res) {
 
-    console.log("FETCHING VIDEO | id: " + req.params.id);
+    log("FETCHING VIDEO | id: " + req.params.id, 0);
 
     var returner = {};
     returner.ratings = {};
@@ -121,11 +114,11 @@ app.get('/api/cv/:id', function(req, res) {
             }, function(err, numAffected, affectedDocument, upsert) {
 
                 if (!affectedDocument) {
-                    console.log("FETCHING VIDEO | no such video!");
+                    log("FETCHING VIDEO | no such video!", 0);
                     returner.video = affectedDocument;
                     returner.error = 1;
                 } else {
-                    console.log("FETCHING VIDEO | added a view to video " + affectedDocument.videoID);
+                    log("FETCHING VIDEO | added a view to video " + affectedDocument.videoID, 0);
                     affectedDocument.src = '/videos/' + req.params.id + affectedDocument.extension;
                     returner.video = affectedDocument;
                     returner.error = 0;
@@ -135,7 +128,7 @@ app.get('/api/cv/:id', function(req, res) {
         }, function(done) {
             //check if requested video exists
             try {
-                var path = storagePath + req.params.id + returner.video.extension;
+                var path = config.file_path + req.params.id + returner.video.extension;
             } catch (e) {}
 
             if (returner.video && fs.existsSync(path)) {
@@ -151,7 +144,7 @@ app.get('/api/cv/:id', function(req, res) {
                     videoID: req.params.id
                 }, {}, function(err, docs) {
                     if (docs.length > 2 || docs.length < 0) {
-                        console.log(chalk.yellow("FETCHING VIDEO | RATING ERROR==========="));
+                        log(chalk.yellow("FETCHING VIDEO | RATING ERROR==========="), 1);
                     }
                     returner.userRatings.liked = false;
                     returner.userRatings.disliked = false;
@@ -169,7 +162,7 @@ app.get('/api/cv/:id', function(req, res) {
                     done();
                 });
             } else {
-                console.log("FETCHING VIDEO | anonymous viewer");;
+                log("FETCHING VIDEO | anonymous viewer", 0);;
                 done();
             }
         }, function(done) {
@@ -190,19 +183,18 @@ app.get('/api/cv/:id', function(req, res) {
             });
         }], function(err) {
             if (err) {
-                console.log(err);
+                log(err, 1);
             }
             return res.json(returner);
         });
-
     }
 });
 
-
+// token checking route
 app.get('/api/checkToken/:token', function(req, res) {
     var returner = {};
     returner.valid = false;
-    console.log("checking for token " + req.params.token);
+    log("PASS RESET | checking for token " + req.params.token, 0);
     db.users.find({
         resetToken: req.params.token,
         tokenExpiry: {
@@ -210,21 +202,21 @@ app.get('/api/checkToken/:token', function(req, res) {
         }
     }, function(err, docs) {
         if (docs.length > 1) {
-            console.log("duplicate tokens?? purge all");
+            log("PASS RESET | duplicate tokens; purging all", 1);
             returner.error = true;
             db.users.remove({}, {
                 multi: true
             }, function(err, docs) {
                 if (err) {
-                    console.log(err);
+                    log("PASS RESET | " + err, 1);
                 }
             });
         } else if (docs.length < 1) {
-            console.log("no such token.");
+            log("PASS RESET | no such token.", 0);
             returner.token = null;
             returner.error = true;
         } else { //token found
-            console.log("found token!");
+            log("PASS RESET | found token!", 0);
             returner.token = docs[0].resetToken;
             returner.valid = true;
             returner.error = false;
@@ -234,27 +226,26 @@ app.get('/api/checkToken/:token', function(req, res) {
 
 });
 
+// post to request a password reset
 app.post('/api/requestReset', function(req, res) {
-    console.log("reset request");
+    log("PASS RESET | reset request", 0);
     var returner = {};
     returner.error = true;
     returner.token = null;
-    console.log(req.body.email);
     db.users.find({
         email: req.body.email
     }, function(err, docs) {
         if (docs.length > 1) {
-            console.log(chalk.bgRed.white("duplicate account emails. CRITICAL"));
+            log(chalk.bgRed.white("CRITICAL!") + chalk.bgRed.white("PASS RESET | duplicate account emails."), 1);
             returner.error = true;
         } else if (docs.length < 1) {
-            console.log("no such user.");
+            log("PASS RESET | no such user.", 0);
             returner.error = true;
             returner.msg = "No account with that email.";
             returner.msgType = 'error';
             res.json(returner);
         } else { //token found
             let token = crypto.randomBytes(23).toString('hex');
-            console.log("generated token is " + token);
 
             var nmlTrans = nodemailer.createTransport({
                 service: 'Gmail',
@@ -277,7 +268,7 @@ app.post('/api/requestReset', function(req, res) {
             };
             nmlTrans.sendMail(mailOptions, function(err) {
                 if (err) {
-                    console.log(err);
+                    log("PASS RESET | " + err, 1);
                 }
             });
 
@@ -301,8 +292,9 @@ app.post('/api/requestReset', function(req, res) {
     });
 });
 
+// post to actually change the password (both in-profile and token-based password reset)
 app.post('/api/changePassword', function(req, res) {
-    console.log("PASSWORD CHANGE || " + (req.body.resetType == 1 ? "normal" : "token"));
+    log("PASSWORD CHANGE || " + (req.body.resetType == 1 ? "normal" : "token"), 0);
     var returner = {};
     returner.error = 0;
     // single route for both the standard password reset and the 'forgot password' token based reset
@@ -323,18 +315,18 @@ app.post('/api/changePassword', function(req, res) {
             upsert: false,
             returnUpdatedDocs: true
         }, function(err, numAffected, affectedDocs) {
-            console.log("found the token");
+            log("PASSWORD CHANGE || found the token", 0);
             if (numAffected == 0) {
-                console.log("password was NOT successfully changed");
+                log("PASSWORD CHANGE || password was NOT successfully changed", 0);
                 returner.msg = "Password reset token is invalid or has expired.";
                 returner.msgType = "error";
                 returner.error = 1;
             } else if (numAffected > 1) {
                 //shouldnt ever happen, severe edge
-                console.log(chalk.bgRed.white("CRITICAL! ") + "multiple passwords updated somehow");
+                log(chalk.bgRed.white("CRITICAL!") + "PASSWORD CHANGE || multiple passwords updated somehow", 1);
             } else {
                 //all ok
-                console.log("password was successfully changed");
+                log("PASSWORD CHANGE || password was successfully changed", 0);
                 returner.msg = "You have successfully changed your password!";
                 returner.msgType = "success";
                 returner.error = 0;
@@ -358,7 +350,7 @@ app.post('/api/changePassword', function(req, res) {
             }, function(fetchedUser, done) {
                 bcrypt.compare(req.body.currentPassword, fetchedUser.password, function(err, valid) {
                     if (err) {
-                        console.log(err);
+                        log("PASSWORD CHANGE || " + err, 1);
                     } else {
                         done(null, valid);
                     }
@@ -379,7 +371,7 @@ app.post('/api/changePassword', function(req, res) {
                         upsert: false
                     }, function(err) {
                         if (err) {
-                            console.log(err);
+                            log("PASSWORD CHANGE || " + err, 1);
                         } else {
                             returner.msg = "You have successfully changed your password!";
                             returner.msgType = "success";
@@ -393,7 +385,7 @@ app.post('/api/changePassword', function(req, res) {
                 }
             }], function(err) {
                 if (err) {
-                    console.log(err);
+                    log("PASSWORD CHANGE || " + err, 1);
                 } else {
                     res.json(returner);
                 }
@@ -406,7 +398,7 @@ app.post('/api/changePassword', function(req, res) {
 app.post('/api/act', function(req, res) {
     //ignore unauthorized acts
     if (req.session.authUser) {
-        console.log("ACT | requester: " + req.session.authUser.username);
+        log("ACT | requester: " + req.session.authUser.username, 0);
         async.waterfall([
             function(done) {
                 db.ratings.find({
@@ -414,7 +406,7 @@ app.post('/api/act', function(req, res) {
                     videoID: req.body.videoID
                 }, function(err, docs) {
                     if (docs.length > 2 || docs.length < 0) {
-                        console.log("RATING ERROR===========");
+                        log(chalk.bgRed.white("CRITICAL!") + "ACT | rating error.", 1);
                     }
                     var userRatings = {};
                     userRatings.liked = false;
@@ -433,7 +425,6 @@ app.post('/api/act', function(req, res) {
                 });
             },
             function(userRatings, done) {
-                console.log(userRatings.liked);
                 var prep = {};
                 prep.action = req.body.action;
                 prep.revert = false;
@@ -460,7 +451,7 @@ app.post('/api/act', function(req, res) {
                         action: prep.action
                     }, {}, function(err) {
                         if (err) {
-                            console.log(err);
+                            log("ACT | " + err, 1);
                         }
                         done();
                     });
@@ -471,7 +462,7 @@ app.post('/api/act', function(req, res) {
                         action: prep.action
                     }, function(err) {
                         if (err) {
-                            console.log(err);
+                            log("ACT | " + err, 1);
                         }
                         done();
                     });
@@ -479,21 +470,21 @@ app.post('/api/act', function(req, res) {
             }
         ], function(err) {
             if (err) {
-                console.log(err);
+                log("ACT | " + err, 1);
             }
         });
     }
 });
 
+// registration post
 app.post('/api/register', function(req, res) {
-
     async.waterfall([function(done) {
         var enoughSpace = true;
         db.users.find({
             username: req.body.username.toLowerCase()
         }, function(err, docs) {
             du('static/videos', function(err, size) {
-                console.log('The size of the video folder is:', size, 'bytes')
+                log('REGISTRATION | The size of the video folder is:' + size + 'bytes', 0)
                 if (size >= config.total_space) {
                     enoughSpace = false;
                 }
@@ -504,26 +495,26 @@ app.post('/api/register', function(req, res) {
 
         // checks for duplicate usernames
         if (docs.length != 0) { // user with duplicate username exists
-            console.log(chalk.bgRed("Failed account creation (duplicate username)"));
+            log(chalk.bgRed("REGISTRATION | Failed account creation (duplicate username)"), 0);
             res.status(599).json({
                 error: 'An account with that username already exists.',
             });
         } else if (!enoughSpace) {
-            console.log(chalk.bgRed("Failed account creation (TOTAL_SPACE exceeded)"));
+            log(chalk.bgRed("REGISTRATION | Failed account creation (TOTAL_SPACE exceeded)"), 1);
             res.status(598).json({
                 error: 'The server cannot accept new registrations at this moment.'
             });
         } else { //ok, proceeding with the creation
             var storageSpace = defaultStorageSpace;
             var userStatus = defaultUserStatus;
-            console.log(chalk.bgRed(chalk.bgCyanBright.black("no duplicate account! proceeding with the creation of the account.")));
+            log(chalk.bgRed(chalk.bgCyanBright.black("REGISTRATION | no duplicate account! proceeding with the creation of the account.")), 0);
             async.waterfall([
                 function(done) {
                     db.users.find({
                         email: req.body.email
                     }, function(err, docs) {
                         if (docs.length != 0) { //duplicate email
-                            console.log(chalk.bgRed("Failed account creation (duplicate emails)"));
+                            log(chalk.bgRed("REGISTRATION | Failed account creation (duplicate emails)"), 0);
                             return res.status(597).json({
                                 error: 'An account with that email already exists.'
                             });
@@ -552,7 +543,7 @@ app.post('/api/register', function(req, res) {
                                 }
                             }, {}, function(err) {
                                 if (err) {
-                                    console.log(err);
+                                    log("REGISTRATION | " + err, 1);
                                 }
                             });
                             done(null, docs[0]);
@@ -596,20 +587,20 @@ app.post('/api/register', function(req, res) {
                         remainingSpace: storageSpace,
                         userStatus: userStatus
                     }, function(err, doc) {
-                        console.log(chalk.bgCyanBright.black("successfully inserted user " + doc.username));
+                        log(chalk.bgCyanBright.black("REGISTRATION | successfully inserted user " + doc.username), 0);
                         req.session.authUser = doc; // attaching to session for easy access
                         return res.json(doc);
                     });
                 }
             ], function(err, res) {
                 if (err) {
-                    console.log(chalk.bgRed.white(err));
+                    log(chalk.bgRed.white("REGISTRATION | " + err), 1);
                 }
             });
         }
     }], function(err) {
         if (err) {
-            console.log(err);
+            log("REGISTRATION | " + err, 1);
         }
     });
 });
@@ -618,14 +609,14 @@ app.post('/api/register', function(req, res) {
 app.post('/api/getVideos', function(req, res) {
 
     var returner = {};
-    console.log("VIDEOS | requester : " + req.body.user.username);
+    log("VIDEOS | requester : " + req.body.user.username, 0);
 
     async.waterfall([function(done) {
         db.videos.find({
             username: req.body.user.username.toLowerCase()
         }, function(err, docs) {
             if (err) {
-                console.log(chalk.bgRed.white(err));
+                log(chalk.bgRed.white("VIDEOS | " + err), 1);
                 returner.error = 1;
                 return res.json(null);
             }
@@ -659,7 +650,7 @@ app.post('/api/getVideos', function(req, res) {
                 }
             ], function(err) {
                 if (err) {
-                    console.log(err);
+                    log("VIDEOS | " + err, 1);
                 }
                 if (index == (docs.length - 1)) {
                     returner.error = 0;
@@ -670,7 +661,7 @@ app.post('/api/getVideos', function(req, res) {
         });
     }], function(err) {
         if (err) {
-            console.log(err);
+            log("VIDEOS | " + err, 1);
         }
     });
 
@@ -680,7 +671,7 @@ app.post('/api/getVideos', function(req, res) {
 app.post('/api/upgradeStorage', function(req, res) {
 
     var returner = {};
-    console.log("UPGRADE | requester : " + req.body.user.username + ", code:" + req.body.code);
+    log("UPGRADE | requester : " + req.body.user.username + ", code:" + req.body.code, 0);
 
     db.codes.find({
         code: req.body.code,
@@ -688,7 +679,7 @@ app.post('/api/upgradeStorage', function(req, res) {
         active: true
     }, function(err, docs) {
         if (err) {
-            console.log(chalk.bgRed.white(err));
+            log(chalk.bgRed.white("UPGRADE | " + err), 1);
             returner.error = 1;
             returner.msg = "server error :(";
             returner.msgType = "error";
@@ -697,7 +688,7 @@ app.post('/api/upgradeStorage', function(req, res) {
             returner.error = 1;
             returner.msg = "No such code exists.";
             returner.msgType = "error";
-            console.log("unsuccessfull no code upgrade");
+            log("UPGRADE | unsuccessful: no such code", 0);
         } else {
             db.users.update({
                 username: req.body.user.username.toLowerCase()
@@ -705,16 +696,24 @@ app.post('/api/upgradeStorage', function(req, res) {
                 $inc: {
                     totalSpace: docs[0].space
                 }
-            }, {}, function(err, doc) {});
+            }, {}, function(err, doc) {
+                if (err) {
+                    log("UPGRADE | " + err, 1);
+                }
+            });
             db.codes.update({
                 code: req.body.code
             }, {
                 $set: {
                     active: false
                 }
-            }, {}, function(err, doc) {});
+            }, {}, function(err, doc) {
+                if (err) {
+                    log("UPGRADE | " + err, 1);
+                }
+            });
 
-            console.log("successful upgrade");
+            log("UPGRADE | successful upgrade", 0);
             returner.error = 0;
             returner.msg = "You have successfully expanded your space limit!";
             returner.msgType = "success";
@@ -725,7 +724,7 @@ app.post('/api/upgradeStorage', function(req, res) {
 
 // route for account deletion
 app.post('/api/deleteAccount', function(req, res) {
-    console.log("ACCOUNT DELETION | requester: " + req.session.authUser.username);
+    log("ACCOUNT DELETION | requester: " + req.session.authUser.username, 0);
     var returner = {};
     returner.error = false;
     var opCount = 0;
@@ -741,13 +740,13 @@ app.post('/api/deleteAccount', function(req, res) {
                 email: req.session.authUser.email
             }, function(err, docs) {
                 if (err) {
-                    console.log(err);
+                    log("ACCOUNT DELETION | " + err, 1);
                 } else {
                     if (docs.length == 0) {
-                        console.log(chalk.bgReg.white("CRITICAL! delete reqests for non-existent accounts!"));
+                        log(chalk.bgRed.white("CRITICAL!") + "ACCOUNT DELETION | delete reqests for non-existent accounts!", 1);
                         returner.error = 1;
                     } else if (docs.length > 1) {
-                        console.log(chalk.bgReg.white("CRITICAL! delete reqest matches multiple accounts!"));
+                        log(chalk.bgRed.white("CRITICAL!") + "ACCOUNT DELETION | delete reqest matches multiple accounts!", 1);
                         returner.error = 1;
                     } else { //all fine, re-fetching to make sure there are no duplicates and that this exact account gets deleted.
                         done(null, docs[0]);
@@ -757,7 +756,7 @@ app.post('/api/deleteAccount', function(req, res) {
         }, function(fetchedUser, done) {
             bcrypt.compare(req.body.passwordConfirmation, fetchedUser.password, function(err, valid) {
                 if (err) {
-                    console.log(err);
+                    log("ACCOUNT DELETION | " + err, 1);
                 } else {
                     returner.error = !valid;
                     done(null, valid);
@@ -779,7 +778,7 @@ app.post('/api/deleteAccount', function(req, res) {
                     multi: true
                 }, function(err) {
                     if (err) {
-                        console.log(err);
+                        log("ACCOUNT DELETION | " + err, 1);
                         returner.error = 1;
                         returner.msg = "An internal error occured. Please try again later.";
                         returner.msgType = "error";
@@ -793,6 +792,9 @@ app.post('/api/deleteAccount', function(req, res) {
             }
             //TODO: cycle-remove all videos, thumbnails. Export video deletion to a promise probably
         }], function(err) {
+            if (err) {
+                log("ACCOUNT DELETION | " + err, 1);
+            }
             res.json(returner);
         });
     }
@@ -800,7 +802,7 @@ app.post('/api/deleteAccount', function(req, res) {
 
 // new link generation
 app.post('/api/newLink', function(req, res) {
-    console.log("NEW LINKS | requester: " + req.session.authUser.username);
+    log("NEW LINKS | requester: " + req.session.authUser.username, 0);
 
     var returner = {};
     returner.error = false;
@@ -855,7 +857,7 @@ app.post('/api/newLink', function(req, res) {
                     multi: true
                 }, function(err) {
                     if (err) {
-                        console.log(err);
+                        log("NEW LINKS | " + err, 1);
                     }
                     done();
 
@@ -863,9 +865,9 @@ app.post('/api/newLink', function(req, res) {
             }, function(done) {
                 // video file renaming
                 if (!returner.error) {
-                    fs.rename(storagePath + sel.videoID + sel.extension, storagePath + newVideoID + sel.extension, function(err) {
+                    fs.rename(config.file_path + sel.videoID + sel.extension, config.file_path + newVideoID + sel.extension, function(err) {
                         if (err) {
-                            console.log(err);
+                            log("NEW LINKS | " + err, 1);
                         }
                         done();
                     });
@@ -873,16 +875,16 @@ app.post('/api/newLink', function(req, res) {
             }, function(done) {
                 // thumbnail renaming
                 if (!returner.error) {
-                    fs.rename(storagePath + "thumbs/" + sel.videoID + ".jpg", storagePath + "thumbs/" + newVideoID + ".jpg", function(err) {
+                    fs.rename(config.file_path + "thumbs/" + sel.videoID + ".jpg", config.file_path + "thumbs/" + newVideoID + ".jpg", function(err) {
                         if (err) {
-                            console.log(err);
+                            log("NEW LINKS | " + err, 1);
                         }
                         done();
                     });
                 }
             }], function(err) {
                 if (err) {
-                    console.log(err);
+                    log("NEW LINKS | " + err, 1);
                 }
                 if (opCount == req.body.selection.length - 1) {
                     if (!returner.error) {
@@ -902,7 +904,7 @@ app.post('/api/newLink', function(req, res) {
 
 // route for video name changes
 app.post('/api/rename', function(req, res) {
-    console.log("RENAME | requester: " + req.session.authUser.username);
+    log("RENAME | requester: " + req.session.authUser.username, 0);
 
     var returner = {};
     if (!req.session.authUser) {
@@ -923,6 +925,9 @@ app.post('/api/rename', function(req, res) {
         }, {
             upsert: false
         }, function(err, numAffected, affectedDocs) {
+            if (err) {
+                log("RENAME | " + err, 1);
+            }
             if (numAffected < 1) {
                 returner.error = true;
                 returner.msgType = "error";
@@ -942,7 +947,7 @@ app.post('/api/rename', function(req, res) {
 // route for video upload finalization (cancel or confirm)
 app.post('/api/finalizeUpload', function(req, res) {
 
-    console.log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username);
+    log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username, 0);
     let returner = {},
         opCount = 0;
     if (!req.session.authUser) {
@@ -954,7 +959,7 @@ app.post('/api/finalizeUpload', function(req, res) {
     }
 
     if (req.body.cancelled) {
-        console.log(chalk.red("upload(s) cancelled"));
+        log(chalk.red("UPLOAD FINALIZATION | upload(s) cancelled"), 0);
 
         returner.error = 1;
         returner.msgType = "danger";
@@ -970,7 +975,7 @@ app.post('/api/finalizeUpload', function(req, res) {
         }
         for (const oldName in req.body.newNames) {
             if (req.body.newNames.hasOwnProperty(oldName)) {
-                console.log("got new name " + req.body.newNames[oldName] + " for " + oldName);
+                log("UPLOAD FINALIZATION | got new name " + req.body.newNames[oldName] + " for " + oldName, 0);
 
                 const newName = req.body.newNames[oldName].replace(/[^a-z0-9\s]/gi, ""); // should already be clean coming from the client, redundancy
                 let cleanedName = oldName.replace(/[^a-z0-9]/gi, "");
@@ -991,7 +996,7 @@ app.post('/api/finalizeUpload', function(req, res) {
                     },
                     function(err, numAffected, affectedDocuments) {
                         if (err) {
-                            console.log(chalk.bgRed.white(err));
+                            log(chalk.bgRed.white("UPLOAD FINALIZATION | " + err), 1);
                             returner.error = 1;
                         }
 
@@ -1014,16 +1019,19 @@ app.post('/api/finalizeUpload', function(req, res) {
             username: req.session.authUser.username,
             confirmed: false
         }, function(err, docs) {
+            if (err) {
+                log("UPLOAD FINALIZATION | " + err, 1);
+            }
             done(null, docs);
         });
     }, function(unconfirmedvideos, done) {
         unconfirmedvideos.forEach(selection => {
-            console.log(chalk.red("removing unconfirmed"));
+            log(chalk.red("UPLOAD FINALIZATION | removing unconfirmed"), 0);
             db.videos.find({
                 videoID: selection.videoID
             }, function(err, docs) {
                 if (err) {
-                    console.log(chalk.bgRed.white(err));
+                    log(chalk.bgRed.white("UPLOAD FINALIZATION | " + err), 1);
                 } else {
                     db.users.update({
                         username: req.session.authUser.username
@@ -1034,15 +1042,15 @@ app.post('/api/finalizeUpload', function(req, res) {
                     }, {}, function() {
                         // removing video from storage
                         try {
-                            fs.unlink(storagePath + selection.videoID + selection.extension);
+                            fs.unlink(config.file_path + selection.videoID + selection.extension);
                         } catch (err) {
-                            console.log(err);
+                            log("UPLOAD FINALIZATION | " + err, 1);
                         }
                         // removing thumbnail
                         try {
-                            fs.unlink(storagePath + "thumbs/" + selection.videoID + ".jpg");
+                            fs.unlink(config.file_path + "thumbs/" + selection.videoID + ".jpg");
                         } catch (err) {
-                            console.log(err);
+                            log("UPLOAD FINALIZATION | " + err, 1);
                         }
                     });
 
@@ -1050,10 +1058,10 @@ app.post('/api/finalizeUpload', function(req, res) {
                         videoID: selection.videoID
                     }, function(err, docs) {
                         if (err) {
-                            console.log(chalk.bgRed.white(err));
+                            log(chalk.bgRed.white("UPLOAD FINALIZATION | " + err, 1));
                         }
                         //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
-                        //return errors from foreach async operations.
+                        //return errors from foreach async operations. 
                     });
                 }
             });
@@ -1062,7 +1070,7 @@ app.post('/api/finalizeUpload', function(req, res) {
         done(); //foreach will be +- synced up
     }], function(err) {
         if (err) {
-            console.log(err);
+            log("UPLOAD FINALIZATION | " + err, 1);
         }
     });
 
@@ -1071,7 +1079,7 @@ app.post('/api/finalizeUpload', function(req, res) {
 // postas adminu statistikom
 app.post('/api/getAdminStats', function(req, res) {
 
-    console.log("FETCHING ADMIN STATS | requester: " + req.body.user.username);
+    log("FETCHING ADMIN STATS | requester: " + req.body.user.username, 0);
 
     var returner = {};
     returner.stats = {};
@@ -1082,7 +1090,7 @@ app.post('/api/getAdminStats', function(req, res) {
             function(done) {
                 db.users.count({}, function(err, count) {
                     if (err) {
-                        console.log(chalk.bgRed.white(err));
+                        log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
                         returner.error = 1;
                     }
                     returner.stats.userCount = count;
@@ -1092,7 +1100,7 @@ app.post('/api/getAdminStats', function(req, res) {
             function(done) {
                 db.videos.count({}, function(err, count) {
                     if (err) {
-                        console.log(chalk.bgRed.white(err));
+                        log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
                         returner.error = 1;
                     }
 
@@ -1103,7 +1111,7 @@ app.post('/api/getAdminStats', function(req, res) {
             function(done) {
                 db.videos.find({}, function(err, docs) {
                     if (err) {
-                        console.log(chalk.bgRed.white(err));
+                        log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
                         returner.error = 1;
                     }
 
@@ -1124,7 +1132,7 @@ app.post('/api/getAdminStats', function(req, res) {
             }
         ], function(err) {
             if (err) {
-                console.log(chalk.bgRed.white(err));
+                log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
                 returner.error = 1;
             }
             return res.json(returner);
@@ -1132,6 +1140,7 @@ app.post('/api/getAdminStats', function(req, res) {
     }
 });
 
+// post to remove video
 app.post('/api/removeVideo', function(req, res) {
     if (!req.session.authUser) {
         res.json({
@@ -1140,7 +1149,7 @@ app.post('/api/removeVideo', function(req, res) {
             msg: "You are not auhorized to do that action!"
         });
     } else {
-        console.log("VIDEO DELETION | " + "requester: " + req.session.authUser.username);
+        log("VIDEO DELETION | " + "requester: " + req.session.authUser.username, 0);
         var returner = {};
         returner.selection = req.body.selection;
         var opCount = 0;
@@ -1150,7 +1159,7 @@ app.post('/api/removeVideo', function(req, res) {
                 videoID: selection.videoID
             }, function(err, docs) {
                 if (err) {
-                    console.log(chalk.bgRed.white(err));
+                    log(chalk.bgRed.white("VIDEO DELETION | " + err), 1);
                     returner.error = 1;
                     returner.msg = "Internal error. Try again.";
                 } else {
@@ -1165,19 +1174,19 @@ app.post('/api/removeVideo', function(req, res) {
                         }, {}, function(err) {
 
                             if (err) {
-                                console.log(err);
+                                log("VIDEO DELETION | " + err, 1);
                             }
                             // rm cached vid
                             try {
-                                fs.unlink(storagePath + selection.videoID + selection.extension);
+                                fs.unlink(config.file_path + selection.videoID + selection.extension);
                             } catch (err) {
-                                console.log(err);
+                                log("VIDEO DELETION | " + err, 1);
                             }
                             // rm thumbnail
                             try {
-                                fs.unlink(storagePath + "thumbs/" + selection.videoID + ".jpg");
+                                fs.unlink(config.file_path + "thumbs/" + selection.videoID + ".jpg");
                             } catch (err) {
-                                console.log(err);
+                                log("VIDEO DELETION | " + err, 1);
                             }
 
                             done();
@@ -1188,7 +1197,7 @@ app.post('/api/removeVideo', function(req, res) {
                             videoID: selection.videoID
                         }, function(err, docs) {
                             if (err) {
-                                console.log(chalk.bgRed.white(err));
+                                log(chalk.bgRed.white("VIDEO DELETION | " + err), 1);
                                 returner.error = 1;
                                 returner.msg = "Internal error. Try again.";
                                 res.json(returner);
@@ -1207,7 +1216,7 @@ app.post('/api/removeVideo', function(req, res) {
                         });
                     }], function(err) {
                         if (err) {
-                            console.log(err);
+                            log("VIDEO DELETION | " + err, 1);
                         }
                     });
 
@@ -1242,7 +1251,7 @@ app.post('/api/upload', function(req, res) {
                     // filesize handlingas
                     let fileSizeInBytes = req.files[file].data.byteLength;
                     let fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
-                    console.log("uploaded video size is " + fileSizeInMegabytes + "mb");
+                    log("UPLOAD | uploaded video size is " + fileSizeInMegabytes + "mb", 0);
 
                     if (fileSizeInMegabytes > 10000) { //hard limitas kad neikeltu didesniu uz 10gb failu
                         res.status(557).json({
@@ -1263,7 +1272,7 @@ app.post('/api/upload', function(req, res) {
                                 extension = ".mp4";
                                 break;
                             default:
-                                console.log("unsupported video format!");
+                                log("UPLOAD | unsupported video format!", 0);
                                 res.status(557).json({
                                     error: 'That video format cannot be uploaded.'
                                 });
@@ -1287,7 +1296,7 @@ app.post('/api/upload', function(req, res) {
                                 // dedam video i storage
                                 var videoID = shortid.generate();
                                 var vidLink = config.host_prefix + "v/" + videoID;
-                                console.log(chalk.bgGreen.black("storing video!"));
+                                log(chalk.green("UPLOAD | storing video!"), 0);
 
                                 db.videos.insert({
                                     username: req.session.authUser.username.toLowerCase(),
@@ -1303,26 +1312,26 @@ app.post('/api/upload', function(req, res) {
                                     confirmed: false
                                 }, function(err, newDoc) {
                                     if (err) {
-                                        console.log(err);
+                                        log("UPLOAD | " + err, 1);
                                     } else {
-                                        req.files[file].mv(storagePath + videoID + extension, function(err) {
+                                        req.files[file].mv(config.file_path + videoID + extension, function(err) {
                                             //savinu thumbnail
                                             try {
-                                                exec("ffmpeg -i '../" + storagePath + videoID + extension + "' -ss 0 -vframes 1 '../" + storagePath + "thumbs/" + videoID + ".jpg'", {
+                                                exec("ffmpeg -i '../" + config.file_path + videoID + extension + "' -ss 0 -vframes 1 '../" + config.file_path + "thumbs/" + videoID + ".jpg'", {
                                                     cwd: __dirname
-                                                }, function(error, stdout, stderr) {
-                                                    if (error) {
-                                                        console.log(error);
+                                                }, function(err, stdout, stderr) {
+                                                    if (err) {
+                                                        log("UPLOAD | " + err, 1);
                                                     }
                                                 });
-                                            } catch (e) {
-                                                console.log(chalk.bgYellow.black("WARN") + "failed to save thumbnail ");
+                                            } catch (err) {
+                                                log(chalk.bgYellow.black("WARN") + "failed to save thumbnail ", 1);
                                             }
 
                                             returner.newVideos.push(newDoc);
 
                                             if (opCount >= Object.keys(req.files).length - 1) {
-                                                console.log("RETURNING UPLOAD CALLBACK w/ " + opCount + " items");
+                                                log("UPLOAD | RETURNING UPLOAD CALLBACK w/ " + opCount + " items", 0);
                                                 res.json(returner);
                                             } else {
                                                 opCount++;
@@ -1347,7 +1356,7 @@ app.post('/api/upload', function(req, res) {
                             }, {}, function() {});
                         }], function(err) {
                             if (err) {
-                                console.log(err);
+                                log("UPLOAD | " + err, 1);
                             }
                         });
                     }
@@ -1384,9 +1393,10 @@ app.use(nuxt.render);
 app.listen(10700);
 console.log('Server is listening on http://localhost:10700');
 
+// used once at login as a precaution 
 function performSecurityChecks(docs) {
     if (docs.length == 0) { // no user with that username
-        console.log(chalk.bgRed("No matching account."));
+        log(chalk.bgRed("No matching account."), 0);
         throw {
             status: 555,
             message: 'No account with that username found.'
@@ -1394,7 +1404,7 @@ function performSecurityChecks(docs) {
     }
 
     if (docs.length > 1) { // duplicate username users
-        console.log(chalk.bgRed("==DUPLICATE ACCOUNTS FOUND=="));
+        log(chalk.bgRed("==DUPLICATE ACCOUNTS FOUND=="), 1);
         throw {
             status: 556,
             message: 'Server error.'
@@ -1402,7 +1412,17 @@ function performSecurityChecks(docs) {
     }
 }
 
+// password hashing function
 function hashUpPass(pass) {
     var hash = bcrypt.hashSync(pass, 10);
     return hash;
+}
+
+// logger
+function log(message, type) {
+    if (config.production_logging === "all" || process.env.NODE_ENV !== 'production') {
+        console.log(message);
+    } else if (config.production_logging === "error" && type === 1) {
+        console.log(message);
+    }
 }
