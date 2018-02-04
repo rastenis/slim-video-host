@@ -36,7 +36,7 @@ var defaultTokenExpiry = 1800000; // 30 mins
 maintenance.preLaunch(config.file_path);
 
 //optional certs
-if (config.selfHost) {
+if (config.selfHost == "1") {
     // returns an instance of node-greenlock with additional helper methods
     const lex = require('greenlock-express').create({
         server: 'production',
@@ -50,10 +50,10 @@ if (config.selfHost) {
         }),
         approveDomains: function(opts, certs, cb) {
             if (certs) {
-                opts.domains = ['domain1.com', 'domain2.com']
+                opts.domains = config.tls.domains
             } else {
-                opts.email = 'youremail@example.com',
-                    opts.agreeTos = true;
+                opts.email = config.tls.email,
+                    opts.agreeTos = config.tls.agree_tos == "1";
             }
             cb(null, {
                 options: opts,
@@ -1419,7 +1419,7 @@ if (nuxt_config.dev) {
 
 app.use(nuxt.render);
 
-if (config.selfHost) {
+if (config.selfHost == "1") {
     // handles acme-challenge and redirects to https
     require('http').createServer(lex.middleware(require('redirect-https')())).listen(80, function() {
         console.log("Listening for ACME http-01 challenges on", this.address());
