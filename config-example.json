@@ -2,7 +2,12 @@
     "file_path": "static/videos/",
     "video_link_prefix": "https://yourHostname.domain/v/",
     "total_space": 100000000000,
-    "production_logging": false,
+    "production_logging": "none",
+    "self_hosted": true,
+    "tls": {
+        "email": "email@example.com",
+        "domains": []
+    },
     "mail": {
         "username": "something@gmail.com",
         "password": "password"
