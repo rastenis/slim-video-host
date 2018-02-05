@@ -36,17 +36,17 @@ var defaultTokenExpiry = 1800000; // 30 mins
 maintenance.preLaunch(config.file_path);
 
 //optional certs
-if (config.selfHost == "1") {
+if (config.self_hosted == "1") {
     // returns an instance of node-greenlock with additional helper methods
-    const lex = require('greenlock-express').create({
+    var lex = require('greenlock-express').create({
         server: 'production',
         challenges: {
             'http-01': require('le-challenge-fs').create({
-                webrootPath: '/tmp/acme-challenges'
+                webrootPath: 'tmp/acme-challenges'
             })
         },
         store: require('le-store-certbot').create({
-            webrootPath: '/tmp/acme-challenges'
+            webrootPath: 'tmp/acme-challenges'
         }),
         approveDomains: function(opts, certs, cb) {
             if (certs) {
@@ -1419,10 +1419,16 @@ if (nuxt_config.dev) {
 
 app.use(nuxt.render);
 
-if (config.selfHost == "1") {
+if (config.self_hosted == "1") {
     // handles acme-challenge and redirects to https
     require('http').createServer(lex.middleware(require('redirect-https')())).listen(80, function() {
         console.log("Listening for ACME http-01 challenges on", this.address());
+    });
+
+    // https handler
+    var server = require('https').createServer(lex.httpsOptions, lex.middleware(app))
+    server.listen(443, function() {
+        console.log("Listening for ACME tls-sni-01 challenges and serve app on", this.address());
     });
 } else {
     app.listen(10700);
