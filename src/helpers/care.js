@@ -47,6 +47,26 @@ mainLoop: while (true) {
                         });
                     },
                     function(done) {
+                        fs.remove("./.nuxt", err => {
+                            if (err) {
+                                console.log(err);
+                            } else {
+                                console.log('Wiped nuxt build...');
+                            }
+                            done();
+                        });
+                    },
+                    function(done) {
+                        fs.remove("./tmp", err => {
+                            if (err) {
+                                console.log(err);
+                            } else {
+                                console.log('Wiped certs...');
+                            }
+                            done();
+                        });
+                    },
+                    function(done) {
                         fs.remove("config.json", err => {
                             if (err) {
                                 console.log(err);
