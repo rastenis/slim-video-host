@@ -4,6 +4,7 @@
     "total_space": 100000000000,
     "production_logging": "none",
     "self_hosted": "0",
+    "port": 10700,
     "tls": {
         "email": "email@example.com",
         "domains": ["domain1.com", "domain2.com"]

@@ -10,7 +10,8 @@ let config = {
     "host_prefix": "https://yourHostname.domain/v/",
     "total_space": 100000000000,
     "production_logging": 'none',
-    "self_hosted": true,
+    "self_hosted": "0",
+    "port": 10700,
     "tls": {
         "email": "email@example.com",
         "domains": ["domain1.com", "domain2.com"]
@@ -75,6 +76,8 @@ if (config.self_hosted == "1") {
             }
         }
     }
+} else {
+    config.tls.port = prompt('Enter port (ENTER for default 10700): ');
 }
 
 console.log(chalk.bgYellow.black("                                                    "));
