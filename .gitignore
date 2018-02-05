@@ -65,4 +65,6 @@ db/
 # video storage (default folder)
 videos/
 
+tmp/
+
 config.json
