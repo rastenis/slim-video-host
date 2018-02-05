@@ -76,12 +76,14 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
+        secure: (config.self_hosted == "1"),
         maxAge: 6 * 60 * 60 * 1000
     },
     store: new NedbStore({
         filename: 'db/persistance'
     })
 }));
+
 
 // post for the login procedure
 app.post('/api/login', function(req, res) {
