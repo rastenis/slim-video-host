@@ -39,13 +39,14 @@ npm run dev
 2. `session_key` - a random string, needed for the express-session module
 3. `total_space` - the total amount of space you are willing to dedicate for the website. It will not allow any more registrations when the amount of reserved user space exceeds **(in bytes)**
 4. `production_logging` - either "all", "error" or "none" - sets production-time logging severity
-5. `port` - custom port for http mode.
+5. `port` - custom port for http mode
 6. `self_hosted` - sets mode of operation:
     * 1 - takes over ports 80 and 443, automatically generates TLS certs, must run as root.
     * 2 - run on port defined in config, http only. Use when a routing system is setup(Apache, etc.)
-7. `mail` - `username` and `password` - gmail account credentials, will be used for password resets
-8. `databases` - `db_users_path`, `db_videos_path`,`db_codes_path` and `db_ratings_path` - database paths, relative to root dir. No need to change the default values.
-9. `video_link_prefix` - set up the domain you want your website to be accessible through. Pay attention to HTTP and HTTPS, choose whichever is right for you!
+7. `tls` - Letsencrypt options
+8. `mail` - `username` and `password` - gmail account credentials, will be used for password resets
+9. `databases` - `db_users_path`, `db_videos_path`,`db_codes_path` and `db_ratings_path` - database paths, relative to root dir. No need to change the default values.
+10. `video_link_prefix` - set up the domain you want your website to be accessible through. Pay attention to HTTP and HTTPS, choose whichever is right for you!
 
 * A config-example.json file is in the root dir with demo settings set. If needed, use it as guidance while filling out `npm run setup`
 
