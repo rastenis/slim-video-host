@@ -52,5 +52,12 @@ npm run dev
   * ``npm run build`` builds the server for production
   * ``npm run start`` starts the built server
 * Setup and maintenance:
+  * ``npm run setup`` or ``npm run config`` - starts the config generation sequence. Gets run automatically after npm install.
   * ``npm run codes`` opens the code manipulation console interface (upgrade and registration codes: space upgrades, admin status codes)
-  * ``npm run care`` or ``npm run maintenance`` - opens the maintenance console interface. Used for manually runnign tasks that check the integrity and health of the platform, as well as other operations, such as a complete wipe.
+  * ``npm run care`` or ``npm run maintenance`` - opens the maintenance console interface. Used for manually runnign tasks that check the integrity and health of the platform, as well as other operations, such as a complete wipe. A config.json must be present in order for these commands to work.
+
+## Independant TLS precautions
+* The server will most likely need to be ran as root, so it can take control of 80/443 ports
+* This may in turn generate databases, temporary files and certs that have root ownership:
+  * Shouldn't be a problem if the TLS mode isn't changed
+  * System wipe will also need to be ran as root. When it's finished, normal non-root operation without auto TLS generation can be reinstated (after reconfiguring config.json via `npm run setup`).
