@@ -77,7 +77,7 @@ if (config.self_hosted == "1") {
         }
     }
 } else {
-    config.tls.port = prompt('Enter port (ENTER for default 10700): ');
+    config.tls.port = prompt('Enter port (ENTER for default 10700): ', config.port);
 }
 
 console.log(chalk.bgYellow.black("                                                    "));
