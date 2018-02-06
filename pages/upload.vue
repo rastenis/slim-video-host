@@ -1,7 +1,7 @@
 <template>
   <div v-if="$store.state.authUser">
     <h1 class="title breaker">Upload</h1>
-    <el-card  class="uploadForm" v-if="uploading">
+    <el-card class="uploadForm" v-if="uploading" v-loading="irreversibleUploadCommenced">
       <div slot="header" class="clearfix">
         <span>Uploading video</span>
       </div>
@@ -39,7 +39,9 @@ export default {
   layout: "main",
   data() {
     return {
+      irreversibleUploadCommenced:false,
       uploading: false,
+      completeCount:0,
       progressBar: {
         status: "",
         percentage: 0
@@ -73,18 +75,16 @@ export default {
     onUploadSuccess(res, file, fileList) {
       //displaying naming fields
       this.newVideos = res.newVideos;
+      this.completeCount++;
       //LEFTOFF: keeping tabs on videos for naming
-      console.log(fileList);
     },
     beforeVideoUpload(file) {
-
       this.uploading = true;
       if (!this.$store.state.authUser) {
         this.$message.error("You are not signed in!");
         this.$nuxt._router.push("/");
         return false;
       }
-
       var mbFilesize = file.size / 1024 / 1024;
 
       if (this.$store.state.authUser.remainingSpace < mbFilesize) {
@@ -115,14 +115,13 @@ export default {
     },
     uploadProgress(event, file, fileList) {
       this.uploadedFileList = fileList;
-      console.log(event);
-      console.log(file);
-      console.log(fileList);
+      // console.log(event);
+      // console.log(file);
+      // console.log(fileList);
       if (event.percent >= 100) {
         // this.uploading=false;
         this.progressBar.status = "success";
         // todo effect for finished upload
-
         if (this.upload.ready) {
           //send it
           setTimeout(() => {
@@ -147,11 +146,14 @@ export default {
         this.$nuxt._router.push("/");
         return false;
       }
-      if (this.progressBar.percentage == 100 || specialPass == true) {
+
+      // check if all videos have finished uploading
+      if (this.completeCount>=this.uploadedFileList.length || specialPass == true) {
         // if (!name && status == 0) {
         //   //validate form of all new video names
         //   this.$message.error("Please enter a valid name!");
         // }
+        this.irreversibleUploadCommenced=true;
         axios({
           url: "https://cigari.ga/api/finalizeUpload",
           method: "post",
@@ -164,7 +166,9 @@ export default {
         })
           .then(res => {
             this.uploading = false;
-
+            this.irreversibleUploadCommenced=false;
+            this.completeCount=0;
+            
             if (status == 0) {
               this.dialog.buttonConfirm.loading = false;
               this.dialog.buttonCancel.disabled = false;
