@@ -415,6 +415,7 @@ export default {
     },
     setUpStats() {
       var totalViews = 0;
+      console.log(this.videos.length+" videos");
       this.videos.forEach(element => {
         totalViews += element.views;
       });
