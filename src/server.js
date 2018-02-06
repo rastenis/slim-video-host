@@ -732,16 +732,23 @@ app.post('/api/upgradeStorage', function(req, res) {
             returner.msgType = "error";
             log("UPGRADE | unsuccessful: no such code", 0);
         } else {
+            // adding granted space
             db.users.update({
                 username: req.body.user.username.toLowerCase()
             }, {
                 $inc: {
                     totalSpace: docs[0].space
                 }
-            }, {}, function(err, doc) {
+            }, {
+                returnUpdatedDocs: true,
+                multi: false
+            }, function(err, numAffected, affectedDocument) {
                 if (err) {
                     log("UPGRADE | " + err, 1);
                 }
+                // refreshing session
+                req.session.authUser = affectedDocument;
+
             });
             db.codes.update({
                 code: req.body.code
@@ -817,7 +824,7 @@ app.post('/api/deleteAccount', function(req, res) {
                 db.users.remove({
                     email: req.session.authUser.email
                 }, {
-                    multi: true
+                    multi: false
                 }, function(err) {
                     if (err) {
                         log("ACCOUNT DELETION | " + err, 1);
@@ -1078,10 +1085,13 @@ app.post('/api/finalizeUpload', function(req, res) {
                     db.users.update({
                         username: req.session.authUser.username
                     }, {
-                        $inc: { // restoring user's storage space
+                        $inc: { // restoring user's storage space for each deleted
                             remainingSpace: Math.abs(docs[0].size)
                         }
-                    }, {}, function() {
+                    }, {
+                        returnUpdatedDocs: true,
+                        multi: false
+                    }, function(err, numAffected, affectedDocument) {
                         // removing video from storage
                         try {
                             fs.unlink(config.file_path + selection.videoID + selection.extension);
@@ -1094,6 +1104,10 @@ app.post('/api/finalizeUpload', function(req, res) {
                         } catch (err) {
                             log("UPLOAD FINALIZATION | " + err, 1);
                         }
+
+                        // updating active user
+                        req.session.authUser = affectedDocument;
+
                     });
 
                     db.videos.remove({
@@ -1208,31 +1222,37 @@ app.post('/api/removeVideo', function(req, res) {
 
                     async.waterfall([function(done) {
                         db.users.update({
-                            username: req.session.authUser.username
-                        }, {
-                            $inc: { // restoring user's storage space
-                                remainingSpace: Math.abs(docs[0].size)
-                            }
-                        }, {}, function(err) {
+                                username: req.session.authUser.username
+                            }, {
+                                $inc: { // restoring user's storage space
+                                    remainingSpace: Math.abs(docs[0].size)
+                                }
+                            }, {
+                                returnUpdatedDocs: true,
+                                multi: false
+                            },
+                            function(err, numAffected, affectedDocument) {
 
-                            if (err) {
-                                log("VIDEO DELETION | " + err, 1);
-                            }
-                            // rm cached vid
-                            try {
-                                fs.unlink(config.file_path + selection.videoID + selection.extension);
-                            } catch (err) {
-                                log("VIDEO DELETION | " + err, 1);
-                            }
-                            // rm thumbnail
-                            try {
-                                fs.unlink(config.file_path + "thumbs/" + selection.videoID + ".jpg");
-                            } catch (err) {
-                                log("VIDEO DELETION | " + err, 1);
-                            }
+                                if (err) {
+                                    log("VIDEO DELETION | " + err, 1);
+                                }
+                                // rm cached vid
+                                try {
+                                    fs.unlink(config.file_path + selection.videoID + selection.extension);
+                                } catch (err) {
+                                    log("VIDEO DELETION | " + err, 1);
+                                }
+                                // rm thumbnail
+                                try {
+                                    fs.unlink(config.file_path + "thumbs/" + selection.videoID + ".jpg");
+                                } catch (err) {
+                                    log("VIDEO DELETION | " + err, 1);
+                                }
 
-                            done();
-                        });
+                                // renewing session user
+                                req.session.authUser = affectedDocument;
+                                done();
+                            });
                     }, function(done) {
 
                         db.videos.remove({
@@ -1395,7 +1415,14 @@ app.post('/api/upload', function(req, res) {
                                 $inc: {
                                     remainingSpace: decrement
                                 }
-                            }, {}, function() {});
+                            }, {
+                                returnUpdatedDocs: true,
+                                multi: false
+                            }, function(err, numAffected, affectedDocument) {
+                                // updating session
+                                req.session.authUser = affectedDocument;
+
+                            });
                         }], function(err) {
                             if (err) {
                                 log("UPLOAD | " + err, 1);
