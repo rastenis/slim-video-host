@@ -5,14 +5,13 @@
       <div slot="header" class="clearfix">
         <span>Uploading video</span>
       </div>
-      <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage" :status="progressBar.status"></el-progress>
         <el-form>
           <div v-if="uploadedFileList" v-for="(video, index) in uploadedFileList" :item="video" :index="index" :key="video.videoID">
+            <el-progress v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="video.percentage" :status="video.status"></el-progress>
             <el-form-item :label="video.name">
               <el-input v-model="newNames[video.name]" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(0,false)"></el-input>
             </el-form-item> <!-- TODO: update enter shortcut to validate all video names and submit -->
           </div>
-
           <!-- <el-form-item label="Video name">
             <el-input v-model="currentVidName" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(currentVidName,0,false)"></el-input>
           </el-form-item> -->
@@ -116,12 +115,13 @@ export default {
     },
     uploadProgress(event, file, fileList) {
       this.uploadedFileList = fileList;
-
+      console.log(event);
+      console.log(file);
+      console.log(fileList);
       if (event.percent >= 100) {
         // this.uploading=false;
         this.progressBar.status = "success";
         // todo effect for finished upload
-        console.log(fileList);
 
         if (this.upload.ready) {
           //send it
