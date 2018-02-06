@@ -1,18 +1,17 @@
 <template>
   <div v-if="$store.state.authUser">
     <h1 class="title breaker">Upload</h1>
-    <el-card  class="uploadForm" v-if="uploading">
+    <el-card class="uploadForm" v-if="uploading" v-loading="irreversibleUploadCommenced">
       <div slot="header" class="clearfix">
         <span>Uploading video</span>
       </div>
-      <el-progress class="progress" v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="progressBar.percentage" :status="progressBar.status"></el-progress>
         <el-form>
           <div v-if="uploadedFileList" v-for="(video, index) in uploadedFileList" :item="video" :index="index" :key="video.videoID">
+            <el-progress v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="video.percentage" :status="video.status"></el-progress>
             <el-form-item :label="video.name">
               <el-input v-model="newNames[video.name]" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(0,false)"></el-input>
             </el-form-item> <!-- TODO: update enter shortcut to validate all video names and submit -->
           </div>
-
           <!-- <el-form-item label="Video name">
             <el-input v-model="currentVidName" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(currentVidName,0,false)"></el-input>
           </el-form-item> -->
@@ -40,7 +39,9 @@ export default {
   layout: "main",
   data() {
     return {
+      irreversibleUploadCommenced:false,
       uploading: false,
+      completeCount:0,
       progressBar: {
         status: "",
         percentage: 0
@@ -74,18 +75,16 @@ export default {
     onUploadSuccess(res, file, fileList) {
       //displaying naming fields
       this.newVideos = res.newVideos;
+      this.completeCount++;
       //LEFTOFF: keeping tabs on videos for naming
-      console.log(fileList);
     },
     beforeVideoUpload(file) {
-
       this.uploading = true;
       if (!this.$store.state.authUser) {
         this.$message.error("You are not signed in!");
         this.$nuxt._router.push("/");
         return false;
       }
-
       var mbFilesize = file.size / 1024 / 1024;
 
       if (this.$store.state.authUser.remainingSpace < mbFilesize) {
@@ -116,13 +115,13 @@ export default {
     },
     uploadProgress(event, file, fileList) {
       this.uploadedFileList = fileList;
-
+      // console.log(event);
+      // console.log(file);
+      // console.log(fileList);
       if (event.percent >= 100) {
         // this.uploading=false;
         this.progressBar.status = "success";
         // todo effect for finished upload
-        console.log(fileList);
-
         if (this.upload.ready) {
           //send it
           setTimeout(() => {
@@ -147,11 +146,14 @@ export default {
         this.$nuxt._router.push("/");
         return false;
       }
-      if (this.progressBar.percentage == 100 || specialPass == true) {
+
+      // check if all videos have finished uploading
+      if (this.completeCount>=this.uploadedFileList.length || specialPass == true) {
         // if (!name && status == 0) {
         //   //validate form of all new video names
         //   this.$message.error("Please enter a valid name!");
         // }
+        this.irreversibleUploadCommenced=true;
         axios({
           url: "https://cigari.ga/api/finalizeUpload",
           method: "post",
@@ -164,7 +166,9 @@ export default {
         })
           .then(res => {
             this.uploading = false;
-
+            this.irreversibleUploadCommenced=false;
+            this.completeCount=0;
+            
             if (status == 0) {
               this.dialog.buttonConfirm.loading = false;
               this.dialog.buttonCancel.disabled = false;
