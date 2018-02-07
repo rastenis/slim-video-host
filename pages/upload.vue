@@ -7,7 +7,7 @@
       </div>
         <el-form>
           <div v-if="uploadedFileList" v-for="(video, index) in uploadedFileList" :item="video" :index="index" :key="video.videoID">
-            <el-progress v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="video.percentage" :status="video.status"></el-progress>
+            <el-progress v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="parseFloat(video.percentage.toFixed(2))" :status="video.status"></el-progress>
             <el-form-item :label="video.name">
               <el-input v-model="newNames[video.name]" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(0,false)"></el-input>
             </el-form-item> <!-- TODO: update enter shortcut to validate all video names and submit -->
