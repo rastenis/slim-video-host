@@ -1238,15 +1238,23 @@ app.post('/api/removeVideo', function(req, res) {
                                 }
                                 // rm cached vid
                                 try {
-                                    fs.unlink(config.file_path + selection.videoID + selection.extension);
-                                } catch (err) {
-                                    log("VIDEO DELETION | " + err, 1);
+                                    fs.remove(config.file_path + selection.videoID + selection.extension, function(err) {
+                                        if (err) {
+                                            console.log(err);
+                                        }
+                                    });
+                                } catch (error) {
+                                    //log("VIDEO DELETION | " + err, 1);
                                 }
                                 // rm thumbnail
                                 try {
-                                    fs.unlink(config.file_path + "thumbs/" + selection.videoID + ".jpg");
-                                } catch (err) {
-                                    log("VIDEO DELETION | " + err, 1);
+                                    fs.remove(config.file_path + "thumbs/" + selection.videoID + ".jpg", function(err) {
+                                        if (err) {
+                                            console.log(err);
+                                        }
+                                    });
+                                } catch (error) {
+                                    //log("VIDEO DELETION | " + err, 1);
                                 }
 
                                 // renewing session user
