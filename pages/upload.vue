@@ -74,9 +74,18 @@ export default {
   methods: {
     onUploadSuccess(res, file, fileList) {
       //displaying naming fields
+      this.uploadedFileList=fileList;
       this.newVideos = res.newVideos;
       this.completeCount++;
+      console.log("SUUCCCCESSSSSSSSS");
       //LEFTOFF: keeping tabs on videos for naming
+      if (this.upload.ready && this.completeCount>=this.uploadedFileList.length) {
+        //send it
+        setTimeout(() => {
+          this.finishUpload(this.upload.name, this.upload.action, true);
+        }, 1000);
+      }
+        
     },
     beforeVideoUpload(file) {
       this.uploading = true;
@@ -118,18 +127,7 @@ export default {
       // console.log(event);
       // console.log(file);
       // console.log(fileList);
-      if (event.percent >= 100) {
-        // this.uploading=false;
-        this.progressBar.status = "success";
-        // todo effect for finished upload
-        if (this.upload.ready) {
-          //send it
-          setTimeout(() => {
-            this.finishUpload(this.upload.name, this.upload.action, true);
-          }, 1000);
-        }
-      }
-      this.progressBar.percentage = parseFloat(event.percent.toFixed(1));
+ 
     },
     uploadedNotification(msg, type) {
       this.$notify({
