@@ -23,6 +23,8 @@ const NedbStore = require('nedb-session-store')(session);
 const config = require('../config');
 const maintenance = require('./external/maintenance.js');
 const db = require('./external/db.js');
+const favicon = require('serve-favicon');
+const path = require('path');
 
 // removed _ and - from the generator because of issues with nuxt dynamic routing
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
@@ -63,6 +65,7 @@ if (config.self_hosted == "1") {
     });
 }
 
+app.use(favicon(__dirname + '/../static/fav/favicon.ico'));
 app.use(helmet());
 app.use(fileUpload({
     limits: {
@@ -1304,6 +1307,7 @@ app.post('/api/upload', function(req, res) {
             error: 'User not signed in.'
         });
     } else {
+
         let returner = {},
             opCount = 0;
         returner.error = 0;
@@ -1408,12 +1412,9 @@ app.post('/api/upload', function(req, res) {
                                             }
                                         });
                                     }
-
                                 });
-
                                 var decrement = fileSizeInMegabytes *= -1;
                                 done(null, decrement);
-
                             }
                         }, function(decrement, done) {
                             // reducing user's storage space
@@ -1435,6 +1436,7 @@ app.post('/api/upload', function(req, res) {
                             if (err) {
                                 log("UPLOAD | " + err, 1);
                             }
+
                         });
                     }
                 }

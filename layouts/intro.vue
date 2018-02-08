@@ -41,11 +41,10 @@
 
 
 <style scoped>
-
-.container{
+.container {
   max-height: 40%;
   width: 40%;
-  background: #E5E9F2;
+  background: #e5e9f2;
   margin: auto;
   opacity: 0.1;
   position: absolute;
@@ -55,9 +54,8 @@
   filter: unset;
 }
 
-.blurMeOut{
+.blurMeOut {
   -webkit-filter: blur(4px);
-  filter:blur(4px);
+  filter: blur(4px);
 }
-
 </style>

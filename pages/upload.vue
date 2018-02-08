@@ -77,7 +77,6 @@ export default {
       this.uploadedFileList=fileList;
       this.newVideos = res.newVideos;
       this.completeCount++;
-      console.log("SUUCCCCESSSSSSSSS");
       //LEFTOFF: keeping tabs on videos for naming
       if (this.upload.ready && this.completeCount>=this.uploadedFileList.length) {
         //send it
@@ -85,7 +84,6 @@ export default {
           this.finishUpload(this.upload.name, this.upload.action, true);
         }, 1000);
       }
-        
     },
     beforeVideoUpload(file) {
       this.uploading = true;

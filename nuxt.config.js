@@ -17,8 +17,15 @@ module.exports = {
     modules: [
         '@nuxtjs/font-awesome'
     ],
-    links: [
-        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Lato' },
+    links: [{
+            rel: 'stylesheet',
+            href: 'https://fonts.googleapis.com/css?family=Lato'
+        },
+        {
+            rel: 'icon',
+            type: 'image/x-icon',
+            href: 'favicon.ico',
+        },
     ],
 
     axios: {
