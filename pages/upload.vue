@@ -1,7 +1,7 @@
 <template>
   <div v-if="$store.state.authUser">
     <h1 class="title breaker">Upload</h1>
-    <el-card class="uploadCard uploadForm clickableCard" v-if="!upload.declined">
+    <el-card class="uploadCard uploadForm clickableCard" v-if="!uploading && !upload.declined">
         <el-upload ref="uploader" :multiple="true" :thumbnail-mode="true" :on-success="onUploadSuccess" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
           <i class="el-icon-upload"></i>
           <div class="el-upload__text">Drop file here or
@@ -10,7 +10,7 @@
           <div class="el-upload__tip" slot="tip">.mp4, .ogg, .webm files with a size less than 5GB</div>
         </el-upload>
     </el-card>
-    <el-card class="uploadForm fileList" v-if="uploadedFileList.length!=0 && !upload.declined" v-loading="irreversibleUploadCommenced">
+    <el-card class="uploadForm fileList" v-if="uploading && !upload.declined" v-loading="irreversibleUploadCommenced">
       <div slot="header" class="clearfix">
         <span>Uploading videos</span>
       </div>
@@ -28,7 +28,7 @@
           <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(1,false)">Cancel</el-button>
         </el-form>
     </el-card>
-    <el-card class="uploadForm" v-if="this.upload.declined">
+    <el-card class="uploadForm" v-if="upload.declined">
       <h2 style="color:red;">Upload declined!</h2> 
       <h3> Try again later.</h3>
     </el-card>
