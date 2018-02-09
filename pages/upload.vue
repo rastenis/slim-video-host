@@ -1,12 +1,21 @@
 <template>
   <div v-if="$store.state.authUser">
     <h1 class="title breaker">Upload</h1>
-    <el-card class="uploadForm" v-if="uploading" v-loading="irreversibleUploadCommenced">
+    <el-card class="uploadCard uploadForm clickableCard" v-if="!uploading && !upload.declined">
+        <el-upload ref="uploader" :multiple="true" :thumbnail-mode="true" :on-success="onUploadSuccess" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
+          <i class="el-icon-upload"></i>
+          <div class="el-upload__text">Drop file here or
+            <em>click to upload</em>
+          </div>
+          <div class="el-upload__tip" slot="tip">.mp4, .ogg, .webm files with a size less than 5GB</div>
+        </el-upload>
+    </el-card>
+    <el-card class="uploadForm fileList" v-if="uploading && !upload.declined" v-loading="irreversibleUploadCommenced">
       <div slot="header" class="clearfix">
-        <span>Uploading video</span>
+        <span>Uploading videos</span>
       </div>
         <el-form>
-          <div v-if="uploadedFileList" v-for="(video, index) in uploadedFileList" :item="video" :index="index" :key="video.videoID">
+          <div v-for="(video, index) in uploadedFileList" :item="video" :index="index" :key="video.videoID">
             <el-progress v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="parseFloat(video.percentage.toFixed(2))" :status="video.status"></el-progress>
             <el-form-item :label="video.name">
               <el-input v-model="newNames[video.name]" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(0,false)"></el-input>
@@ -19,15 +28,10 @@
           <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(1,false)">Cancel</el-button>
         </el-form>
     </el-card>
-    <el-card class="uploadCard uploadForm clickableCard" v-else>
-        <el-upload ref="uploader" :multiple="true" :thumbnail-mode="true" :on-success="onUploadSuccess" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
-          <i class="el-icon-upload"></i>
-          <div class="el-upload__text">Drop file here or
-            <em>click to upload</em>
-          </div>
-          <div class="el-upload__tip" slot="tip">.mp4, .ogg, .webm files with a size less than 5GB</div>
-        </el-upload>
-      </el-card>
+    <el-card class="uploadForm" v-if="upload.declined">
+      <h2 style="color:red;">Upload declined!</h2> 
+      <h3> Try again later.</h3>
+    </el-card>
     </div>
 </template>
 <script>
@@ -64,18 +68,22 @@ export default {
       upload: {
         ready: false,
         name: null,
-        action: 0
+        action: 0,
+        declined:false
       },
       newVideos: [],
       uploadedFileList: [],
-      newNames: {}, 
-      uploader:null
+      newNames: {}
     };
   },
   methods: {
       onUploadSuccess(res, file, fileList) {
         if (res.error) {
-      
+          this.upload.declined=true;
+          this.$message({
+            message:res.msg,
+            type:res.msgType
+          });
          // red progress bar, disabled buttons
         } else {
           //displaying naming fields
@@ -90,7 +98,6 @@ export default {
             }, 1000);
           }
         }
-
     },
     beforeVideoUpload(file) {
       this.uploading = true;
@@ -247,7 +254,12 @@ export default {
   left: 0;
   width: 60vw;
 }
-
+.uploadDenied {
+  color: red;
+}
+.fileList {
+  margin-top: 4vh;
+}
 .vid-uploader .el-upload {
   cursor: pointer;
   position: relative;

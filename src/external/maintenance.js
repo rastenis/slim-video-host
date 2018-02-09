@@ -1,29 +1,36 @@
 const fs = require('fs-extra');
 var db = require('../external/db.js');
+const du = require('du');
 const chalk = require('chalk');
 const async = require('async');
 const exec = require('child_process').exec;
 
-
+// custom array diff prototype
 Array.prototype.diff = function(a) {
     return this.filter(function(i) {
         return a.indexOf(i) < 0;
     });
 };
 
-function preLaunch(videoDir) {
+function preLaunch(config) {
 
     // make sure the designated video directory is up
-    fs.ensureDir(videoDir, err => {
+    fs.ensureDir(config.file_path, err => {
         if (err) {
             console.log(err);
         }
     });
 
     // thumbnail dir too
-    fs.ensureDir(videoDir + "thumbs/", err => {
+    fs.ensureDir(config.file_path + "thumbs/", err => {
         if (err) {
             console.log(err);
+        }
+    });
+
+    du(config.file_path, function(err, size) {
+        if (size >= config.total_space) {
+            console.log("WARNING! Max space exceeded!");
         }
     });
 
@@ -43,7 +50,7 @@ function preLaunch(videoDir) {
 
                 async.waterfall([
                     function(done) {
-                        fs.pathExists(videoDir + video.videoID + video.extension, (err, exists) => {
+                        fs.pathExists(config.file_path + video.videoID + video.extension, (err, exists) => {
                             if (err) {
                                 console.log(err);
                             }
@@ -61,7 +68,7 @@ function preLaunch(videoDir) {
                         });
                     },
                     function(done) {
-                        fs.pathExists(videoDir + "thumbs/" + video.videoID + ".jpg", (err, exists) => {
+                        fs.pathExists(config.file_path + "thumbs/" + video.videoID + ".jpg", (err, exists) => {
                             if (err) {
                                 console.log(err);
                             }
@@ -69,7 +76,7 @@ function preLaunch(videoDir) {
                                 //console.log(chalk.bgYellow.black("WARN! Video " + video.videoID + " has no thumbnail! Creating..."));
                                 //savinu thumbnail
                                 try {
-                                    exec("ffmpeg -i '../../" + videoDir + video.videoID + video.extension + "' -ss 0 -vframes 1 '../../" + videoDir + "thumbs/" + video.videoID + ".jpg'", {
+                                    exec("ffmpeg -i '../../" + config.file_path + video.videoID + video.extension + "' -ss 0 -vframes 1 '../../" + config.file_path + "thumbs/" + video.videoID + ".jpg'", {
                                         cwd: __dirname
                                     }, function(error, stdout, stderr) {
                                         if (error) {
@@ -91,7 +98,7 @@ function preLaunch(videoDir) {
                 });
             });
 
-            fs.readdir(videoDir, (err, files) => {
+            fs.readdir(config.file_path, (err, files) => {
                 if (docs.length < files.length - 1) {
                     //console.log("WARN! Detected undeleted video files.");
 
@@ -103,7 +110,7 @@ function preLaunch(videoDir) {
                     if (difference.length != 0) {
                         difference.forEach((item) => {
                             //removing unneeded
-                            fs.unlink(videoDir + item, function(err) {
+                            fs.unlink(config.file_path + item, function(err) {
                                 if (err) {
                                     console.log(err);
                                 }
@@ -113,7 +120,7 @@ function preLaunch(videoDir) {
                 }
             });
             //LEFTOFF: remove uneeeded thumbs 
-            fs.readdir(videoDir + "thumbs/", (err, files) => {
+            fs.readdir(config.file_path + "thumbs/", (err, files) => {
                 if (docs.length < files.length) {
                     //console.log("WARN! Detected undeleted video thumbnails.");
 
@@ -121,7 +128,7 @@ function preLaunch(videoDir) {
                     if (difference.length != 0) {
                         difference.forEach((item) => {
                             //removing unneeded
-                            fs.unlink(videoDir + "thumbs/" + item, function(err) {
+                            fs.unlink(config.file_path + "thumbs/" + item, function(err) {
                                 if (err) {
                                     console.log(err);
                                 }
