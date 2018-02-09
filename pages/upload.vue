@@ -98,7 +98,6 @@ export default {
             }, 1000);
           }
         }
-
     },
     beforeVideoUpload(file) {
       this.uploading = true;

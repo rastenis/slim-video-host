@@ -35,7 +35,7 @@ var defaultStorageSpace = 10000; // in megabytes
 var defaultTokenExpiry = 1800000; // 30 mins
 
 // on-start auto maintenance
-maintenance.preLaunch(config.file_path);
+maintenance.preLaunch(config);
 
 //optional certs
 if (config.self_hosted == "1") {
