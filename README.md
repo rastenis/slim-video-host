@@ -68,3 +68,11 @@ npm run dev
 * This may in turn generate databases, temporary files and certs that have root ownership:
   * Shouldn't be a problem if the TLS mode isn't changed
   * System wipe will also need to be ran as root. When it's finished, normal non-root operation without auto TLS generation can be reinstated (after reconfiguring config.json via `npm run setup`).
+
+
+### Automatic maintenance
+
+* All unconfirmed videos (stored videos w/o confirmation & naming from the user) are removed
+* All videos & thumbnails without entries in the database are purged
+* Videos without a thumbnail get their thumbnails regenerated
+* Total space is checked with current space. A **Warning** will be displayed on build if the total_space is exceeded (the system will still function, but uploads will no longer be accepted).
