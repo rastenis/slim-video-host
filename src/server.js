@@ -1307,16 +1307,23 @@ app.post('/api/upload', function(req, res) {
             error: 'User not signed in.'
         });
     } else {
-
         let returner = {},
             opCount = 0;
         returner.error = 0;
         returner.newVideos = [];
 
         async.waterfall([function(done) {
-            // runnign all-unconfirmed removal before starting
-            // TODO: where's this go?
-            done();
+            // checking space first
+            du('static/videos', function(err, size) {
+                if (size >= config.total_space) {
+                    log('UPLOAD | Max space exceeded! Interrupting download...', 1);
+                    returner.error = 1;
+                    returner.msg = "The server cannot accept videos at the moment. Try again later!";
+                    returner.msgType = "info";
+                    return res.json(returner);
+                }
+                done();
+            });
         }], function(err) {
             // PER-FILE handling  
 

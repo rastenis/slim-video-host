@@ -68,22 +68,29 @@ export default {
       },
       newVideos: [],
       uploadedFileList: [],
-      newNames: {}
+      newNames: {}, 
+      uploader:null
     };
   },
   methods: {
-    onUploadSuccess(res, file, fileList) {
-      //displaying naming fields
-      this.uploadedFileList=fileList;
-      this.newVideos = res.newVideos;
-      this.completeCount++;
-      //LEFTOFF: keeping tabs on videos for naming
-      if (this.upload.ready && this.completeCount>=this.uploadedFileList.length) {
-        //send it
-        setTimeout(() => {
-          this.finishUpload(this.upload.name, this.upload.action, true);
-        }, 1000);
-      }
+      onUploadSuccess(res, file, fileList) {
+        if (res.error) {
+      
+         // red progress bar, disabled buttons
+        } else {
+          //displaying naming fields
+          this.uploadedFileList = fileList;
+          this.newVideos = res.newVideos;
+          this.completeCount++;
+          //LEFTOFF: keeping tabs on videos for naming
+          if (this.upload.ready && this.completeCount >= this.uploadedFileList.length) {
+            //send it
+            setTimeout(() => {
+              this.finishUpload(this.upload.name, this.upload.action, true);
+            }, 1000);
+          }
+        }
+
     },
     beforeVideoUpload(file) {
       this.uploading = true;
@@ -125,7 +132,6 @@ export default {
       // console.log(event);
       // console.log(file);
       // console.log(fileList);
- 
     },
     uploadedNotification(msg, type) {
       this.$notify({
@@ -225,6 +231,7 @@ export default {
     } else {
       this.$store.state.activeTab = "3";
     }
+    this.uploader = this.$refs.uploader;
   },
   transition: "mainTransition"
 };
