@@ -1,8 +1,7 @@
 <template>
   <div v-if="$store.state.authUser">
     <h1 class="title breaker">Upload</h1>
-    
-    <el-card class="uploadCard uploadForm clickableCard">
+    <el-card class="uploadCard uploadForm clickableCard" v-if="!upload.declined">
         <el-upload ref="uploader" :multiple="true" :thumbnail-mode="true" :on-success="onUploadSuccess" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
           <i class="el-icon-upload"></i>
           <div class="el-upload__text">Drop file here or
@@ -11,7 +10,7 @@
           <div class="el-upload__tip" slot="tip">.mp4, .ogg, .webm files with a size less than 5GB</div>
         </el-upload>
     </el-card>
-    <el-card class="uploadForm fileList" v-if="uploadedFileList.length!=0" v-loading="irreversibleUploadCommenced">
+    <el-card class="uploadForm fileList" v-if="uploadedFileList.length!=0 && !upload.declined" v-loading="irreversibleUploadCommenced">
       <div slot="header" class="clearfix">
         <span>Uploading videos</span>
       </div>
@@ -28,6 +27,10 @@
           <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(0,false)">Finish upload</el-button>
           <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(1,false)">Cancel</el-button>
         </el-form>
+    </el-card>
+    <el-card class="uploadForm" v-if="this.upload.declined">
+      <h2 style="color:red;">Upload declined!</h2> 
+      <h3> Try again later.</h3>
     </el-card>
     </div>
 </template>
@@ -65,18 +68,22 @@ export default {
       upload: {
         ready: false,
         name: null,
-        action: 0
+        action: 0,
+        declined:false
       },
       newVideos: [],
       uploadedFileList: [],
-      newNames: {}, 
-      uploader:null
+      newNames: {}
     };
   },
   methods: {
       onUploadSuccess(res, file, fileList) {
         if (res.error) {
-          this.$refs.uploader.abort({file:file});
+          this.upload.declined=true;
+          this.$message({
+            message:res.msg,
+            type:res.msgType
+          });
          // red progress bar, disabled buttons
         } else {
           //displaying naming fields
@@ -248,7 +255,9 @@ export default {
   left: 0;
   width: 60vw;
 }
-
+.uploadDenied {
+  color: red;
+}
 .fileList {
   margin-top: 4vh;
 }
