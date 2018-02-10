@@ -78,7 +78,10 @@ export default {
     }
   },
   layout: 'main',
-  transition:'mainTransition'
+  transition:'mainTransition',
+  head:{
+    title:"Password Reset"
+  }
 }
 </script>
 

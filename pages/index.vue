@@ -118,6 +118,9 @@ export default {
         this.intro.backgroundImage = 'url(' + res.data.data.image_original_url + ')';
       })
       .catch(e=>{});
+  },
+  head:{
+    title:"Welcome"
   }
 }
 </script>

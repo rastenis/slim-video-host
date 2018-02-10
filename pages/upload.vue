@@ -21,9 +21,6 @@
               <el-input v-model="newNames[video.name]" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(0,false)"></el-input>
             </el-form-item> <!-- TODO: update enter shortcut to validate all video names and submit -->
           </div>
-          <!-- <el-form-item label="Video name">
-            <el-input v-model="currentVidName" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(currentVidName,0,false)"></el-input>
-          </el-form-item> -->
           <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(0,false)">Finish upload</el-button>
           <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(1,false)">Cancel</el-button>
         </el-form>
@@ -149,7 +146,6 @@ export default {
       });
     },
     finishUpload(status, specialPass) {
-      console.log(this.newNames);
       if (!this.$store.state.authUser) {
         this.$message.error("You are not signed in!");
         this.$nuxt._router.push("/");
@@ -240,7 +236,10 @@ export default {
     }
     this.uploader = this.$refs.uploader;
   },
-  transition: "mainTransition"
+  transition: "mainTransition",
+  head:{
+    title:"Upload"
+  }
 };
 </script>
 

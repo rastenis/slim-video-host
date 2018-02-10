@@ -487,7 +487,7 @@ export default {
       });
     },
     updateFilter(event) {
-      //sumerginu abu masyvus pradzioj, kad galeciau fresh fiterint
+      // merging arrays for filtering later on
       this.videos = this.videos.concat(this.hiddenVideos);
       this.hiddenVideos = [];
 
@@ -504,16 +504,17 @@ export default {
           return video.name.includes(this.searchTerm);
         });
       }
-
       this.videos = filtered[0];
       this.hiddenVideos = filtered[1];
     }
   },
   layout: "main",
-  transition: "mainTransition"
+  transition: "mainTransition",
+  head:{
+    title:"Dashboard"
+  }
 };
 </script>
-
 
 <style scoped>
 img {

@@ -148,7 +148,10 @@ export default {
     }
   },
   layout: 'main',
-  transition:'mainTransition'
+  transition:'mainTransition',
+  head:{
+    title:"Registration"
+  }
 }
 </script>
 
