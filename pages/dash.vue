@@ -227,6 +227,11 @@ export default {
                 let hasVideos = false;
                 if (res.data.videos.length != 0) {
                   hasVideos = true;
+
+                  // filtering out unconfirmeds
+                  res.data.videos=res.data.videos.filter(item => {
+                    return item.confirmed;
+                  });
                 }
                 return {
                   videos: res.data.videos,
