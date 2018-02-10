@@ -37,7 +37,9 @@
             </el-card>
           </el-col>
         </el-row>
-        <el-table v-loading="loading" :data="videos" style="width: 100%; margin-top:4vh;">
+        <el-table :data="videos" v-loading="loading" @selection-change="handleSelectionChange" style="width: 100%;margin-top:4vh">
+          <el-table-column type="selection" width="40">
+          </el-table-column>
           <el-table-column prop="name" label="Video">
             <template slot-scope="scope">
               <div class="nameColumn">
@@ -60,6 +62,9 @@
             </template>
           </el-table-column>
         </el-table>
+        <el-card>
+          <el-button :disabled="multipleSelection.length==0" type="danger" size="small" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
+        </el-card>
       </div>
     </div>
     <div v-else>
