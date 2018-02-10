@@ -173,76 +173,79 @@
 
 
 <script>
-import axios from 'axios'
+import axios from "axios";
 export default {
   data() {
     return {
       loading: true,
       videos: [],
-      hasVideos:false,
+      hasVideos: false,
       hiddenVideos: [],
       stats: {},
       currentCopyTooltip: "Click to copy!",
       multipleSelection: [],
-      searchTerm: ''
-    }
+      searchTerm: ""
+    };
   },
   asyncData(context) {
     try {
       if (context.app.store.state.authUser.userStatus == 1) {
         //fetchinam additional stats
         return axios({
-            url: 'https://cigari.ga/api/getAdminStats',
-            method: 'post',
-            credentials: 'same-origin',
-            data: {
-              user: context.app.store.state.authUser
-            }
-          })
-          .then((res) => {
+          url: "https://cigari.ga/api/getAdminStats",
+          method: "post",
+          credentials: "same-origin",
+          data: {
+            user: context.app.store.state.authUser
+          }
+        })
+          .then(res => {
             if (res.data.error == 0) {
               return {
                 stats: res.data.stats,
                 loading: false,
                 videos: res.data.videos
-              }
-            } else if (res.data.error == 1) {}
-          }).catch(function (e) {
+              };
+            } else if (res.data.error == 1) {
+            }
+          })
+          .catch(function(e) {
             console.log(e);
           });
       } else {
         return axios({
-            url: 'https://cigari.ga/api/getVideos',
-            method: 'post',
-            credentials: 'same-origin',
-            data: {
-              user: context.app.store.state.authUser
-            }
-          })
-          .then((res) => {
-            try{
+          url: "https://cigari.ga/api/getVideos",
+          method: "post",
+          credentials: "same-origin",
+          data: {
+            user: context.app.store.state.authUser
+          }
+        })
+          .then(res => {
+            try {
               if (res.data.error == 0) {
-                  let hasVideos=false;
-                  if(res.data.videos.length!=0){
-                    hasVideos=true;
-                  }
+                let hasVideos = false;
+                if (res.data.videos.length != 0) {
+                  hasVideos = true;
+                }
                 return {
                   videos: res.data.videos,
                   loading: false,
-                  hasVideos:hasVideos
-                }
+                  hasVideos: hasVideos
+                };
               } else if (res.data.error == 1) {
                 console.log("error while fetching videos");
               }
-            }catch(err){
+            } catch (err) {
               // null videos(no videos)
               return {
                 videos: res.data.videos,
                 loading: false,
-                hasVideos:false
-              }
+                hasVideos: false
+              };
             }
-          }).catch(function (e) {
+          })
+          .catch(function(e) {
             console.log(e);
           });
       }
@@ -258,99 +261,117 @@ export default {
   },
   created() {
     if (!this.$store.state.authUser) {
-      this.$nuxt._router.push("/")
+      this.$nuxt._router.push("/");
     } else {
-      this.$store.state.activeTab = '2';
+      this.$store.state.activeTab = "2";
     }
   },
   methods: {
     async deleteVideo(selects) {
-      this.$confirm('This will permanently delete the selected videos. Continue?', 'Warning', {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
-        type: 'warning'
-      }).then(() => {
-        this.loading=true;
-        axios({
-            url: 'https://cigari.ga/api/removeVideo',
-            method: 'post',
-            credentials: 'same-origin',
+      this.$confirm(
+        "This will permanently delete the selected videos. Continue?",
+        "Warning",
+        {
+          confirmButtonText: "OK",
+          cancelButtonText: "Cancel",
+          type: "warning"
+        }
+      )
+        .then(() => {
+          this.loading = true;
+          axios({
+            url: "https://cigari.ga/api/removeVideo",
+            method: "post",
+            credentials: "same-origin",
             data: {
               user: this.$store.state.authUser,
               selection: selects
             }
           })
-          .then((res) => {
-            //resetting selection
-            this.toggleSelection();
-            
-            if (res.data.error == 0) {
-              res.data.selection.forEach(selection => {
-                console.log(selection._id);
+            .then(res => {
+              //resetting selection
+              this.toggleSelection();
 
-                this.videos.forEach((video,index) => {
-                    if(video._id==selection._id){
-                      this.stats.usedSpace -= selection.size;                      
+              if (res.data.error == 0) {
+                res.data.selection.forEach(selection => {
+                  console.log(selection._id);
+
+                  this.videos.forEach((video, index) => {
+                    if (video._id == selection._id) {
+                      this.stats.usedSpace -= selection.size;
+                      this.stats.usedSpace = this.stats.usedSpace.toFixed(2);
+
+                      // could happen due to size rounding on upload
+                      if (this.stats.usedSpace < 0) {
+                        this.stats.usedSpace = 0;
+                      }
+
                       this.videos.splice(index, 1);
                     }
                   });
+                });
+              } else if (res.data.error == 1) {
+                console.log("error while bulk deleting videos");
+              }
+              this.loading = false;
+              this.$message({
+                type: res.data.msgType,
+                message: res.data.msg
               });
-
-            } else if (res.data.error == 1) {
-              console.log("error while bulk deleting videos");
-            }
-            this.loading=false;
-            this.$message({
-              type: res.data.msgType,
-              message: res.data.msg
+            })
+            .catch(function(e) {
+              console.log(e);
             });
-
-          }).catch(function (e) {
-            console.log(e);
-          });
-      }).catch(() => {});
+        })
+        .catch(() => {});
     },
     async requestNewID(selection) {
-      this.$confirm('This will generate new links for all selected videos. Continue?', 'Warning', {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
-        type: 'warning'
-      }).then(() => {
-        axios({
-            url: 'https://cigari.ga/api/newLink',
-            method: 'post',
-            credentials: 'same-origin',
+      this.$confirm(
+        "This will generate new links for all selected videos. Continue?",
+        "Warning",
+        {
+          confirmButtonText: "OK",
+          cancelButtonText: "Cancel",
+          type: "warning"
+        }
+      )
+        .then(() => {
+          axios({
+            url: "https://cigari.ga/api/newLink",
+            method: "post",
+            credentials: "same-origin",
             data: {
               user: this.$store.state.authUser,
               selection: selection
             }
           })
-          .then((res) => {
-            this.$message({
-              type: res.data.msgType,
-              message: res.data.msg
-            });
-            if (res.data.error == 0) {
-
-              //resetting selection
-              this.toggleSelection();
-
-              this.videos.forEach((video, index) => {
-                res.data.newData.forEach(newVideo => {
-                  if (newVideo.videoID == video.videoID) { //update local
-                    this.videos[index].videoID = newVideo.newVideoID;
-                    this.videos[index].link = newVideo.newLink;
-                  }
-                });
+            .then(res => {
+              this.$message({
+                type: res.data.msgType,
+                message: res.data.msg
               });
-            } else if (res.data.error == 1) {
-              console.log("error while bulk requesting new ids");
-            }
-          }).catch(function (e) {
-            console.log(e);
-          });
+              if (res.data.error == 0) {
+                //resetting selection
+                this.toggleSelection();
 
-      }).catch(() => {});
+                this.videos.forEach((video, index) => {
+                  res.data.newData.forEach(newVideo => {
+                    if (newVideo.videoID == video.videoID) {
+                      //update local
+                      this.videos[index].videoID = newVideo.newVideoID;
+                      this.videos[index].link = newVideo.newLink;
+                    }
+                  });
+                });
+              } else if (res.data.error == 1) {
+                console.log("error while bulk requesting new ids");
+              }
+            })
+            .catch(function(e) {
+              console.log(e);
+            });
+        })
+        .catch(() => {});
     },
     handleSelectionChange(val) {
       this.multipleSelection = val;
@@ -370,58 +391,74 @@ export default {
     },
     copyLink(link) {
       var outt = this;
-      this.$copyText(link)
-        .then(function (e) {
+      this.$copyText(link).then(
+        function(e) {
           outt.currentCopyTooltip = "Copied!";
-        }, function (e) {
+        },
+        function(e) {
           outt.currentCopyTooltip = "Couldn't copy :(";
-        });
+        }
+      );
       setTimeout(() => {
         this.currentCopyTooltip = "Click to copy!";
       }, 1000);
     },
     async requestNewName(index) {
-      this.$prompt('Input the new name:', 'Rename', {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel'
-      }).then((value) => {
-        var videoID = this.videos[index].videoID;
-        console.log("requesting new name for video: " + videoID + ", index is " + index + ", name is " + value.value);
-        axios({
-            url: 'https://cigari.ga/api/rename',
-            method: 'post',
-            credentials: 'same-origin',
+      this.$prompt("Input the new name:", "Rename", {
+        confirmButtonText: "OK",
+        cancelButtonText: "Cancel"
+      })
+        .then(value => {
+          var videoID = this.videos[index].videoID;
+          console.log(
+            "requesting new name for video: " +
+              videoID +
+              ", index is " +
+              index +
+              ", name is " +
+              value.value
+          );
+          axios({
+            url: "https://cigari.ga/api/rename",
+            method: "post",
+            credentials: "same-origin",
             data: {
               user: this.$store.state.authUser,
               videoID: videoID,
               newName: value.value
             }
           })
-          .then((res) => {
-            this.$message({
-              type: res.data.msgType,
-              message: res.data.msg
+            .then(res => {
+              this.$message({
+                type: res.data.msgType,
+                message: res.data.msg
+              });
+              if (res.data.error) {
+                console.log("error while asking for new video name");
+              } else {
+                console.log(
+                  "Successfully updated. Updating local representation..."
+                );
+                this.videos[index].name = res.data.newName;
+              }
+            })
+            .catch(function(e) {
+              console.log(e);
             });
-            if (res.data.error) {
-              console.log("error while asking for new video name");
-            } else {
-              console.log("Successfully updated. Updating local representation...");
-              this.videos[index].name = res.data.newName;
-            }
-          }).catch(function (e) {
-            console.log(e);
-          });
-      }).catch(() => {});
+        })
+        .catch(() => {});
     },
     setUpStats() {
       var totalViews = 0;
-      console.log(this.videos.length+" videos");
+      console.log(this.videos.length + " videos");
       this.videos.forEach(element => {
         totalViews += element.views;
       });
       this.stats.totalViews = totalViews;
       this.stats.totalSpace = this.$store.state.authUser.totalSpace;
-      this.stats.usedSpace = (this.stats.totalSpace - this.$store.state.authUser.remainingSpace).toFixed(1);
+      this.stats.usedSpace = (
+        this.stats.totalSpace - this.$store.state.authUser.remainingSpace
+      ).toFixed(1);
     },
     setUpAdminStats() {
       this.stats.uploadDates = [];
@@ -430,27 +467,28 @@ export default {
       });
     },
     async storageUpgradeInit() {
-      this.$prompt('Please input a promotion code', 'Upgrade', {
-        confirmButtonText: 'Apply',
-        cancelButtonText: 'Cancel',
-        inputErrorMessage: 'Invalid code'
+      this.$prompt("Please input a promotion code", "Upgrade", {
+        confirmButtonText: "Apply",
+        cancelButtonText: "Cancel",
+        inputErrorMessage: "Invalid code"
       }).then(value => {
         //activating the code
         axios({
-            url: 'https://cigari.ga/api/upgradeStorage',
-            method: 'post',
-            credentials: 'same-origin',
-            data: {
-              user: this.$store.state.authUser,
-              code: value.value
-            }
-          })
-          .then((res) => {
+          url: "https://cigari.ga/api/upgradeStorage",
+          method: "post",
+          credentials: "same-origin",
+          data: {
+            user: this.$store.state.authUser,
+            code: value.value
+          }
+        })
+          .then(res => {
             this.$message({
               type: res.data.msgType,
               message: res.data.msg
             });
-          }).catch(function (e) {
+          })
+          .catch(function(e) {
             console.log(e);
           });
       });
@@ -461,15 +499,14 @@ export default {
       this.hiddenVideos = [];
 
       let filtered;
-      if(this.searchTerm==''){ //grazinam viska
+      if (this.searchTerm == "") {
+        //grazinam viska
         try {
-          filtered[0]=this.videos;
-          filtered[1]=null;
-        
-        } catch (e) {
-        
-        }
-      }else{ //filtruojam
+          filtered[0] = this.videos;
+          filtered[1] = null;
+        } catch (e) {}
+      } else {
+        //filtruojam
         filtered = _.partition(this.videos, video => {
           return video.name.includes(this.searchTerm);
         });
@@ -479,9 +516,9 @@ export default {
       this.hiddenVideos = filtered[1];
     }
   },
-  layout: 'main',
-  transition: 'mainTransition'
-}
+  layout: "main",
+  transition: "mainTransition"
+};
 </script>
 
 
