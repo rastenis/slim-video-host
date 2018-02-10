@@ -689,6 +689,7 @@ app.post('/api/getVideos', function(req, res) {
                             username: req.body.user.username.toLowerCase()
                         }, function(err, docs) {
                             req.session.authUser = docs[0];
+                            returner.user = docs[0];
                             finished();
                         });
                     }

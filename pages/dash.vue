@@ -251,19 +251,16 @@ export default {
       }
     } catch (e) {}
   },
-  mounted() {
-    if (!this.$store.state.authUser.userStatus == 1) {
-      console.log("messing w/ some stats");
-      this.setUpStats();
-    } else {
-      this.setUpAdminStats();
-    }
-  },
   created() {
     if (!this.$store.state.authUser) {
       this.$nuxt._router.push("/");
     } else {
       this.$store.state.activeTab = "2";
+      if (!this.$store.state.authUser.userStatus == 1) {
+        this.setUpStats();
+      } else {
+        this.setUpAdminStats();
+      }
     }
   },
   methods: {
@@ -294,8 +291,6 @@ export default {
 
               if (res.data.error == 0) {
                 res.data.selection.forEach(selection => {
-                  console.log(selection._id);
-
                   this.videos.forEach((video, index) => {
                     if (video._id == selection._id) {
                       this.stats.usedSpace -= selection.size;
@@ -375,7 +370,6 @@ export default {
     },
     handleSelectionChange(val) {
       this.multipleSelection = val;
-      console.log(this.multipleSelection);
     },
     redirect(link) {
       this.redirect(link);
@@ -450,7 +444,6 @@ export default {
     },
     setUpStats() {
       var totalViews = 0;
-      console.log(this.videos.length + " videos");
       this.videos.forEach(element => {
         totalViews += element.views;
       });
