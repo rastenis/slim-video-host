@@ -37,7 +37,7 @@ var defaultTokenExpiry = 1800000; // 30 mins
 // on-start auto maintenance
 maintenance.preLaunch(config);
 
-//optional certs
+// optional cert generation
 if (config.self_hosted == "1") {
     // returns an instance of node-greenlock with additional helper methods
     var lex = require('greenlock-express').create({
@@ -1226,7 +1226,7 @@ app.post('/api/removeVideo', function(req, res) {
 
                     async.waterfall([function(done) {
                         db.users.update({
-                                username: req.session.authUser.username
+                                username: selection.username
                             }, {
                                 $inc: { // restoring user's storage space
                                     remainingSpace: Math.abs(docs[0].size)
@@ -1261,8 +1261,11 @@ app.post('/api/removeVideo', function(req, res) {
                                     //log("VIDEO DELETION | " + err, 1);
                                 }
 
-                                // renewing session user
-                                req.session.authUser = affectedDocument;
+                                // renewing session user, but not if the user is an admin
+                                if (req.session.authUser.usreStatus != 1) {
+                                    req.session.authUser = affectedDocument;
+                                }
+
                                 done();
                             });
                     }, function(done) {

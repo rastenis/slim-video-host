@@ -1,8 +1,16 @@
+// dash.vue:
+// User/Admin dashboard,
+// Contains global and per-user video lists
+// (video management + statistics).
+// Also includes user space upgrade method.
+
 <template>
   <div v-if="$store.state.authUser">
     <h1 class="title">{{($store.state.authUser.userStatus==1 ? "Admin panel" : "Dashboard")}}</h1>
+    <!-- Admin panel -->
     <div v-if="$store.state.authUser.userStatus==1" class="pads">
       <div>
+        <!-- Admin stats -->
         <el-row :gutter="20">
           <el-col class="" :span="12">
             <el-card class="box-card ">
@@ -37,6 +45,7 @@
             </el-card>
           </el-col>
         </el-row>
+        <!-- Global video table -->
         <el-table :data="videos" v-loading="loading" @selection-change="handleSelectionChange" style="width: 100%;margin-top:4vh">
           <el-table-column type="selection" width="40">
           </el-table-column>
@@ -67,6 +76,7 @@
         </el-card>
       </div>
     </div>
+    <!-- Normal user dashboard -->
     <div v-else>
       <div v-if="videos.length==0 && searchTerm=='' && hasVideos==false" class="centeredUploadVideoSuggestion">
         <el-card>
@@ -77,6 +87,7 @@
         </el-card>
       </div>
       <div class="videoList" v-else>
+        <!-- Statistics cards -->
         <div class="cards">
           <el-card class="box-card statCard">
             <div slot="header" class="clearfix">
@@ -115,6 +126,7 @@
             </div>
           </el-card>
         </div>
+        <!-- Video list/table -->
         <h2 class="subtitle1">Your videos:</h2>
         <el-card>
           <el-button :disabled="multipleSelection.length==0" type="warning" size="medium" @click.native.prevent="requestNewID(multipleSelection)">New links for selected</el-button>
