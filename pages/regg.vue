@@ -59,7 +59,8 @@ export default {
             max: 100,
             message: 'Length should be 5 to 100',
             trigger: 'blur'
-          }
+          },
+          { validator: this.validateUsername, trigger: 'blur' }
         ],
         email: [{
             required: true,
@@ -126,6 +127,13 @@ export default {
           return false;
         }
       });
+    },
+    validateUsername(rule, value, callback) {
+      if ((/\s/g.test(value))) {
+        callback(new Error('Username cannot contain spaces!'));
+      } else {
+        callback();
+      }
     },
     resetForm(formName) {
       this.$refs[formName].resetFields();

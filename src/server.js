@@ -12,7 +12,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const app = require('express')();
 const fileUpload = require('express-fileupload');
-const fs = require("fs");
+const fs = require("fs-extra");
 const util = require('util');
 const helmet = require('helmet');
 const du = require('du');
@@ -37,7 +37,7 @@ var defaultTokenExpiry = 1800000; // 30 mins
 // on-start auto maintenance
 maintenance.preLaunch(config);
 
-//optional certs
+// optional cert generation
 if (config.self_hosted == "1") {
     // returns an instance of node-greenlock with additional helper methods
     var lex = require('greenlock-express').create({
@@ -1223,10 +1223,9 @@ app.post('/api/removeVideo', function(req, res) {
                     returner.error = 1;
                     returner.msg = "Internal error. Try again.";
                 } else {
-
                     async.waterfall([function(done) {
                         db.users.update({
-                                username: req.session.authUser.username
+                                username: selection.username
                             }, {
                                 $inc: { // restoring user's storage space
                                     remainingSpace: Math.abs(docs[0].size)
@@ -1236,7 +1235,7 @@ app.post('/api/removeVideo', function(req, res) {
                                 multi: false
                             },
                             function(err, numAffected, affectedDocument) {
-
+                                console.log(selection);
                                 if (err) {
                                     log("VIDEO DELETION | " + err, 1);
                                 }
@@ -1248,7 +1247,7 @@ app.post('/api/removeVideo', function(req, res) {
                                         }
                                     });
                                 } catch (error) {
-                                    //log("VIDEO DELETION | " + err, 1);
+                                    log("VIDEO DELETION | " + "couldn't remove video file.", 1);
                                 }
                                 // rm thumbnail
                                 try {
@@ -1258,11 +1257,14 @@ app.post('/api/removeVideo', function(req, res) {
                                         }
                                     });
                                 } catch (error) {
-                                    //log("VIDEO DELETION | " + err, 1);
+                                    log("VIDEO DELETION | " + "couldn't remove video thumbnail.", 1);
                                 }
 
-                                // renewing session user
-                                req.session.authUser = affectedDocument;
+                                // renewing session user, but not if the user is an admin
+                                if (req.session.authUser.userStatus != 1) {
+                                    req.session.authUser = affectedDocument;
+                                }
+
                                 done();
                             });
                     }, function(done) {
@@ -1293,7 +1295,6 @@ app.post('/api/removeVideo', function(req, res) {
                             log("VIDEO DELETION | " + err, 1);
                         }
                     });
-
                 }
             });
         });

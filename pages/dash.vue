@@ -1,8 +1,16 @@
+// dash.vue:
+// User/Admin dashboard,
+// Contains global and per-user video lists
+// (video management + statistics).
+// Also includes user space upgrade method.
+
 <template>
   <div v-if="$store.state.authUser">
     <h1 class="title">{{($store.state.authUser.userStatus==1 ? "Admin panel" : "Dashboard")}}</h1>
+    <!-- Admin panel -->
     <div v-if="$store.state.authUser.userStatus==1" class="pads">
       <div>
+        <!-- Admin stats -->
         <el-row :gutter="20">
           <el-col class="" :span="12">
             <el-card class="box-card ">
@@ -37,7 +45,10 @@
             </el-card>
           </el-col>
         </el-row>
-        <el-table v-loading="loading" :data="videos" style="width: 100%; margin-top:4vh;">
+        <!-- Global video table -->
+        <el-table :data="videos" v-loading="loading" @selection-change="handleSelectionChange" ref="videoTable" style="width: 100%;margin-top:4vh">
+          <el-table-column type="selection" width="40">
+          </el-table-column>
           <el-table-column prop="name" label="Video">
             <template slot-scope="scope">
               <div class="nameColumn">
@@ -54,14 +65,13 @@
           </el-table-column>
           <el-table-column prop="views" label="Views">
           </el-table-column>
-          <el-table-column label="Actions">
-            <template slot-scope="scope">
-              <el-button disabled type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
-            </template>
-          </el-table-column>
         </el-table>
+        <el-card>
+          <el-button :disabled="multipleSelection.length==0" type="danger" size="small" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
+        </el-card>
       </div>
     </div>
+    <!-- Normal user dashboard -->
     <div v-else>
       <div v-if="videos.length==0 && searchTerm=='' && hasVideos==false" class="centeredUploadVideoSuggestion">
         <el-card>
@@ -72,6 +82,7 @@
         </el-card>
       </div>
       <div class="videoList" v-else>
+        <!-- Statistics cards -->
         <div class="cards">
           <el-card class="box-card statCard">
             <div slot="header" class="clearfix">
@@ -110,6 +121,7 @@
             </div>
           </el-card>
         </div>
+        <!-- Video list/table -->
         <h2 class="subtitle1">Your videos:</h2>
         <el-card>
           <el-button :disabled="multipleSelection.length==0" type="warning" size="medium" @click.native.prevent="requestNewID(multipleSelection)">New links for selected</el-button>
@@ -278,8 +290,7 @@ export default {
           cancelButtonText: "Cancel",
           type: "warning"
         }
-      )
-        .then(() => {
+      ).then(() => {
           this.loading = true;
           axios({
             url: "https://cigari.ga/api/removeVideo",
@@ -289,12 +300,13 @@ export default {
               user: this.$store.state.authUser,
               selection: selects
             }
-          })
-            .then(res => {
+          }).then(res => {
               //resetting selection
+              console.log("got res back");
               this.toggleSelection();
-
               if (res.data.error == 0) {
+              console.log("err is 0");
+                
                 res.data.selection.forEach(selection => {
                   this.videos.forEach((video, index) => {
                     if (video._id == selection._id) {
