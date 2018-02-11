@@ -105,19 +105,16 @@
             <div class="text item">
               Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
             </div>
-            <div class="text item">
-              <el-button type="text" @click="storageUpgradeInit">Apply for an upgrade</el-button>
-            </div>
           </el-card>
           <el-card class="box-card statCard">
             <div slot="header" class="clearfix">
-              <span class="headerOfStatCard">Your stats</span>
+              <span class="headerOfStatCard">Account standing</span>
             </div>
             <div class="text item">
-              Total views: {{stats.totalViews}}
+              Status: OK!
             </div>
             <div class="text item">
-              Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
+              <el-button type="text" @click="upgradeInit">Enter upgrade code</el-button>
             </div>
           </el-card>
         </div>
@@ -476,7 +473,7 @@ export default {
         this.stats.uploadDates.push(video.uploadDate);
       });
     },
-    async storageUpgradeInit() {
+    async upgradeInit() {
       this.$prompt("Please input a promotion code", "Upgrade", {
         confirmButtonText: "Apply",
         cancelButtonText: "Cancel",
