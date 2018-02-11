@@ -65,11 +65,6 @@
           </el-table-column>
           <el-table-column prop="views" label="Views">
           </el-table-column>
-          <el-table-column label="Actions">
-            <template slot-scope="scope">
-              <el-button disabled type="danger" size="small" @click.native.prevent="deleteVideo(scope.$index)">Remove</el-button>
-            </template>
-          </el-table-column>
         </el-table>
         <el-card>
           <el-button :disabled="multipleSelection.length==0" type="danger" size="small" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>

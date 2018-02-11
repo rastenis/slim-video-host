@@ -12,7 +12,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const app = require('express')();
 const fileUpload = require('express-fileupload');
-const fs = require("fs");
+const fs = require("fs-extra");
 const util = require('util');
 const helmet = require('helmet');
 const du = require('du');
@@ -1283,7 +1283,6 @@ app.post('/api/removeVideo', function(req, res) {
                                 returner.msgType = "info";
                                 returner.error = 0;
                                 returner.msg = "Successfully deleted video(s)!";
-                                console.log("ok so returning all ok , yea?");
                                 return res.json(returner);
                             } else {
                                 opCount++;
