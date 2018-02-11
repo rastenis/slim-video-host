@@ -1223,7 +1223,6 @@ app.post('/api/removeVideo', function(req, res) {
                     returner.error = 1;
                     returner.msg = "Internal error. Try again.";
                 } else {
-
                     async.waterfall([function(done) {
                         db.users.update({
                                 username: selection.username
@@ -1236,7 +1235,7 @@ app.post('/api/removeVideo', function(req, res) {
                                 multi: false
                             },
                             function(err, numAffected, affectedDocument) {
-
+                                console.log(selection);
                                 if (err) {
                                     log("VIDEO DELETION | " + err, 1);
                                 }
@@ -1248,7 +1247,7 @@ app.post('/api/removeVideo', function(req, res) {
                                         }
                                     });
                                 } catch (error) {
-                                    //log("VIDEO DELETION | " + err, 1);
+                                    log("VIDEO DELETION | " + "couldn't remove video file.", 1);
                                 }
                                 // rm thumbnail
                                 try {
@@ -1258,7 +1257,7 @@ app.post('/api/removeVideo', function(req, res) {
                                         }
                                     });
                                 } catch (error) {
-                                    //log("VIDEO DELETION | " + err, 1);
+                                    log("VIDEO DELETION | " + "couldn't remove video thumbnail.", 1);
                                 }
 
                                 // renewing session user, but not if the user is an admin
@@ -1284,6 +1283,7 @@ app.post('/api/removeVideo', function(req, res) {
                                 returner.msgType = "info";
                                 returner.error = 0;
                                 returner.msg = "Successfully deleted video(s)!";
+                                console.log("ok so returning all ok , yea?");
                                 return res.json(returner);
                             } else {
                                 opCount++;
@@ -1296,7 +1296,6 @@ app.post('/api/removeVideo', function(req, res) {
                             log("VIDEO DELETION | " + err, 1);
                         }
                     });
-
                 }
             });
         });

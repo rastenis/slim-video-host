@@ -46,7 +46,7 @@
           </el-col>
         </el-row>
         <!-- Global video table -->
-        <el-table :data="videos" v-loading="loading" @selection-change="handleSelectionChange" style="width: 100%;margin-top:4vh">
+        <el-table :data="videos" v-loading="loading" @selection-change="handleSelectionChange" ref="videoTable" style="width: 100%;margin-top:4vh">
           <el-table-column type="selection" width="40">
           </el-table-column>
           <el-table-column prop="name" label="Video">
@@ -295,8 +295,7 @@ export default {
           cancelButtonText: "Cancel",
           type: "warning"
         }
-      )
-        .then(() => {
+      ).then(() => {
           this.loading = true;
           axios({
             url: "https://cigari.ga/api/removeVideo",
@@ -306,12 +305,13 @@ export default {
               user: this.$store.state.authUser,
               selection: selects
             }
-          })
-            .then(res => {
+          }).then(res => {
               //resetting selection
+              console.log("got res back");
               this.toggleSelection();
-
               if (res.data.error == 0) {
+              console.log("err is 0");
+                
                 res.data.selection.forEach(selection => {
                   this.videos.forEach((video, index) => {
                     if (video._id == selection._id) {
