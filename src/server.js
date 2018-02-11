@@ -721,7 +721,6 @@ app.post('/api/upgrade', function(req, res) {
 
     db.codes.find({
         code: req.body.code,
-        type: "upgrade",
         active: true
     }, function(err, docs) {
         if (err) {
@@ -736,24 +735,58 @@ app.post('/api/upgrade', function(req, res) {
             returner.msgType = "error";
             log("UPGRADE | unsuccessful: no such code", 0);
         } else {
-            // adding granted space
-            db.users.update({
-                username: req.body.user.username.toLowerCase()
-            }, {
-                $inc: {
-                    totalSpace: docs[0].space
-                }
-            }, {
-                returnUpdatedDocs: true,
-                multi: false
-            }, function(err, numAffected, affectedDocument) {
-                if (err) {
-                    log("UPGRADE | " + err, 1);
-                }
-                // refreshing session
-                req.session.authUser = affectedDocument;
+            // adding granted benefit:
+            // space
+            if (docs[0].benefit == 0) {
+                db.users.update({
+                    username: req.body.user.username.toLowerCase()
+                }, {
+                    $inc: {
+                        totalSpace: docs[0].space
+                    }
+                }, {
+                    returnUpdatedDocs: true,
+                    multi: false
+                }, function(err, numAffected, affectedDocument) {
+                    if (err) {
+                        log("UPGRADE | " + err, 1);
+                    }
+                    // refreshing session
+                    req.session.authUser = affectedDocument;
 
-            });
+                    // res
+                    returner.msg = "You have successfully expanded your space limit!";
+                    returner.error = 0;
+                    returner.msgType = "success";
+                    res.json(returner);
+                });
+                // admin status
+            } else if (docs[0].benefit == 1) {
+                db.users.update({
+                    username: req.body.user.username.toLowerCase()
+                }, {
+                    $set: {
+                        userStatus: 1
+                    }
+                }, {
+                    returnUpdatedDocs: true,
+                    multi: false
+                }, function(err, numAffected, affectedDocument) {
+                    if (err) {
+                        log("UPGRADE | " + err, 1);
+                    }
+                    // refreshing session
+                    req.session.authUser = affectedDocument;
+
+                    // res
+                    returner.msg = "You are now an admin!";
+                    returner.error = 0;
+                    returner.msgType = "success";
+                    res.json(returner);
+                });
+            }
+
+            // disable code
             db.codes.update({
                 code: req.body.code
             }, {
@@ -767,11 +800,7 @@ app.post('/api/upgrade', function(req, res) {
             });
 
             log("UPGRADE | successful upgrade", 0);
-            returner.error = 0;
-            returner.msg = "You have successfully expanded your space limit!";
-            returner.msgType = "success";
         }
-        return res.json(returner);
     });
 });
 
