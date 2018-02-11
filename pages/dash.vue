@@ -112,8 +112,8 @@
             </div>
             <div class="text item">
               Status: 
-                <i class="fa fa-shield fa-lg" style="color:#98FB98;" aria-hidden="true"></i>
                 All fine.
+                <i class="fa fa-check fa-lg" style="color:#98FB98; -webkit-text-stroke: 2px white;" aria-hidden="true"></i>
             </div>
             <div class="text item">
               <el-button type="text" @click="upgradeInit">Enter upgrade code</el-button>

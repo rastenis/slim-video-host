@@ -717,6 +717,7 @@ app.post('/api/getVideos', function(req, res) {
 app.post('/api/upgrade', function(req, res) {
 
     var returner = {};
+    returner.error = 0;
     log("UPGRADE | requester : " + req.body.user.username + ", code:" + req.body.code, 0);
 
     db.codes.find({
@@ -756,7 +757,6 @@ app.post('/api/upgrade', function(req, res) {
 
                     // res
                     returner.msg = "You have successfully expanded your space limit!";
-                    returner.error = 0;
                     returner.msgType = "success";
                     res.json(returner);
                 });
@@ -780,7 +780,6 @@ app.post('/api/upgrade', function(req, res) {
 
                     // res
                     returner.msg = "You are now an admin!";
-                    returner.error = 0;
                     returner.msgType = "success";
                     res.json(returner);
                 });
