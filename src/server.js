@@ -1261,7 +1261,7 @@ app.post('/api/removeVideo', function(req, res) {
                                 }
 
                                 // renewing session user, but not if the user is an admin
-                                if (req.session.authUser.usreStatus != 1) {
+                                if (req.session.authUser.userStatus != 1) {
                                     req.session.authUser = affectedDocument;
                                 }
 
