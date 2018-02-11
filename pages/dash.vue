@@ -111,7 +111,9 @@
               <span class="headerOfStatCard">Account standing</span>
             </div>
             <div class="text item">
-              Status: OK!
+              Status: 
+                <i class="fa fa-shield fa-lg" style="color:#98FB98;" aria-hidden="true"></i>
+                All fine.
             </div>
             <div class="text item">
               <el-button type="text" @click="upgradeInit">Enter upgrade code</el-button>
