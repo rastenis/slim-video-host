@@ -484,7 +484,7 @@ export default {
       }).then(value => {
         //activating the code
         axios({
-          url: "https://cigari.ga/api/upgradeStorage",
+          url: "https://cigari.ga/api/upgrade",
           method: "post",
           credentials: "same-origin",
           data: {

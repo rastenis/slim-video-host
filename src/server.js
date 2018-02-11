@@ -714,7 +714,7 @@ app.post('/api/getVideos', function(req, res) {
 });
 
 // route for storage upgrades
-app.post('/api/upgradeStorage', function(req, res) {
+app.post('/api/upgrade', function(req, res) {
 
     var returner = {};
     log("UPGRADE | requester : " + req.body.user.username + ", code:" + req.body.code, 0);
