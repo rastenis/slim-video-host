@@ -68,6 +68,14 @@
         </el-table>
         <el-card>
           <el-button :disabled="multipleSelection.length==0" type="danger" size="small" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
+          <el-select v-model="warning" placeholder="No warning">
+            <el-option
+              v-for="item in admOpts"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
+          </el-select>
         </el-card>
       </div>
     </div>
@@ -217,7 +225,8 @@ export default {
       stats: {},
       currentCopyTooltip: "Click to copy!",
       multipleSelection: [],
-      searchTerm: ""
+      searchTerm: "",
+      warning:null
     };
   },
   asyncData(context) {
@@ -313,6 +322,11 @@ export default {
         }
       ).then(() => {
           this.loading = true;
+
+          if (warning) {
+            selects[0].warning=warning;
+          }
+          f
           axios({
             url: "https://cigari.ga/api/removeVideo",
             method: "post",
@@ -544,6 +558,15 @@ export default {
       }
       this.videos = filtered[0];
       this.hiddenVideos = filtered[1];
+    }
+  },
+  computed:{
+    admOpts(){
+      if (this.$store.state.authUser.userStatus==1) {
+        return [{label:"Warn user", value:1}, {label:"Block user from uploading", value:2}]
+      }else{
+        return null;
+      }
     }
   },
   layout: "main",

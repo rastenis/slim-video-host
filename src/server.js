@@ -91,6 +91,9 @@ app.use(session({
 // post for the login procedure
 app.post('/api/login', function(req, res) {
     log("LOGIN | requester: " + req.body.username, 0);
+
+    //TODO: debounce if signed in
+
     db.users.find({
         username: req.body.username.toLowerCase()
     }, function(err, docs) {
@@ -1351,7 +1354,15 @@ app.post('/api/removeVideo', function(req, res) {
                         function(done) {
                             if (req.session.authUser.userStatus == 1 && selection.warning != 0) {
                                 // admin has chosen to warn/block user
-                                db.users.update({ username: selection.username }, { $set: { accountStanding: selection.warning } }, { multi: false }, err => {
+                                db.users.update({
+                                    username: selection.username
+                                }, {
+                                    $set: {
+                                        accountStanding: selection.warning
+                                    }
+                                }, {
+                                    multi: false
+                                }, err => {
                                     if (err) {
                                         console.log(err);
                                     }
