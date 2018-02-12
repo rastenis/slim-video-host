@@ -719,7 +719,7 @@ app.post('/api/upgrade', function(req, res) {
 
     var returner = {};
     returner.error = 0;
-    log("UPGRADE | requester : " + req.body.user.username + ", code:" + req.body.code, 0);
+    log("UPGRADE | requester : " + req.session.authUser.username + ", code:" + req.body.code, 0);
 
     db.codes.find({
         code: req.body.code,
@@ -741,7 +741,7 @@ app.post('/api/upgrade', function(req, res) {
             // space
             if (docs[0].benefit == 0) {
                 db.users.update({
-                    username: req.body.user.username.toLowerCase()
+                    username: req.session.authUser.username.toLowerCase()
                 }, {
                     $inc: {
                         totalSpace: docs[0].space,
@@ -765,7 +765,7 @@ app.post('/api/upgrade', function(req, res) {
                 // admin status
             } else if (docs[0].benefit == 1) {
                 db.users.update({
-                    username: req.body.user.username.toLowerCase()
+                    username: req.session.authUser.username.toLowerCase()
                 }, {
                     $set: {
                         userStatus: 1
@@ -787,7 +787,7 @@ app.post('/api/upgrade', function(req, res) {
                 });
             } else if (docs[0].benefit == 2) {
                 db.users.update({
-                    username: req.body.user.username.toLowerCase()
+                    username: req.session.authUser.username.toLowerCase()
                 }, {
                     $set: {
                         accountStanding: 0
