@@ -128,6 +128,15 @@
                 </el-tooltip>
               </div>
             </div>
+            <div v-else-if="$store.state.authUser.accountStanding===2">
+              <div class="text item">
+                Status: 
+                Blocked
+                <el-tooltip class="item" effect="light" content="An admin forbade you from uploading new videos." placement="top-start">
+                  <i class="fa fa-times fa-lg" style="color:#ff2222;" aria-hidden="true"></i>
+                </el-tooltip>
+              </div>
+            </div>
             <div class="text item">
               <el-button type="text" @click="upgradeInit">Enter upgrade code</el-button>
             </div>

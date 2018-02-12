@@ -69,7 +69,7 @@ app.use(favicon(__dirname + '/../static/fav/favicon.ico'));
 app.use(helmet());
 app.use(fileUpload({
     limits: {
-        fileSize: 100 * 1000 * 1000 * 1000 //100 GB
+        fileSize: 10 * 1000 * 1000 * 1000 //100 GB
     },
     safeFileNames: true
 }));
