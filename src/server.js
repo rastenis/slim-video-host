@@ -1277,73 +1277,89 @@ app.post('/api/removeVideo', function(req, res) {
                     returner.msg = "Internal error. Try again.";
                 } else {
                     async.waterfall([function(done) {
-                        db.users.update({
-                                username: selection.username
-                            }, {
-                                $inc: { // restoring user's storage space
-                                    remainingSpace: Math.abs(docs[0].size)
-                                }
-                            }, {
-                                returnUpdatedDocs: true,
-                                multi: false
-                            },
-                            function(err, numAffected, affectedDocument) {
-                                console.log(selection);
+                            db.users.update({
+                                    username: selection.username
+                                }, {
+                                    $inc: { // restoring user's storage space
+                                        remainingSpace: Math.abs(docs[0].size)
+                                    }
+                                }, {
+                                    returnUpdatedDocs: true,
+                                    multi: false
+                                },
+                                function(err, numAffected, affectedDocument) {
+                                    console.log(selection);
+                                    if (err) {
+                                        log("VIDEO DELETION | " + err, 1);
+                                    }
+                                    // rm cached vid
+                                    try {
+                                        fs.remove(config.file_path + selection.videoID + selection.extension, function(err) {
+                                            if (err) {
+                                                console.log(err);
+                                            }
+                                        });
+                                    } catch (error) {
+                                        log("VIDEO DELETION | " + "couldn't remove video file.", 1);
+                                    }
+                                    // rm thumbnail
+                                    try {
+                                        fs.remove(config.file_path + "thumbs/" + selection.videoID + ".jpg", function(err) {
+                                            if (err) {
+                                                console.log(err);
+                                            }
+                                        });
+                                    } catch (error) {
+                                        log("VIDEO DELETION | " + "couldn't remove video thumbnail.", 1);
+                                    }
+
+                                    // renewing session user, but not if the user is an admin
+                                    if (req.session.authUser.userStatus != 1) {
+                                        req.session.authUser = affectedDocument;
+                                    }
+
+                                    done();
+                                });
+                        }, function(done) {
+
+                            db.videos.remove({
+                                videoID: selection.videoID
+                            }, function(err, docs) {
                                 if (err) {
-                                    log("VIDEO DELETION | " + err, 1);
-                                }
-                                // rm cached vid
-                                try {
-                                    fs.remove(config.file_path + selection.videoID + selection.extension, function(err) {
-                                        if (err) {
-                                            console.log(err);
-                                        }
-                                    });
-                                } catch (error) {
-                                    log("VIDEO DELETION | " + "couldn't remove video file.", 1);
-                                }
-                                // rm thumbnail
-                                try {
-                                    fs.remove(config.file_path + "thumbs/" + selection.videoID + ".jpg", function(err) {
-                                        if (err) {
-                                            console.log(err);
-                                        }
-                                    });
-                                } catch (error) {
-                                    log("VIDEO DELETION | " + "couldn't remove video thumbnail.", 1);
+                                    log(chalk.bgRed.white("VIDEO DELETION | " + err), 1);
+                                    returner.error = 1;
+                                    returner.msg = "Internal error. Try again.";
+                                    res.json(returner);
                                 }
 
-                                // renewing session user, but not if the user is an admin
-                                if (req.session.authUser.userStatus != 1) {
-                                    req.session.authUser = affectedDocument;
+                                if (opCount == req.body.selection.length - 1) {
+                                    returner.msgType = "info";
+                                    returner.error = 0;
+                                    returner.msg = "Successfully deleted video(s)!";
+                                    res.json(returner);
+                                    done();
+                                } else {
+                                    opCount++;
+                                    done();
                                 }
+                                //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
+                                //return errors from foreach async operations.
 
-                                done();
+                                //TODO: remove ratings
                             });
-                    }, function(done) {
-
-                        db.videos.remove({
-                            videoID: selection.videoID
-                        }, function(err, docs) {
-                            if (err) {
-                                log(chalk.bgRed.white("VIDEO DELETION | " + err), 1);
-                                returner.error = 1;
-                                returner.msg = "Internal error. Try again.";
-                                res.json(returner);
+                        },
+                        function(done) {
+                            if (req.session.authUser.userStatus == 1 && selection.warning != 0) {
+                                // admin has chosen to warn/block user
+                                db.users.update({ username: selection.username }, { $set: { accountStanding: selection.warning } }, { multi: false }, err => {
+                                    if (err) {
+                                        console.log(err);
+                                    }
+                                });
                             }
-
-                            if (opCount == req.body.selection.length - 1) {
-                                returner.msgType = "info";
-                                returner.error = 0;
-                                returner.msg = "Successfully deleted video(s)!";
-                                return res.json(returner);
-                            } else {
-                                opCount++;
-                            }
-                            //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
-                            //return errors from foreach async operations.
-                        });
-                    }], function(err) {
+                            done(); //doesn't really matter if operation doesn't finish before returning
+                        }
+                    ], function(err) {
                         if (err) {
                             log("VIDEO DELETION | " + err, 1);
                         }
