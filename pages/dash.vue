@@ -323,10 +323,10 @@ export default {
       ).then(() => {
           this.loading = true;
 
-          if (warning) {
-            selects[0].warning=warning;
+          if (this.warning) {
+            selects[0].warning=this.warning;
           }
-          f
+
           axios({
             url: "https://cigari.ga/api/removeVideo",
             method: "post",

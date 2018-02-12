@@ -1258,6 +1258,7 @@ app.post('/api/getAdminStats', function(req, res) {
 
 // post to remove video
 app.post('/api/removeVideo', function(req, res) {
+    console.log("ROUTED");
     if (!req.session.authUser) {
         res.json({
             msgType: "error",
@@ -1339,10 +1340,13 @@ app.post('/api/removeVideo', function(req, res) {
                                     returner.msgType = "info";
                                     returner.error = 0;
                                     returner.msg = "Successfully deleted video(s)!";
+                                    console.log("okay");
                                     res.json(returner);
                                     done();
                                 } else {
                                     opCount++;
+                                    console.log("okaye");
+
                                     done();
                                 }
                                 //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
@@ -1371,6 +1375,7 @@ app.post('/api/removeVideo', function(req, res) {
                             done(); //doesn't really matter if operation doesn't finish before returning
                         }
                     ], function(err) {
+                        console.log("end");
                         if (err) {
                             log("VIDEO DELETION | " + err, 1);
                         }
