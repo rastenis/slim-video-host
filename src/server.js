@@ -785,7 +785,30 @@ app.post('/api/upgrade', function(req, res) {
                     returner.msgType = "success";
                     res.json(returner);
                 });
+            } else if (docs[0].benefit == 2) {
+                db.users.update({
+                    username: req.body.user.username.toLowerCase()
+                }, {
+                    $set: {
+                        accountStanding: 0
+                    }
+                }, {
+                    returnUpdatedDocs: true,
+                    multi: false
+                }, function(err, numAffected, affectedDocument) {
+                    if (err) {
+                        log("UPGRADE | " + err, 1);
+                    }
+                    // refreshing session
+                    req.session.authUser = affectedDocument;
+
+                    // res
+                    returner.msg = "Your account standing has been cleared!";
+                    returner.msgType = "success";
+                    res.json(returner);
+                });
             }
+
 
             // disable code
             db.codes.update({
