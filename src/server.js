@@ -743,7 +743,8 @@ app.post('/api/upgrade', function(req, res) {
                     username: req.body.user.username.toLowerCase()
                 }, {
                     $inc: {
-                        totalSpace: docs[0].space
+                        totalSpace: docs[0].space,
+                        remainingSpace: docs[0].space
                     }
                 }, {
                     returnUpdatedDocs: true,
