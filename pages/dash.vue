@@ -110,10 +110,23 @@
             <div slot="header" class="clearfix">
               <span class="headerOfStatCard">Account standing</span>
             </div>
-            <div class="text item">
-              Status: 
+            <!-- no warnings -->
+            <div v-if="$store.state.authUser.accountStanding===0">
+              <div class="text item">
+                Status: 
                 All fine.
                 <i class="fa fa-check fa-lg" style="color:#98FB98; -webkit-text-stroke: 2px white;" aria-hidden="true"></i>
+              </div>
+            </div>
+            <!-- warned about video content -->
+            <div v-else-if="$store.state.authUser.accountStanding===1">
+              <div class="text item">
+                Status: 
+                Warned
+                <el-tooltip class="item" effect="light" content="Some of your videos have been deleted because they contained forbidden content." placement="top-start">
+                  <i class="fa fa-exclamation fa-lg" style="color:#f98300;" aria-hidden="true"></i>
+                </el-tooltip>
+              </div>
             </div>
             <div class="text item">
               <el-button type="text" @click="upgradeInit">Enter upgrade code</el-button>

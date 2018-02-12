@@ -618,7 +618,8 @@ app.post('/api/register', function(req, res) {
                         email: req.body.email,
                         totalSpace: storageSpace,
                         remainingSpace: storageSpace,
-                        userStatus: userStatus
+                        userStatus: userStatus,
+                        accountStanding: 0
                     }, function(err, doc) {
                         log(chalk.bgCyanBright.black("REGISTRATION | successfully inserted user " + doc.username), 0);
                         req.session.authUser = doc; // attaching to session for easy access
