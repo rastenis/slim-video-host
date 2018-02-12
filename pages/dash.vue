@@ -68,12 +68,13 @@
         </el-table>
         <el-card>
           <el-button :disabled="multipleSelection.length==0" type="danger" size="small" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
-          <el-select v-model="warning" placeholder="No warning">
+          <el-select v-model="warning" placeholder="No warning" style=" margin-left:2vw; ">
             <el-option
               v-for="item in admOpts"
               :key="item.value"
               :label="item.label"
-              :value="item.value">
+              :value="item.value" 
+              :style="item.style">
             </el-option>
           </el-select>
         </el-card>
@@ -563,7 +564,7 @@ export default {
   computed:{
     admOpts(){
       if (this.$store.state.authUser.userStatus==1) {
-        return [{label:"Warn user", value:1}, {label:"Block user from uploading", value:2}]
+        return [{label:"Warn user", value:1,style:"color:orange;"}, {label:"Block user from uploading", value:2, style:"color:red;"}]
       }else{
         return null;
       }
