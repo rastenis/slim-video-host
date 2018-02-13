@@ -84,10 +84,18 @@
     <div v-else>
       <div v-if="videos.length==0 && searchTerm=='' && hasVideos==false" class="centeredUploadVideoSuggestion">
         <el-card>
+          <div v-if="$store.state.authUser.accountStanding==2">
+            <p style="display:block;">Suspended.</p>
+            <el-button @click="upgradeInit">
+              Use code
+            </el-button>
+          </div>
+          <div v-else>
           <p>You don't have any videos yet!</p>
           <el-button @click="$store.app.router.push('/upload'); this.$store.state.activeTab = '3';">
             Upload a video
           </el-button>
+          </div>
         </el-card>
       </div>
       <div class="videoList" v-else>
