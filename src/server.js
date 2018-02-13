@@ -92,7 +92,9 @@ app.use(session({
 app.post('/api/login', function(req, res) {
     log("LOGIN | requester: " + req.body.username, 0);
 
-    //TODO: debounce if signed in
+    if (req.session.authUser) {
+        return;
+    }
 
     db.users.find({
         username: req.body.username.toLowerCase()
@@ -259,11 +261,15 @@ app.get('/api/checkToken/:token', function(req, res) {
         }
         res.json(returner);
     });
-
 });
 
 // post to request a password reset
 app.post('/api/requestReset', function(req, res) {
+
+    if (req.session.authUser) {
+        return;
+    }
+
     log("PASS RESET | reset request", 0);
     var returner = {};
     returner.error = true;
@@ -433,87 +439,93 @@ app.post('/api/changePassword', function(req, res) {
 // route for video actions (like/dislike)
 app.post('/api/act', function(req, res) {
     //ignore unauthorized acts
-    if (req.session.authUser) {
-        log("ACT | requester: " + req.session.authUser.username, 0);
-        async.waterfall([
-            function(done) {
-                db.ratings.find({
-                    username: req.session.authUser.username,
-                    videoID: req.body.videoID
-                }, function(err, docs) {
-                    if (docs.length > 2 || docs.length < 0) {
-                        log(chalk.bgRed.white("CRITICAL!") + "ACT | rating error.", 1);
-                    }
-                    var userRatings = {};
-                    userRatings.liked = false;
-                    userRatings.disliked = false;
-
-                    // assigning likes/dislikes
-                    docs.forEach(doc => {
-                        if (doc.action == 0) // disliked
-                        {
-                            userRatings.disliked = true;
-                        } else if (doc.action == 1) {
-                            userRatings.liked = true;
-                        }
-                    });
-                    done(null, userRatings);
-                });
-            },
-            function(userRatings, done) {
-                var prep = {};
-                prep.action = req.body.action;
-                prep.revert = false;
-                if (prep.action) { // like
-                    if (userRatings.liked) { // revert
-                        prep.revert = true;
-                        prep.increment = -1;
-                    } else { // just like
-                        prep.increment = 1
-                    }
-                } else { // dislike
-                    if (userRatings.disliked) { // revert
-                        prep.revert = true;
-                        prep.increment = -1;
-                    } else { // just dislike
-                        prep.increment = 1;
-                    }
-                }
-                // updating rating DB
-                if (prep.revert) {
-                    db.ratings.remove({
-                        username: req.session.authUser.username,
-                        videoID: req.body.videoID,
-                        action: prep.action
-                    }, {}, function(err) {
-                        if (err) {
-                            log("ACT | " + err, 1);
-                        }
-                        done();
-                    });
-                } else {
-                    db.ratings.insert({
-                        username: req.session.authUser.username,
-                        videoID: req.body.videoID,
-                        action: prep.action
-                    }, function(err) {
-                        if (err) {
-                            log("ACT | " + err, 1);
-                        }
-                        done();
-                    });
-                }
-            }
-        ], function(err) {
-            if (err) {
-                log("ACT | " + err, 1);
-            }
-        });
+    if (!req.session.authUser) {
+        return;
     }
+
+    log("ACT | requester: " + req.session.authUser.username, 0);
+    async.waterfall([
+        function(done) {
+            db.ratings.find({
+                username: req.session.authUser.username,
+                videoID: req.body.videoID
+            }, function(err, docs) {
+                if (docs.length > 2 || docs.length < 0) {
+                    log(chalk.bgRed.white("CRITICAL!") + "ACT | rating error.", 1);
+                }
+                var userRatings = {};
+                userRatings.liked = false;
+                userRatings.disliked = false;
+
+                // assigning likes/dislikes
+                docs.forEach(doc => {
+                    if (doc.action == 0) // disliked
+                    {
+                        userRatings.disliked = true;
+                    } else if (doc.action == 1) {
+                        userRatings.liked = true;
+                    }
+                });
+                done(null, userRatings);
+            });
+        },
+        function(userRatings, done) {
+            var prep = {};
+            prep.action = req.body.action;
+            prep.revert = false;
+            if (prep.action) { // like
+                if (userRatings.liked) { // revert
+                    prep.revert = true;
+                    prep.increment = -1;
+                } else { // just like
+                    prep.increment = 1
+                }
+            } else { // dislike
+                if (userRatings.disliked) { // revert
+                    prep.revert = true;
+                    prep.increment = -1;
+                } else { // just dislike
+                    prep.increment = 1;
+                }
+            }
+            // updating rating DB
+            if (prep.revert) {
+                db.ratings.remove({
+                    username: req.session.authUser.username,
+                    videoID: req.body.videoID,
+                    action: prep.action
+                }, {}, function(err) {
+                    if (err) {
+                        log("ACT | " + err, 1);
+                    }
+                    done();
+                });
+            } else {
+                db.ratings.insert({
+                    username: req.session.authUser.username,
+                    videoID: req.body.videoID,
+                    action: prep.action
+                }, function(err) {
+                    if (err) {
+                        log("ACT | " + err, 1);
+                    }
+                    done();
+                });
+            }
+        }
+    ], function(err) {
+        if (err) {
+            log("ACT | " + err, 1);
+        }
+    });
 });
 
 // registration post
 app.post('/api/register', function(req, res) {
+    if (req.session.authUser) {
+        // can't register if signed in
+        return;
+    }
     async.waterfall([function(done) {
         var enoughSpace = true;
         db.users.find({
@@ -646,6 +658,7 @@ app.post('/api/register', function(req, res) {
 app.post('/api/getVideos', function(req, res) {
 
     var returner = {};
+
     log("VIDEOS | requester : " + req.body.user.username, 0);
 
     async.waterfall([
