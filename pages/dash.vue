@@ -13,7 +13,7 @@
         <!-- Admin stats -->
         <el-row :gutter="20">
           <el-col class="" :span="12">
-            <el-card class="box-card ">
+            <el-card class="box-card" v-loading="dataLoads.panel1">
               <div slot="header" class="clearfix">
                 <span class="headerOfStatCard">Uploaded videos</span>
               </div>
@@ -26,7 +26,7 @@
             </el-card>
           </el-col>
           <el-col class="" :span="12">
-            <el-card class="box-card">
+            <el-card class="box-card" v-loading="dataLoads.panel2">
               <div slot="header" class="clearfix">
                 <span class="headerOfStatCard">Statistics</span>
               </div>
@@ -46,7 +46,7 @@
           </el-col>
         </el-row>
         <!-- Global video table -->
-        <el-table :data="videos" v-loading="loading" @selection-change="handleSelectionChange" ref="videoTable" style="width: 100%;margin-top:4vh">
+        <el-table :data="videos" v-loading="dataLoads.videoList" @selection-change="handleSelectionChange" ref="videoTable" style="width: 100%;margin-top:4vh">
           <el-table-column type="selection" width="40">
           </el-table-column>
           <el-table-column prop="name" label="Video">
@@ -70,7 +70,7 @@
           <el-button :disabled="multipleSelection.length==0" type="danger" size="small" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
           <el-select v-model="warning" placeholder="No warning" style=" margin-left:2vw; ">
             <el-option
-              v-for="item in admOpts"
+              v-for="item in warnOpts"
               :key="item.value"
               :label="item.label"
               :value="item.value" 
@@ -101,7 +101,7 @@
       <div class="videoList" v-else>
         <!-- Statistics cards -->
         <div class="cards">
-          <el-card class="box-card statCard">
+          <el-card class="box-card statCard" v-loading="dataLoads.panel1">
             <div slot="header" class="clearfix">
               <span class="headerOfStatCard">Video stats</span>
             </div>
@@ -112,7 +112,7 @@
               Active videos: {{videos.length}}
             </div>
           </el-card>
-          <el-card class="box-card statCard">
+          <el-card class="box-card statCard" v-loading="dataLoads.panel2">
             <div slot="header" class="clearfix">
               <span class="headerOfStatCard">Storage</span>
             </div>
@@ -123,7 +123,7 @@
               Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
             </div>
           </el-card>
-          <el-card class="box-card statCard">
+          <el-card class="box-card statCard" v-loading="dataLoads.panel3">
             <div slot="header" class="clearfix">
               <span class="headerOfStatCard">Account standing</span>
             </div>
@@ -166,7 +166,7 @@
           <el-button :disabled="multipleSelection.length==0" type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
           <el-input @keyup.native="updateFilter" class="searchField" v-model="searchTerm" placeholder="Search videos..."></el-input>
         </el-card>
-        <el-table :data="videos" v-loading="loading" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
+        <el-table :data="videos" v-loading="dataLoads.videoList" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
           <el-table-column type="selection" width="40">
           </el-table-column>
           <el-table-column prop="thumbnail" label="Thumbnail">
@@ -227,6 +227,14 @@ import axios from "axios";
 export default {
   data() {
     return {
+      dataLoads:{
+        loading:{
+          panel1:true,
+          panel2:true,
+          panel3:true,
+          videoList:true
+        }
+      }
       loading: true,
       videos: [],
       hasVideos: false,
@@ -570,7 +578,7 @@ export default {
     }
   },
   computed:{
-    admOpts(){
+    warnOpts(){
       if (this.$store.state.authUser.userStatus==1) {
         return [{label:"Warn user", value:1,style:"color:orange;"}, {label:"Block user from uploading", value:2, style:"color:red;"}]
       }else{
