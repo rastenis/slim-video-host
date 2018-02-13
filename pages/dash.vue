@@ -13,7 +13,7 @@
         <!-- Admin stats -->
         <el-row :gutter="20">
           <el-col class="" :span="12">
-            <el-card class="box-card" v-loading="dataLoads.panel1">
+            <el-card class="box-card" v-loading="dataLoads.loading.panels">
               <div slot="header" class="clearfix">
                 <span class="headerOfStatCard">Uploaded videos</span>
               </div>
@@ -26,7 +26,7 @@
             </el-card>
           </el-col>
           <el-col class="" :span="12">
-            <el-card class="box-card" v-loading="dataLoads.panel2">
+            <el-card class="box-card" v-loading="dataLoads.loading.panels">
               <div slot="header" class="clearfix">
                 <span class="headerOfStatCard">Statistics</span>
               </div>
@@ -46,7 +46,7 @@
           </el-col>
         </el-row>
         <!-- Global video table -->
-        <el-table :data="videos" v-loading="dataLoads.videoList" @selection-change="handleSelectionChange" ref="videoTable" style="width: 100%;margin-top:4vh">
+        <el-table :data="videos" v-loading="dataLoads.loading.videoList" @selection-change="handleSelectionChange" ref="videoTable" style="width: 100%;margin-top:4vh">
           <el-table-column type="selection" width="40">
           </el-table-column>
           <el-table-column prop="name" label="Video">
@@ -101,7 +101,7 @@
       <div class="videoList" v-else>
         <!-- Statistics cards -->
         <div class="cards">
-          <el-card class="box-card statCard" v-loading="dataLoads.panel1">
+          <el-card class="box-card statCard" v-loading="dataLoads.loading.panels">
             <div slot="header" class="clearfix">
               <span class="headerOfStatCard">Video stats</span>
             </div>
@@ -112,7 +112,7 @@
               Active videos: {{videos.length}}
             </div>
           </el-card>
-          <el-card class="box-card statCard" v-loading="dataLoads.panel2">
+          <el-card class="box-card statCard" v-loading="dataLoads.loading.panels">
             <div slot="header" class="clearfix">
               <span class="headerOfStatCard">Storage</span>
             </div>
@@ -123,7 +123,7 @@
               Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
             </div>
           </el-card>
-          <el-card class="box-card statCard" v-loading="dataLoads.panel3">
+          <el-card class="box-card statCard" v-loading="dataLoads.loading.panels">
             <div slot="header" class="clearfix">
               <span class="headerOfStatCard">Account standing</span>
             </div>
@@ -166,7 +166,7 @@
           <el-button :disabled="multipleSelection.length==0" type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
           <el-input @keyup.native="updateFilter" class="searchField" v-model="searchTerm" placeholder="Search videos..."></el-input>
         </el-card>
-        <el-table :data="videos" v-loading="dataLoads.videoList" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
+        <el-table :data="videos" v-loading="dataLoads.loading.videoList" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
           <el-table-column type="selection" width="40">
           </el-table-column>
           <el-table-column prop="thumbnail" label="Thumbnail">
@@ -229,12 +229,10 @@ export default {
     return {
       dataLoads:{
         loading:{
-          panel1:true,
-          panel2:true,
-          panel3:true,
+          panels:false,
           videoList:true
         }
-      }
+      },
       loading: true,
       videos: [],
       hasVideos: false,
@@ -246,26 +244,37 @@ export default {
       warning:null
     };
   },
-  asyncData(context) {
-    try {
-      if (context.app.store.state.authUser.userStatus == 1) {
+  created() {
+    if (!this.$store.state.authUser) {
+      this.$nuxt._router.push("/");
+    } else {
+      this.$store.state.activeTab = "2";
+      if (!this.$store.state.authUser.userStatus == 1) {
+        this.setUpStats();
+      } else {
+        this.setUpAdminStats();
+      }
+    }
+  },
+  mounted(){
+      if (this.$store.state.authUser.userStatus == 1) {
         //fetchinam additional stats
         return axios({
           url: "https://cigari.ga/api/getAdminStats",
           method: "post",
           credentials: "same-origin",
           data: {
-            user: context.app.store.state.authUser
+            user: this.$store.state.authUser
           }
         })
           .then(res => {
             if (res.data.error == 0) {
-              return {
-                stats: res.data.stats,
-                loading: false,
-                videos: res.data.videos
-              };
+              this.stats=res.data.stats;
+              this.videos=res.data.videos;
+              this.dataLoads.loading.videoList=false;
+              
             } else if (res.data.error == 1) {
+              //handling?
             }
           })
           .catch(function(e) {
@@ -277,7 +286,7 @@ export default {
           method: "post",
           credentials: "same-origin",
           data: {
-            user: context.app.store.state.authUser
+            user: this.$store.state.authUser
           }
         })
           .then(res => {
@@ -292,40 +301,22 @@ export default {
                     return item.confirmed;
                   });
                 }
-                return {
-                  videos: res.data.videos,
-                  loading: false,
-                  hasVideos: hasVideos
-                };
+                
+                this.videos=res.data.videos;
+                this.hasVideos=hasVideos;
               } else if (res.data.error == 1) {
                 console.log("error while fetching videos");
               }
             } catch (err) {
-              // null videos(no videos)
-              return {
-                videos: res.data.videos,
-                loading: false,
-                hasVideos: false
-              };
+              this.videos=res.data.videos;
+              this.hasVideos=hasVideos;
             }
+            this.dataLoads.loading.videoList=false;
           })
           .catch(function(e) {
             console.log(e);
           });
       }
-    } catch (e) {}
-  },
-  created() {
-    if (!this.$store.state.authUser) {
-      this.$nuxt._router.push("/");
-    } else {
-      this.$store.state.activeTab = "2";
-      if (!this.$store.state.authUser.userStatus == 1) {
-        this.setUpStats();
-      } else {
-        this.setUpAdminStats();
-      }
-    }
   },
   methods: {
     async deleteVideo(selects) {
