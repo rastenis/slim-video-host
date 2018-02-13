@@ -659,12 +659,12 @@ app.post('/api/getVideos', function(req, res) {
 
     var returner = {};
 
-    log("VIDEOS | requester : " + req.body.user.username, 0);
+    log("VIDEOS | requester : " + req.session.authUser.username, 0);
 
     async.waterfall([
         function(done) {
             db.videos.find({
-                username: req.body.user.username.toLowerCase()
+                username: req.session.authUser.username.toLowerCase()
             }, function(err, docs) {
                 if (err) {
                     log(chalk.bgRed.white("VIDEOS | " + err), 1);
@@ -703,7 +703,7 @@ app.post('/api/getVideos', function(req, res) {
                     function(finished) {
                         // user instance refreshment
                         db.users.find({
-                            username: req.body.user.username.toLowerCase()
+                            username: req.session.authUser.username.toLowerCase()
                         }, function(err, docs) {
                             req.session.authUser = docs[0];
                             returner.user = docs[0];
@@ -1208,65 +1208,67 @@ app.post('/api/finalizeUpload', function(req, res) {
 // postas adminu statistikom
 app.post('/api/getAdminStats', function(req, res) {
 
-    log("FETCHING ADMIN STATS | requester: " + req.body.user.username, 0);
+    log("FETCHING ADMIN STATS | requester: " + req.session.authUser.username, 0);
 
     var returner = {};
     returner.stats = {};
 
-    if (req.body.user.userStatus == 1) {
-
-        async.waterfall([
-            function(done) {
-                db.users.count({}, function(err, count) {
-                    if (err) {
-                        log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
-                        returner.error = 1;
-                    }
-                    returner.stats.userCount = count;
-                    done();
-                });
-            },
-            function(done) {
-                db.videos.count({}, function(err, count) {
-                    if (err) {
-                        log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
-                        returner.error = 1;
-                    }
-
-                    returner.stats.videoCount = count;
-                    done();
-                });
-            },
-            function(done) {
-                db.videos.find({}, function(err, docs) {
-                    if (err) {
-                        log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
-                        returner.error = 1;
-                    }
-
-                    var totalViews = 0,
-                        usedSpace = 0;
-                    docs.forEach(video => {
-                        totalViews += video.views;
-                        usedSpace += Math.abs(video.size);
-                    });
-
-                    returner.error = 0;
-                    returner.stats.totalViews = totalViews;
-                    returner.stats.totalSpaceA = config.total_space;
-                    returner.stats.usedSpaceA = usedSpace;
-                    returner.videos = docs;
-                    done();
-                });
-            }
-        ], function(err) {
-            if (err) {
-                log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
-                returner.error = 1;
-            }
-            return res.json(returner);
-        });
+    if (req.session.authUser.userStatus != 1) {
+        return;
     }
+
+    async.waterfall([
+        function(done) {
+            db.users.count({}, function(err, count) {
+                if (err) {
+                    log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
+                    returner.error = 1;
+                }
+                returner.stats.userCount = count;
+                done();
+            });
+        },
+        function(done) {
+            db.videos.count({}, function(err, count) {
+                if (err) {
+                    log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
+                    returner.error = 1;
+                }
+
+                returner.stats.videoCount = count;
+                done();
+            });
+        },
+        function(done) {
+            db.videos.find({}, function(err, docs) {
+                if (err) {
+                    log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
+                    returner.error = 1;
+                }
+
+                var totalViews = 0,
+                    usedSpace = 0;
+                docs.forEach(video => {
+                    totalViews += video.views;
+                    usedSpace += Math.abs(video.size);
+                });
+
+                returner.error = 0;
+                returner.stats.totalViews = totalViews;
+                returner.stats.totalSpaceA = config.total_space;
+                returner.stats.usedSpaceA = usedSpace;
+                returner.videos = docs;
+                done();
+            });
+        }
+    ], function(err) {
+        if (err) {
+            log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
+            returner.error = 1;
+        }
+        return res.json(returner);
+    });
+
 });
 
 // post to remove video
