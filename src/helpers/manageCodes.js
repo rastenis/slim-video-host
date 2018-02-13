@@ -12,10 +12,11 @@ db.codes = new Datastore({
 
 mainLoop: while (true) {
     console.log(chalk.bgCyan.black("========CODE MANAGER========"));
-    console.log("1. Add code for storage space");
-    console.log("2. Add code for admin status");
+    console.log("1. Add code - storage space");
+    console.log("2. Add code - admin status");
     console.log("3. Remove code");
     console.log("4. Update 'active' state of a specific code");
+    console.log("5. Add code - account standing reset");
     console.log("ENTER. Exit.");
 
     var choice = prompt('choose:');
@@ -53,6 +54,15 @@ mainLoop: while (true) {
             var code = prompt('enter code:');
             var active = prompt('enter state (0 for inactive, 1 for active):');
             db.codes.update({ code: code }, { $set: { active: active } }, {});
+            console.log(chalk.green("DONE!"));
+            break;
+        case "5":
+            var code = prompt('enter code:');
+            db.codes.insert({ code: code, space: null, type: "upgrade", benefit: 2, active: true }, function(err) {
+                if (err) {
+                    console.log(err);
+                }
+            });
             console.log(chalk.green("DONE!"));
             break;
         case "":

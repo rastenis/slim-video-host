@@ -69,7 +69,7 @@ app.use(favicon(__dirname + '/../static/fav/favicon.ico'));
 app.use(helmet());
 app.use(fileUpload({
     limits: {
-        fileSize: 100 * 1000 * 1000 * 1000 //100 GB
+        fileSize: 10 * 1000 * 1000 * 1000 //100 GB
     },
     safeFileNames: true
 }));
@@ -91,6 +91,9 @@ app.use(session({
 // post for the login procedure
 app.post('/api/login', function(req, res) {
     log("LOGIN | requester: " + req.body.username, 0);
+
+    //TODO: debounce if signed in
+
     db.users.find({
         username: req.body.username.toLowerCase()
     }, function(err, docs) {
@@ -618,7 +621,8 @@ app.post('/api/register', function(req, res) {
                         email: req.body.email,
                         totalSpace: storageSpace,
                         remainingSpace: storageSpace,
-                        userStatus: userStatus
+                        userStatus: userStatus,
+                        accountStanding: 0
                     }, function(err, doc) {
                         log(chalk.bgCyanBright.black("REGISTRATION | successfully inserted user " + doc.username), 0);
                         req.session.authUser = doc; // attaching to session for easy access
@@ -714,14 +718,14 @@ app.post('/api/getVideos', function(req, res) {
 });
 
 // route for storage upgrades
-app.post('/api/upgradeStorage', function(req, res) {
+app.post('/api/upgrade', function(req, res) {
 
     var returner = {};
-    log("UPGRADE | requester : " + req.body.user.username + ", code:" + req.body.code, 0);
+    returner.error = 0;
+    log("UPGRADE | requester : " + req.session.authUser.username + ", code:" + req.body.code, 0);
 
     db.codes.find({
         code: req.body.code,
-        type: "upgrade",
         active: true
     }, function(err, docs) {
         if (err) {
@@ -736,24 +740,80 @@ app.post('/api/upgradeStorage', function(req, res) {
             returner.msgType = "error";
             log("UPGRADE | unsuccessful: no such code", 0);
         } else {
-            // adding granted space
-            db.users.update({
-                username: req.body.user.username.toLowerCase()
-            }, {
-                $inc: {
-                    totalSpace: docs[0].space
-                }
-            }, {
-                returnUpdatedDocs: true,
-                multi: false
-            }, function(err, numAffected, affectedDocument) {
-                if (err) {
-                    log("UPGRADE | " + err, 1);
-                }
-                // refreshing session
-                req.session.authUser = affectedDocument;
+            // adding granted benefit:
+            // space
+            if (docs[0].benefit == 0) {
+                db.users.update({
+                    username: req.session.authUser.username.toLowerCase()
+                }, {
+                    $inc: {
+                        totalSpace: docs[0].space,
+                        remainingSpace: docs[0].space
+                    }
+                }, {
+                    returnUpdatedDocs: true,
+                    multi: false
+                }, function(err, numAffected, affectedDocument) {
+                    if (err) {
+                        log("UPGRADE | " + err, 1);
+                    }
+                    // refreshing session
+                    req.session.authUser = affectedDocument;
 
-            });
+                    // res
+                    returner.msg = "You have successfully expanded your space limit!";
+                    returner.msgType = "success";
+                    res.json(returner);
+                });
+                // admin status
+            } else if (docs[0].benefit == 1) {
+                db.users.update({
+                    username: req.session.authUser.username.toLowerCase()
+                }, {
+                    $set: {
+                        userStatus: 1
+                    }
+                }, {
+                    returnUpdatedDocs: true,
+                    multi: false
+                }, function(err, numAffected, affectedDocument) {
+                    if (err) {
+                        log("UPGRADE | " + err, 1);
+                    }
+                    // refreshing session
+                    req.session.authUser = affectedDocument;
+
+                    // res
+                    returner.msg = "You are now an admin!";
+                    returner.msgType = "success";
+                    res.json(returner);
+                });
+            } else if (docs[0].benefit == 2) {
+                db.users.update({
+                    username: req.session.authUser.username.toLowerCase()
+                }, {
+                    $set: {
+                        accountStanding: 0
+                    }
+                }, {
+                    returnUpdatedDocs: true,
+                    multi: false
+                }, function(err, numAffected, affectedDocument) {
+                    if (err) {
+                        log("UPGRADE | " + err, 1);
+                    }
+                    // refreshing session
+                    req.session.authUser = affectedDocument;
+
+                    // res
+                    returner.msg = "Your account standing has been cleared!";
+                    returner.msgType = "success";
+                    res.json(returner);
+                });
+            }
+
+
+            // disable code
             db.codes.update({
                 code: req.body.code
             }, {
@@ -767,11 +827,7 @@ app.post('/api/upgradeStorage', function(req, res) {
             });
 
             log("UPGRADE | successful upgrade", 0);
-            returner.error = 0;
-            returner.msg = "You have successfully expanded your space limit!";
-            returner.msgType = "success";
         }
-        return res.json(returner);
     });
 });
 
@@ -1202,6 +1258,7 @@ app.post('/api/getAdminStats', function(req, res) {
 
 // post to remove video
 app.post('/api/removeVideo', function(req, res) {
+    console.log("ROUTED");
     if (!req.session.authUser) {
         res.json({
             msgType: "error",
@@ -1224,73 +1281,101 @@ app.post('/api/removeVideo', function(req, res) {
                     returner.msg = "Internal error. Try again.";
                 } else {
                     async.waterfall([function(done) {
-                        db.users.update({
-                                username: selection.username
-                            }, {
-                                $inc: { // restoring user's storage space
-                                    remainingSpace: Math.abs(docs[0].size)
-                                }
-                            }, {
-                                returnUpdatedDocs: true,
-                                multi: false
-                            },
-                            function(err, numAffected, affectedDocument) {
-                                console.log(selection);
+                            db.users.update({
+                                    username: selection.username
+                                }, {
+                                    $inc: { // restoring user's storage space
+                                        remainingSpace: Math.abs(docs[0].size)
+                                    }
+                                }, {
+                                    returnUpdatedDocs: true,
+                                    multi: false
+                                },
+                                function(err, numAffected, affectedDocument) {
+                                    console.log(selection);
+                                    if (err) {
+                                        log("VIDEO DELETION | " + err, 1);
+                                    }
+                                    // rm cached vid
+                                    try {
+                                        fs.remove(config.file_path + selection.videoID + selection.extension, function(err) {
+                                            if (err) {
+                                                console.log(err);
+                                            }
+                                        });
+                                    } catch (error) {
+                                        log("VIDEO DELETION | " + "couldn't remove video file.", 1);
+                                    }
+                                    // rm thumbnail
+                                    try {
+                                        fs.remove(config.file_path + "thumbs/" + selection.videoID + ".jpg", function(err) {
+                                            if (err) {
+                                                console.log(err);
+                                            }
+                                        });
+                                    } catch (error) {
+                                        log("VIDEO DELETION | " + "couldn't remove video thumbnail.", 1);
+                                    }
+
+                                    // renewing session user, but not if the user is an admin
+                                    if (req.session.authUser.userStatus != 1) {
+                                        req.session.authUser = affectedDocument;
+                                    }
+
+                                    done();
+                                });
+                        }, function(done) {
+
+                            db.videos.remove({
+                                videoID: selection.videoID
+                            }, function(err, docs) {
                                 if (err) {
-                                    log("VIDEO DELETION | " + err, 1);
-                                }
-                                // rm cached vid
-                                try {
-                                    fs.remove(config.file_path + selection.videoID + selection.extension, function(err) {
-                                        if (err) {
-                                            console.log(err);
-                                        }
-                                    });
-                                } catch (error) {
-                                    log("VIDEO DELETION | " + "couldn't remove video file.", 1);
-                                }
-                                // rm thumbnail
-                                try {
-                                    fs.remove(config.file_path + "thumbs/" + selection.videoID + ".jpg", function(err) {
-                                        if (err) {
-                                            console.log(err);
-                                        }
-                                    });
-                                } catch (error) {
-                                    log("VIDEO DELETION | " + "couldn't remove video thumbnail.", 1);
+                                    log(chalk.bgRed.white("VIDEO DELETION | " + err), 1);
+                                    returner.error = 1;
+                                    returner.msg = "Internal error. Try again.";
+                                    res.json(returner);
                                 }
 
-                                // renewing session user, but not if the user is an admin
-                                if (req.session.authUser.userStatus != 1) {
-                                    req.session.authUser = affectedDocument;
-                                }
+                                if (opCount == req.body.selection.length - 1) {
+                                    returner.msgType = "info";
+                                    returner.error = 0;
+                                    returner.msg = "Successfully deleted video(s)!";
+                                    console.log("okay");
+                                    res.json(returner);
+                                    done();
+                                } else {
+                                    opCount++;
+                                    console.log("okaye");
 
-                                done();
+                                    done();
+                                }
+                                //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
+                                //return errors from foreach async operations.
+
+                                //TODO: remove ratings
                             });
-                    }, function(done) {
-
-                        db.videos.remove({
-                            videoID: selection.videoID
-                        }, function(err, docs) {
-                            if (err) {
-                                log(chalk.bgRed.white("VIDEO DELETION | " + err), 1);
-                                returner.error = 1;
-                                returner.msg = "Internal error. Try again.";
-                                res.json(returner);
+                        },
+                        function(done) {
+                            if (req.session.authUser.userStatus == 1 && selection.warning != 0) {
+                                // admin has chosen to warn/block user
+                                db.users.update({
+                                    username: selection.username
+                                }, {
+                                    $set: {
+                                        accountStanding: selection.warning
+                                    }
+                                }, {
+                                    multi: false
+                                }, err => {
+                                    if (err) {
+                                        console.log(err);
+                                    }
+                                });
                             }
-
-                            if (opCount == req.body.selection.length - 1) {
-                                returner.msgType = "info";
-                                returner.error = 0;
-                                returner.msg = "Successfully deleted video(s)!";
-                                return res.json(returner);
-                            } else {
-                                opCount++;
-                            }
-                            //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
-                            //return errors from foreach async operations.
-                        });
-                    }], function(err) {
+                            done(); //doesn't really matter if operation doesn't finish before returning
+                        }
+                    ], function(err) {
+                        console.log("end");
                         if (err) {
                             log("VIDEO DELETION | " + err, 1);
                         }

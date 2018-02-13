@@ -68,6 +68,15 @@
         </el-table>
         <el-card>
           <el-button :disabled="multipleSelection.length==0" type="danger" size="small" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
+          <el-select v-model="warning" placeholder="No warning" style=" margin-left:2vw; ">
+            <el-option
+              v-for="item in admOpts"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value" 
+              :style="item.style">
+            </el-option>
+          </el-select>
         </el-card>
       </div>
     </div>
@@ -75,10 +84,18 @@
     <div v-else>
       <div v-if="videos.length==0 && searchTerm=='' && hasVideos==false" class="centeredUploadVideoSuggestion">
         <el-card>
+          <div v-if="$store.state.authUser.accountStanding==2">
+            <p style="display:block;">Suspended.</p>
+            <el-button @click="upgradeInit">
+              Use code
+            </el-button>
+          </div>
+          <div v-else>
           <p>You don't have any videos yet!</p>
           <el-button @click="$store.app.router.push('/upload'); this.$store.state.activeTab = '3';">
             Upload a video
           </el-button>
+          </div>
         </el-card>
       </div>
       <div class="videoList" v-else>
@@ -105,19 +122,40 @@
             <div class="text item">
               Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
             </div>
-            <div class="text item">
-              <el-button type="text" @click="storageUpgradeInit">Apply for an upgrade</el-button>
-            </div>
           </el-card>
           <el-card class="box-card statCard">
             <div slot="header" class="clearfix">
-              <span class="headerOfStatCard">Your stats</span>
+              <span class="headerOfStatCard">Account standing</span>
+            </div>
+            <!-- no warnings -->
+            <div v-if="$store.state.authUser.accountStanding===0">
+              <div class="text item">
+                Status: 
+                All fine.
+                <i class="fa fa-check fa-lg" style="color:#98FB98; -webkit-text-stroke: 2px white;" aria-hidden="true"></i>
+              </div>
+            </div>
+            <!-- warned about video content -->
+            <div v-else-if="$store.state.authUser.accountStanding===1">
+              <div class="text item">
+                Status: 
+                Warned
+                <el-tooltip class="item" effect="light" content="Some of your videos have been deleted because they contained forbidden content." placement="top-start">
+                  <i class="fa fa-exclamation fa-lg" style="color:#f98300;" aria-hidden="true"></i>
+                </el-tooltip>
+              </div>
+            </div>
+            <div v-else-if="$store.state.authUser.accountStanding===2">
+              <div class="text item">
+                Status: 
+                Blocked
+                <el-tooltip class="item" effect="light" content="An admin forbade you from uploading new videos." placement="top-start">
+                  <i class="fa fa-times fa-lg" style="color:#ff2222;" aria-hidden="true"></i>
+                </el-tooltip>
+              </div>
             </div>
             <div class="text item">
-              Total views: {{stats.totalViews}}
-            </div>
-            <div class="text item">
-              Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
+              <el-button type="text" @click="upgradeInit">Enter upgrade code</el-button>
             </div>
           </el-card>
         </div>
@@ -196,7 +234,8 @@ export default {
       stats: {},
       currentCopyTooltip: "Click to copy!",
       multipleSelection: [],
-      searchTerm: ""
+      searchTerm: "",
+      warning:null
     };
   },
   asyncData(context) {
@@ -292,6 +331,11 @@ export default {
         }
       ).then(() => {
           this.loading = true;
+
+          if (this.warning) {
+            selects[0].warning=this.warning;
+          }
+
           axios({
             url: "https://cigari.ga/api/removeVideo",
             method: "post",
@@ -476,7 +520,7 @@ export default {
         this.stats.uploadDates.push(video.uploadDate);
       });
     },
-    async storageUpgradeInit() {
+    async upgradeInit() {
       this.$prompt("Please input a promotion code", "Upgrade", {
         confirmButtonText: "Apply",
         cancelButtonText: "Cancel",
@@ -484,7 +528,7 @@ export default {
       }).then(value => {
         //activating the code
         axios({
-          url: "https://cigari.ga/api/upgradeStorage",
+          url: "https://cigari.ga/api/upgrade",
           method: "post",
           credentials: "same-origin",
           data: {
@@ -523,6 +567,15 @@ export default {
       }
       this.videos = filtered[0];
       this.hiddenVideos = filtered[1];
+    }
+  },
+  computed:{
+    admOpts(){
+      if (this.$store.state.authUser.userStatus==1) {
+        return [{label:"Warn user", value:1,style:"color:orange;"}, {label:"Block user from uploading", value:2, style:"color:red;"}]
+      }else{
+        return null;
+      }
     }
   },
   layout: "main",

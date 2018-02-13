@@ -1,7 +1,10 @@
 <template>
   <div v-if="$store.state.authUser">
     <h1 class="title breaker">Upload</h1>
-    <el-card class="uploadCard uploadForm clickableCard" v-if="!uploading && !upload.declined">
+    <el-card class="uploadCard uploadForm clickableCard" v-if="$store.state.authUser.accountStanding==2">
+      <i class="fa fa-times"><p style="font-family:LatoLight;display:inline; margin-left:1vh;">You are prohibited from uploading videos. Ask an admin to provide you with a reset code for your account status.</p>  </i>
+    </el-card>
+    <el-card class="uploadCard uploadForm clickableCard" v-if="!uploading && !upload.declined && $store.state.authUser.accountStanding!=2">
         <el-upload ref="uploader" :multiple="true" :thumbnail-mode="true" :on-success="onUploadSuccess" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
           <i class="el-icon-upload"></i>
           <div class="el-upload__text">Drop file here or
