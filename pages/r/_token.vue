@@ -65,7 +65,6 @@ export default {
         valid: false,
         token: null
       };
-      console.log("checking token "+context.params.token);
       return axios({
           url: `https://cigari.ga/api/checkToken/${context.params.token}`,
           method: 'get',
@@ -78,7 +77,6 @@ export default {
           if (res.data.valid) {
             token.valid = true;
             token.token = context.params.token;
-            console.log("set valid and token "+token.token);
           }
           return {
             token: token

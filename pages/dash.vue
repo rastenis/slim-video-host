@@ -13,7 +13,7 @@
         <!-- Admin stats -->
         <el-row :gutter="20">
           <el-col class="" :span="12">
-            <el-card class="box-card ">
+            <el-card class="box-card" v-loading="dataLoads.loading.panels">
               <div slot="header" class="clearfix">
                 <span class="headerOfStatCard">Uploaded videos</span>
               </div>
@@ -26,7 +26,7 @@
             </el-card>
           </el-col>
           <el-col class="" :span="12">
-            <el-card class="box-card">
+            <el-card class="box-card" v-loading="dataLoads.loading.panels">
               <div slot="header" class="clearfix">
                 <span class="headerOfStatCard">Statistics</span>
               </div>
@@ -40,13 +40,13 @@
                 Max storage space: {{stats.totalSpaceA*0.000001}} MB
               </div>
               <div class="text item">
-                Space used: {{stats.usedSpaceA.toFixed(1)}} / {{stats.totalSpaceA*0.000001}} MB
+                Space used: {{stats.usedSpaceA}} / {{stats.totalSpaceA*0.000001}} MB
               </div>
             </el-card>
           </el-col>
         </el-row>
         <!-- Global video table -->
-        <el-table :data="videos" v-loading="loading" @selection-change="handleSelectionChange" ref="videoTable" style="width: 100%;margin-top:4vh">
+        <el-table :data="videos" v-loading="dataLoads.loading.videoList" @selection-change="handleSelectionChange" ref="videoTable" style="width: 100%;margin-top:4vh">
           <el-table-column type="selection" width="40">
           </el-table-column>
           <el-table-column prop="name" label="Video">
@@ -70,7 +70,7 @@
           <el-button :disabled="multipleSelection.length==0" type="danger" size="small" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
           <el-select v-model="warning" placeholder="No warning" style=" margin-left:2vw; ">
             <el-option
-              v-for="item in admOpts"
+              v-for="item in warnOpts"
               :key="item.value"
               :label="item.label"
               :value="item.value" 
@@ -82,7 +82,7 @@
     </div>
     <!-- Normal user dashboard -->
     <div v-else>
-      <div v-if="videos.length==0 && searchTerm=='' && hasVideos==false" class="centeredUploadVideoSuggestion">
+      <div v-if="videos.length==0 && searchTerm=='' && hasVideos==false && !dataLoads.loading.videoList" class="centeredUploadVideoSuggestion">
         <el-card>
           <div v-if="$store.state.authUser.accountStanding==2">
             <p style="display:block;">Suspended.</p>
@@ -101,18 +101,18 @@
       <div class="videoList" v-else>
         <!-- Statistics cards -->
         <div class="cards">
-          <el-card class="box-card statCard">
-            <div slot="header" class="clearfix">
-              <span class="headerOfStatCard">Video stats</span>
-            </div>
-            <div class="text item">
-              Total views: {{stats.totalViews}}
-            </div>
-            <div class="text item">
-              Active videos: {{videos.length}}
-            </div>
+          <el-card class="box-card statCard" v-loading="dataLoads.loading.panels">
+              <div slot="header" class="clearfix">
+                <span class="headerOfStatCard">Video stats</span>
+              </div>
+              <div class="text item">
+                Total views: {{stats.totalViews}}
+              </div>
+              <div class="text item">
+                Active videos: {{videos.length}}
+              </div>
           </el-card>
-          <el-card class="box-card statCard">
+          <el-card class="box-card statCard" v-loading="dataLoads.loading.panels">
             <div slot="header" class="clearfix">
               <span class="headerOfStatCard">Storage</span>
             </div>
@@ -123,7 +123,7 @@
               Space used: {{stats.usedSpace}} / {{stats.totalSpace}} MB
             </div>
           </el-card>
-          <el-card class="box-card statCard">
+          <el-card class="box-card statCard" v-loading="dataLoads.loading.panels">
             <div slot="header" class="clearfix">
               <span class="headerOfStatCard">Account standing</span>
             </div>
@@ -166,56 +166,58 @@
           <el-button :disabled="multipleSelection.length==0" type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
           <el-input @keyup.native="updateFilter" class="searchField" v-model="searchTerm" placeholder="Search videos..."></el-input>
         </el-card>
-        <el-table :data="videos" v-loading="loading" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
-          <el-table-column type="selection" width="40">
-          </el-table-column>
-          <el-table-column prop="thumbnail" label="Thumbnail">
-            <template slot-scope="scope">
-              <div class="thumbnailColumn">
-                <img :src="videos[scope.$index].thumbnailSrc" alt="">
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column prop="name" label="Name">
-            <template slot-scope="scope">
-              <div class="nameColumn">
-                {{videos[scope.$index].name}}
-                <i class="fa fa-pencil fa-lg renameIcon" aria-hidden="false" @click="requestNewName(scope.$index)"></i>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column label="Link" @click.native="$event.target.select()" width="250">
-            <template slot-scope="scope">
-              <div class="linkColumn">
-                <a :href="videos[scope.$index].link">{{videos[scope.$index].link}}</a>
-                <el-tooltip :content="currentCopyTooltip" :enterable="false" transition="el-zoom-in-top">
-                  <i class="fa fa-clipboard fa-lg copyIcon" aria-hidden="false" @click="copyLink(videos[scope.$index].link)"></i>
-                </el-tooltip>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column prop="views" sortable label="Views" width="100">
-          </el-table-column>
-          <el-table-column label="Ratings">
-            <template slot-scope="scope" class="ratingColumn">
-              <i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>
-              {{videos[scope.$index].likes}} | {{videos[scope.$index].dislikes}}
-              <i class="fa fa-thumbs-up fa-rotate-180" style="color:red;" aria-hidden="true"></i>
-            </template>
-          </el-table-column>
-          <el-table-column label="Actions">
-            <template slot-scope="scope">
-              <el-form size="small">
-                <el-form-item>
-                  <el-button :disabled="multipleSelection.length!=0" type="warning" size="small" @click.native.prevent="requestNewID([videos[scope.$index]])">New link</el-button>
-                </el-form-item>
-                <el-form-item>
-                  <el-button :disabled="multipleSelection.length!=0" type="danger" size="small" @click.native.prevent="deleteVideo([videos[scope.$index]])">Remove</el-button>
-                </el-form-item>
-              </el-form>
-            </template>
-          </el-table-column>
-        </el-table>
+          <transition  name="el-fade-in">
+            <el-table :data="videos" v-loading="dataLoads.loading.videoList" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
+              <el-table-column type="selection" width="40">
+              </el-table-column>
+              <el-table-column prop="thumbnail" label="Thumbnail">
+                <template slot-scope="scope">
+                  <div class="thumbnailColumn">
+                    <img :src="videos[scope.$index].thumbnailSrc" alt="">
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="name" label="Name">
+                <template slot-scope="scope">
+                  <div class="nameColumn">
+                    {{videos[scope.$index].name}}
+                    <i class="fa fa-pencil fa-lg renameIcon" aria-hidden="false" @click="requestNewName(scope.$index)"></i>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="Link" @click.native="$event.target.select()" width="250">
+                <template slot-scope="scope">
+                  <div class="linkColumn">
+                    <a :href="videos[scope.$index].link">{{videos[scope.$index].link}}</a>
+                    <el-tooltip :content="currentCopyTooltip" :enterable="false" transition="el-zoom-in-top">
+                      <i class="fa fa-clipboard fa-lg copyIcon" aria-hidden="false" @click="copyLink(videos[scope.$index].link)"></i>
+                    </el-tooltip>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="views" sortable label="Views" width="100">
+              </el-table-column>
+              <el-table-column label="Ratings">
+                <template slot-scope="scope" class="ratingColumn">
+                  <i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>
+                  {{videos[scope.$index].likes}} | {{videos[scope.$index].dislikes}}
+                  <i class="fa fa-thumbs-up fa-rotate-180" style="color:red;" aria-hidden="true"></i>
+                </template>
+              </el-table-column>
+              <el-table-column label="Actions">
+                <template slot-scope="scope">
+                  <el-form size="small">
+                    <el-form-item>
+                      <el-button :disabled="multipleSelection.length!=0" type="warning" size="small" @click.native.prevent="requestNewID([videos[scope.$index]])">New link</el-button>
+                    </el-form-item>
+                    <el-form-item>
+                      <el-button :disabled="multipleSelection.length!=0" type="danger" size="small" @click.native.prevent="deleteVideo([videos[scope.$index]])">Remove</el-button>
+                    </el-form-item>
+                  </el-form>
+                </template>
+              </el-table-column>
+            </el-table>
+          </transition>
       </div>
     </div>
   </div>
@@ -227,6 +229,12 @@ import axios from "axios";
 export default {
   data() {
     return {
+      dataLoads: {
+        loading: {
+          panels: true,
+          videoList: true
+        }
+      },
       loading: true,
       videos: [],
       hasVideos: false,
@@ -235,122 +243,122 @@ export default {
       currentCopyTooltip: "Click to copy!",
       multipleSelection: [],
       searchTerm: "",
-      warning:null
+      warning: null
     };
   },
-  asyncData(context) {
-    try {
-      if (context.app.store.state.authUser.userStatus == 1) {
-        //fetchinam additional stats
-        return axios({
+  mounted() {
+
+    if (!this.$store.state.authUser) {
+      this.$nuxt._router.push("/");
+      return;
+    } else {
+      this.$store.state.activeTab = "2";
+    }
+
+    // stats
+    if (!this.$store.state.authUser.userStatus == 1) {
+      this.setUpStats();
+    } else {
+      this.setUpAdminStats();
+    }
+    // videos
+    if (this.$store.state.authUser.userStatus == 1) {
+      //fetchinam additional stats
+      return axios({
           url: "https://cigari.ga/api/getAdminStats",
           method: "post",
           credentials: "same-origin",
           data: {
-            user: context.app.store.state.authUser
+            user: this.$store.state.authUser
           }
         })
-          .then(res => {
-            if (res.data.error == 0) {
-              return {
-                stats: res.data.stats,
-                loading: false,
-                videos: res.data.videos
-              };
-            } else if (res.data.error == 1) {
-            }
-          })
-          .catch(function(e) {
-            console.log(e);
-          });
-      } else {
-        return axios({
+        .then(res => {
+          if (res.data.error == 0) {
+            this.stats = res.data.stats;
+            this.videos = res.data.videos;
+
+            // allow some time for the table to hydrate
+            setTimeout(() => {
+              this.dataLoads.loading.videoList = false;
+            }, 200);
+
+          } else if (res.data.error == 1) {
+            //handling?
+          }
+        })
+        .catch(function (e) {
+          console.log(e);
+        });
+    } else {
+      return axios({
           url: "https://cigari.ga/api/getVideos",
           method: "post",
           credentials: "same-origin",
           data: {
-            user: context.app.store.state.authUser
+            user: this.$store.state.authUser
           }
         })
-          .then(res => {
-            try {
-              if (res.data.error == 0) {
-                let hasVideos = false;
-                if (res.data.videos.length != 0) {
-                  hasVideos = true;
-
-                  // filtering out unconfirmeds
-                  res.data.videos=res.data.videos.filter(item => {
-                    return item.confirmed;
-                  });
-                }
-                return {
-                  videos: res.data.videos,
-                  loading: false,
-                  hasVideos: hasVideos
-                };
-              } else if (res.data.error == 1) {
-                console.log("error while fetching videos");
+        .then(res => {
+          try {
+            if (res.data.error == 0) {
+              let hasVideos = false;
+              if (res.data.videos.length != 0) {
+                hasVideos = true;
+                // filtering out unconfirmeds
+                res.data.videos = res.data.videos.filter(item => {
+                  return item.confirmed;
+                });
               }
-            } catch (err) {
-              // null videos(no videos)
-              return {
-                videos: res.data.videos,
-                loading: false,
-                hasVideos: false
-              };
+
+              this.videos = res.data.videos;
+              this.hasVideos = hasVideos;
+
+            } else if (res.data.error == 1) {
+              console.log("error while fetching videos");
             }
-          })
-          .catch(function(e) {
-            console.log(e);
-          });
-      }
-    } catch (e) {}
-  },
-  created() {
-    if (!this.$store.state.authUser) {
-      this.$nuxt._router.push("/");
-    } else {
-      this.$store.state.activeTab = "2";
-      if (!this.$store.state.authUser.userStatus == 1) {
-        this.setUpStats();
-      } else {
-        this.setUpAdminStats();
-      }
+          } catch (err) {
+            this.videos = res.data.videos;
+            this.hasVideos = hasVideos;
+          }
+          this.dataLoads.loading.videoList = false;
+
+        })
+        .catch(function (e) {
+          console.log(e);
+        });
     }
+
+
   },
   methods: {
     async deleteVideo(selects) {
       this.$confirm(
-        "This will permanently delete the selected videos. Continue?",
-        "Warning",
-        {
-          confirmButtonText: "OK",
-          cancelButtonText: "Cancel",
-          type: "warning"
-        }
-      ).then(() => {
+          "This will permanently delete the selected videos. Continue?",
+          "Warning", {
+            confirmButtonText: "OK",
+            cancelButtonText: "Cancel",
+            type: "warning"
+          }
+        ).then(() => {
           this.loading = true;
 
           if (this.warning) {
-            selects[0].warning=this.warning;
+            selects[0].warning = this.warning;
           }
 
           axios({
-            url: "https://cigari.ga/api/removeVideo",
-            method: "post",
-            credentials: "same-origin",
-            data: {
-              user: this.$store.state.authUser,
-              selection: selects
-            }
-          }).then(res => {
+              url: "https://cigari.ga/api/removeVideo",
+              method: "post",
+              credentials: "same-origin",
+              data: {
+                user: this.$store.state.authUser,
+                selection: selects
+              }
+            }).then(res => {
               //resetting selection
-              console.log("got res back");
               this.toggleSelection();
               if (res.data.error == 0) {
-              console.log("err is 0");
-                
+
                 res.data.selection.forEach(selection => {
                   this.videos.forEach((video, index) => {
                     if (video._id == selection._id) {
@@ -375,7 +383,7 @@ export default {
                 message: res.data.msg
               });
             })
-            .catch(function(e) {
+            .catch(function (e) {
               console.log(e);
             });
         })
@@ -383,24 +391,23 @@ export default {
     },
     async requestNewID(selection) {
       this.$confirm(
-        "This will generate new links for all selected videos. Continue?",
-        "Warning",
-        {
-          confirmButtonText: "OK",
-          cancelButtonText: "Cancel",
-          type: "warning"
-        }
-      )
+          "This will generate new links for all selected videos. Continue?",
+          "Warning", {
+            confirmButtonText: "OK",
+            cancelButtonText: "Cancel",
+            type: "warning"
+          }
+        )
         .then(() => {
           axios({
-            url: "https://cigari.ga/api/newLink",
-            method: "post",
-            credentials: "same-origin",
-            data: {
-              user: this.$store.state.authUser,
-              selection: selection
-            }
-          })
+              url: "https://cigari.ga/api/newLink",
+              method: "post",
+              credentials: "same-origin",
+              data: {
+                user: this.$store.state.authUser,
+                selection: selection
+              }
+            })
             .then(res => {
               this.$message({
                 type: res.data.msgType,
@@ -423,7 +430,7 @@ export default {
                 console.log("error while bulk requesting new ids");
               }
             })
-            .catch(function(e) {
+            .catch(function (e) {
               console.log(e);
             });
         })
@@ -447,10 +454,10 @@ export default {
     copyLink(link) {
       var outt = this;
       this.$copyText(link).then(
-        function(e) {
+        function (e) {
           outt.currentCopyTooltip = "Copied!";
         },
-        function(e) {
+        function (e) {
           outt.currentCopyTooltip = "Couldn't copy :(";
         }
       );
@@ -460,29 +467,21 @@ export default {
     },
     async requestNewName(index) {
       this.$prompt("Input the new name:", "Rename", {
-        confirmButtonText: "OK",
-        cancelButtonText: "Cancel"
-      })
+          confirmButtonText: "OK",
+          cancelButtonText: "Cancel"
+        })
         .then(value => {
           var videoID = this.videos[index].videoID;
-          console.log(
-            "requesting new name for video: " +
-              videoID +
-              ", index is " +
-              index +
-              ", name is " +
-              value.value
-          );
           axios({
-            url: "https://cigari.ga/api/rename",
-            method: "post",
-            credentials: "same-origin",
-            data: {
-              user: this.$store.state.authUser,
-              videoID: videoID,
-              newName: value.value
-            }
-          })
+              url: "https://cigari.ga/api/rename",
+              method: "post",
+              credentials: "same-origin",
+              data: {
+                user: this.$store.state.authUser,
+                videoID: videoID,
+                newName: value.value
+              }
+            })
             .then(res => {
               this.$message({
                 type: res.data.msgType,
@@ -491,20 +490,17 @@ export default {
               if (res.data.error) {
                 console.log("error while asking for new video name");
               } else {
-                console.log(
-                  "Successfully updated. Updating local representation..."
-                );
                 this.videos[index].name = res.data.newName;
               }
             })
-            .catch(function(e) {
+            .catch(function (e) {
               console.log(e);
             });
         })
         .catch(() => {});
     },
     setUpStats() {
-      var totalViews = 0;
+      let totalViews = 0;
       this.videos.forEach(element => {
         totalViews += element.views;
       });
@@ -513,12 +509,14 @@ export default {
       this.stats.usedSpace = (
         this.stats.totalSpace - this.$store.state.authUser.remainingSpace
       ).toFixed(1);
+      this.dataLoads.loading.panels = false;
     },
     setUpAdminStats() {
       this.stats.uploadDates = [];
       this.videos.forEach(video => {
         this.stats.uploadDates.push(video.uploadDate);
       });
+      this.dataLoads.loading.panels = false;
     },
     async upgradeInit() {
       this.$prompt("Please input a promotion code", "Upgrade", {
@@ -528,21 +526,21 @@ export default {
       }).then(value => {
         //activating the code
         axios({
-          url: "https://cigari.ga/api/upgrade",
-          method: "post",
-          credentials: "same-origin",
-          data: {
-            user: this.$store.state.authUser,
-            code: value.value
-          }
-        })
+            url: "https://cigari.ga/api/upgrade",
+            method: "post",
+            credentials: "same-origin",
+            data: {
+              user: this.$store.state.authUser,
+              code: value.value
+            }
+          })
           .then(res => {
             this.$message({
               type: res.data.msgType,
               message: res.data.msg
             });
           })
-          .catch(function(e) {
+          .catch(function (e) {
             console.log(e);
           });
       });
@@ -569,19 +567,27 @@ export default {
       this.hiddenVideos = filtered[1];
     }
   },
-  computed:{
-    admOpts(){
-      if (this.$store.state.authUser.userStatus==1) {
-        return [{label:"Warn user", value:1,style:"color:orange;"}, {label:"Block user from uploading", value:2, style:"color:red;"}]
-      }else{
+  computed: {
+    warnOpts() {
+      if (this.$store.state.authUser.userStatus == 1) {
+        return [{
+          label: "Warn user",
+          value: 1,
+          style: "color:orange;"
+        }, {
+          label: "Block user from uploading",
+          value: 2,
+          style: "color:red;"
+        }]
+      } else {
         return null;
       }
     }
   },
   layout: "main",
   transition: "mainTransition",
-  head:{
-    title:"Dashboard"
+  head: {
+    title: "Dashboard"
   }
 };
 </script>
@@ -595,6 +601,15 @@ img {
 .el-form-item--mini.el-form-item,
 .el-form-item--small.el-form-item {
   margin-bottom: 3px;
+}
+
+.smoothTable-enter-active,
+.smoothTable-leave-active {
+  transition: opacity 0.5s;
+}
+
+.smoothTable-leave-to {
+  opacity: 0;
 }
 </style>
 

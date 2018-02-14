@@ -124,8 +124,6 @@ export default {
       .then((res) => {
         if (res.data.error) {
           console.log("error while performing "+(action==0 ? "dislike" : "like"));
-        } else {
-          console.log("Successfully performed action. Updating local representation...");
         }
       }).catch(function (e) {
         console.log(e);
