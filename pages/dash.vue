@@ -102,15 +102,15 @@
         <!-- Statistics cards -->
         <div class="cards">
           <el-card class="box-card statCard" v-loading="dataLoads.loading.panels">
-            <div slot="header" class="clearfix">
-              <span class="headerOfStatCard">Video stats</span>
-            </div>
-            <div class="text item">
-              Total views: {{stats.totalViews}}
-            </div>
-            <div class="text item">
-              Active videos: {{videos.length}}
-            </div>
+              <div slot="header" class="clearfix">
+                <span class="headerOfStatCard">Video stats</span>
+              </div>
+              <div class="text item">
+                Total views: {{stats.totalViews}}
+              </div>
+              <div class="text item">
+                Active videos: {{videos.length}}
+              </div>
           </el-card>
           <el-card class="box-card statCard" v-loading="dataLoads.loading.panels">
             <div slot="header" class="clearfix">
@@ -231,7 +231,7 @@ export default {
     return {
       dataLoads:{
         loading:{
-          panels:false,
+          panels:true,
           videoList:true
         }
       },
@@ -251,14 +251,16 @@ export default {
       this.$nuxt._router.push("/");
     } else {
       this.$store.state.activeTab = "2";
+    }
+  },
+  mounted(){
+      // stats
       if (!this.$store.state.authUser.userStatus == 1) {
         this.setUpStats();
       } else {
         this.setUpAdminStats();
       }
-    }
-  },
-  mounted(){
+      // videos
       if (this.$store.state.authUser.userStatus == 1) {
         //fetchinam additional stats
         return axios({
@@ -273,7 +275,11 @@ export default {
             if (res.data.error == 0) {
               this.stats=res.data.stats;
               this.videos=res.data.videos;
-              this.dataLoads.loading.videoList=false;
+
+              // allow some time for the table to hydrate
+              setTimeout(() => {
+                this.dataLoads.loading.videoList=false;
+              }, 200);
               
             } else if (res.data.error == 1) {
               //handling?
@@ -297,7 +303,6 @@ export default {
                 let hasVideos = false;
                 if (res.data.videos.length != 0) {
                   hasVideos = true;
-
                   // filtering out unconfirmeds
                   res.data.videos=res.data.videos.filter(item => {
                     return item.confirmed;
@@ -306,6 +311,7 @@ export default {
                 
                 this.videos=res.data.videos;
                 this.hasVideos=hasVideos;
+
               } else if (res.data.error == 1) {
                 console.log("error while fetching videos");
               }
@@ -314,11 +320,14 @@ export default {
               this.hasVideos=hasVideos;
             }
             this.dataLoads.loading.videoList=false;
+          
           })
           .catch(function(e) {
             console.log(e);
           });
       }
+
+
   },
   methods: {
     async deleteVideo(selects) {
@@ -347,10 +356,8 @@ export default {
             }
           }).then(res => {
               //resetting selection
-              console.log("got res back");
               this.toggleSelection();
               if (res.data.error == 0) {
-              console.log("err is 0");
                 
                 res.data.selection.forEach(selection => {
                   this.videos.forEach((video, index) => {
@@ -505,7 +512,7 @@ export default {
         .catch(() => {});
     },
     setUpStats() {
-      var totalViews = 0;
+      let totalViews = 0;
       this.videos.forEach(element => {
         totalViews += element.views;
       });
@@ -514,12 +521,14 @@ export default {
       this.stats.usedSpace = (
         this.stats.totalSpace - this.$store.state.authUser.remainingSpace
       ).toFixed(1);
+      this.dataLoads.loading.panels=false;
     },
     setUpAdminStats() {
       this.stats.uploadDates = [];
       this.videos.forEach(video => {
         this.stats.uploadDates.push(video.uploadDate);
       });
+      this.dataLoads.loading.panels=false;
     },
     async upgradeInit() {
       this.$prompt("Please input a promotion code", "Upgrade", {
