@@ -10,13 +10,13 @@
     </transition>
     <div v-show="showLogin" class="introLoginForm">
       <div class="centerHor" v-if="!$store.state.authUser">
-        <el-form v-on:submit.prevent="login" class="formField" size="small">
+        <el-form v-on:submit.prevent="login" class="formField" size="small" autocomplete="on">
           <p class="error" v-if="formError">{{ formError }}</p>
           <el-form-item prop="username">
-            <input class="substituteInput topField" autocorrect="off" autocapitalize="off" spellcheck="false" @keyup.alt.82="redirectToRegister" placeholder="Username" type="text" v-model="form.username" name="username"/>
+            <input class="substituteInput topField" autocorrect="off" autocapitalize="off" spellcheck="false" @keyup.alt.82="redirectToRegister" placeholder="Username" autocomplete="username" type="text" v-model="form.username" name="username"/>
           </el-form-item>
           <el-form-item prop="password">
-            <input class="substituteInput bottomField" @keydown.enter="login" placeholder="Password" type="password" v-model="form.password" name="password" />
+            <input class="substituteInput bottomField" @keydown.enter="login" placeholder="Password" type="password" v-model="form.password" autocomplete="current-password" name="password" />
           </el-form-item>
           <el-form-item>
             <el-button class="loginButton" type="submit" @click="login">Login</el-button>
