@@ -46,7 +46,6 @@ export default {
     async askForToken() {
       this.$refs["tokenReqForm"].validate((valid) => {
         if (valid) {
-          console.log(this.resetForm.email);
           axios({
             url: 'https://cigari.ga/api/requestReset',
             method: 'post',

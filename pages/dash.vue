@@ -473,14 +473,6 @@ export default {
       })
         .then(value => {
           var videoID = this.videos[index].videoID;
-          console.log(
-            "requesting new name for video: " +
-              videoID +
-              ", index is " +
-              index +
-              ", name is " +
-              value.value
-          );
           axios({
             url: "https://cigari.ga/api/rename",
             method: "post",
@@ -499,9 +491,6 @@ export default {
               if (res.data.error) {
                 console.log("error while asking for new video name");
               } else {
-                console.log(
-                  "Successfully updated. Updating local representation..."
-                );
                 this.videos[index].name = res.data.newName;
               }
             })
