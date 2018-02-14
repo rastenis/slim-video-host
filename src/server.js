@@ -1246,8 +1246,10 @@ app.post('/api/getAdminStats', function(req, res) {
                     returner.error = 1;
                 }
 
-                var totalViews = 0,
+                let totalViews = 0,
                     usedSpace = 0;
+
+                // counting video views and total space used
                 docs.forEach(video => {
                     totalViews += video.views;
                     usedSpace += Math.abs(video.size);
@@ -1256,7 +1258,7 @@ app.post('/api/getAdminStats', function(req, res) {
                 returner.error = 0;
                 returner.stats.totalViews = totalViews;
                 returner.stats.totalSpaceA = config.total_space;
-                returner.stats.usedSpaceA = usedSpace;
+                returner.stats.usedSpaceA = usedSpace.toFixed(2);
                 returner.videos = docs;
                 done();
             });

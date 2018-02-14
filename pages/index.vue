@@ -113,7 +113,7 @@ export default {
   },
   created() {
     var randomTag = this.gifTags[Math.floor(Math.random()*this.gifTags.length)];
-    axios.get('//api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag='+randomTag)
+    axios.get('https://api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag='+randomTag)
       .then((res) => {
         this.intro.backgroundImage = 'url(' + res.data.data.image_original_url + ')';
       })

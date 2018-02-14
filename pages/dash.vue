@@ -40,7 +40,7 @@
                 Max storage space: {{stats.totalSpaceA*0.000001}} MB
               </div>
               <div class="text item">
-                Space used: {{stats.usedSpaceA.toFixed(1)}} / {{stats.totalSpaceA*0.000001}} MB
+                Space used: {{stats.usedSpaceA}} / {{stats.totalSpaceA*0.000001}} MB
               </div>
             </el-card>
           </el-col>
