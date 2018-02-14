@@ -82,7 +82,7 @@
     </div>
     <!-- Normal user dashboard -->
     <div v-else>
-      <div v-if="videos.length==0 && searchTerm=='' && hasVideos==false" class="centeredUploadVideoSuggestion">
+      <div v-if="videos.length==0 && searchTerm=='' && hasVideos==false && !dataLoads.loading.videoList" class="centeredUploadVideoSuggestion">
         <el-card>
           <div v-if="$store.state.authUser.accountStanding==2">
             <p style="display:block;">Suspended.</p>
@@ -166,56 +166,58 @@
           <el-button :disabled="multipleSelection.length==0" type="danger" size="medium" @click.native.prevent="deleteVideo(multipleSelection)">Remove selected</el-button>
           <el-input @keyup.native="updateFilter" class="searchField" v-model="searchTerm" placeholder="Search videos..."></el-input>
         </el-card>
-        <el-table :data="videos" v-loading="dataLoads.loading.videoList" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
-          <el-table-column type="selection" width="40">
-          </el-table-column>
-          <el-table-column prop="thumbnail" label="Thumbnail">
-            <template slot-scope="scope">
-              <div class="thumbnailColumn">
-                <img :src="videos[scope.$index].thumbnailSrc" alt="">
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column prop="name" label="Name">
-            <template slot-scope="scope">
-              <div class="nameColumn">
-                {{videos[scope.$index].name}}
-                <i class="fa fa-pencil fa-lg renameIcon" aria-hidden="false" @click="requestNewName(scope.$index)"></i>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column label="Link" @click.native="$event.target.select()" width="250">
-            <template slot-scope="scope">
-              <div class="linkColumn">
-                <a :href="videos[scope.$index].link">{{videos[scope.$index].link}}</a>
-                <el-tooltip :content="currentCopyTooltip" :enterable="false" transition="el-zoom-in-top">
-                  <i class="fa fa-clipboard fa-lg copyIcon" aria-hidden="false" @click="copyLink(videos[scope.$index].link)"></i>
-                </el-tooltip>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column prop="views" sortable label="Views" width="100">
-          </el-table-column>
-          <el-table-column label="Ratings">
-            <template slot-scope="scope" class="ratingColumn">
-              <i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>
-              {{videos[scope.$index].likes}} | {{videos[scope.$index].dislikes}}
-              <i class="fa fa-thumbs-up fa-rotate-180" style="color:red;" aria-hidden="true"></i>
-            </template>
-          </el-table-column>
-          <el-table-column label="Actions">
-            <template slot-scope="scope">
-              <el-form size="small">
-                <el-form-item>
-                  <el-button :disabled="multipleSelection.length!=0" type="warning" size="small" @click.native.prevent="requestNewID([videos[scope.$index]])">New link</el-button>
-                </el-form-item>
-                <el-form-item>
-                  <el-button :disabled="multipleSelection.length!=0" type="danger" size="small" @click.native.prevent="deleteVideo([videos[scope.$index]])">Remove</el-button>
-                </el-form-item>
-              </el-form>
-            </template>
-          </el-table-column>
-        </el-table>
+          <transition  name="el-fade-in">
+            <el-table :data="videos" v-loading="dataLoads.loading.videoList" style="width: 100%" @selection-change="handleSelectionChange" ref="videoTable">
+              <el-table-column type="selection" width="40">
+              </el-table-column>
+              <el-table-column prop="thumbnail" label="Thumbnail">
+                <template slot-scope="scope">
+                  <div class="thumbnailColumn">
+                    <img :src="videos[scope.$index].thumbnailSrc" alt="">
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="name" label="Name">
+                <template slot-scope="scope">
+                  <div class="nameColumn">
+                    {{videos[scope.$index].name}}
+                    <i class="fa fa-pencil fa-lg renameIcon" aria-hidden="false" @click="requestNewName(scope.$index)"></i>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="Link" @click.native="$event.target.select()" width="250">
+                <template slot-scope="scope">
+                  <div class="linkColumn">
+                    <a :href="videos[scope.$index].link">{{videos[scope.$index].link}}</a>
+                    <el-tooltip :content="currentCopyTooltip" :enterable="false" transition="el-zoom-in-top">
+                      <i class="fa fa-clipboard fa-lg copyIcon" aria-hidden="false" @click="copyLink(videos[scope.$index].link)"></i>
+                    </el-tooltip>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="views" sortable label="Views" width="100">
+              </el-table-column>
+              <el-table-column label="Ratings">
+                <template slot-scope="scope" class="ratingColumn">
+                  <i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>
+                  {{videos[scope.$index].likes}} | {{videos[scope.$index].dislikes}}
+                  <i class="fa fa-thumbs-up fa-rotate-180" style="color:red;" aria-hidden="true"></i>
+                </template>
+              </el-table-column>
+              <el-table-column label="Actions">
+                <template slot-scope="scope">
+                  <el-form size="small">
+                    <el-form-item>
+                      <el-button :disabled="multipleSelection.length!=0" type="warning" size="small" @click.native.prevent="requestNewID([videos[scope.$index]])">New link</el-button>
+                    </el-form-item>
+                    <el-form-item>
+                      <el-button :disabled="multipleSelection.length!=0" type="danger" size="small" @click.native.prevent="deleteVideo([videos[scope.$index]])">Remove</el-button>
+                    </el-form-item>
+                  </el-form>
+                </template>
+              </el-table-column>
+            </el-table>
+          </transition>
       </div>
     </div>
   </div>
@@ -594,6 +596,15 @@ img {
 .el-form-item--mini.el-form-item,
 .el-form-item--small.el-form-item {
   margin-bottom: 3px;
+}
+
+.smoothTable-enter-active,
+.smoothTable-leave-active {
+  transition: opacity 0.5s;
+}
+
+.smoothTable-leave-to {
+  opacity: 0;
 }
 </style>
 
