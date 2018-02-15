@@ -16,7 +16,7 @@ const store = () => new Vuex.Store({
         newUploadNotif: 0,
         settings: {
             loaded: false,
-            data: []
+            data: {}
         }
     },
 
@@ -168,6 +168,5 @@ const store = () => new Vuex.Store({
     }
 
 })
-
 
 export default store;

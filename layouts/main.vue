@@ -15,7 +15,7 @@
 
     </el-menu>
 
-    <el-menu v-else class="nav" mode="horizontal" :background-color="theme.nav['background-color']" text-color="#fff" active-text-color="#ffd04b" :default-active="$store.state.activeTab" @select="handleSelect">
+    <el-menu v-else class="nav" mode="horizontal" :background-color="theme.nav['backgroundColor']" :text-color="theme.nav['textColor']" :active-text-color="theme.nav['activeTextColor']" :default-active="$store.state.activeTab" @select="handleSelect">
       <el-menu-item index="1">
          <nuxt-link to="/" >Intro</nuxt-link>
       </el-menu-item>
@@ -48,10 +48,10 @@
         if (this.$store.state.settings.loaded) {
           return this.$store.state.settings.data;
         }else{
-          return {"main": {"position": "absolute","top": 0,"left": 0,"width": "100%","min-height": "100%","background": "#f0f1e7"},"nav": {"backgroundColor": "#545c64","text-color": "#fff","active-text-color": "#ffd04b"}};
+          return {main: {"position": "absolute","top": 0,"left": 0,"width": "100%","min-height": "100%","background": "#f0f1e7"},nav: {"backgroundColor": "#545c64","textColor": "#fff","activeTextColor": "#ffd04b"}};
         }
-
       }
+
     },
     methods: {
       handleSelect(key, keyPath) {
