@@ -250,7 +250,7 @@ export default {
 
     // badge handling
     if (this.$store.state.newUploadNotif>0) {
-      this.$store.state.newUploadNotif=0;
+      this.$store.commit("RESET_UPLOAD_NOTIFS");
     }
 
     // non logged in bounce

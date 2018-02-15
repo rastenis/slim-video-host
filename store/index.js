@@ -13,7 +13,7 @@ const store = () => new Vuex.Store({
         authUser: null,
         gifURL: null,
         activeTab: '1',
-        newUploadNotif: 5
+        newUploadNotif: 0
     },
 
     mutations: {

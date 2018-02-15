@@ -175,6 +175,7 @@ export default {
           .then(res => {
             this.uploading = false;
             this.irreversibleUploadCommenced=false;
+            this.$store.commit("INC_UPLOAD_NOTIFS",this.completeCount);
             this.completeCount=0;
             
             if (status == 0) {
