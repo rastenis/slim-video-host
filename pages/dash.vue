@@ -297,11 +297,12 @@ export default {
         });
     } else {
       return axios({
-          url: "https://cigari.ga/api/getVideos",
+          url: "https://cigari.ga/api/dash",
           method: "post",
           credentials: "same-origin",
           data: {
-            user: this.$store.state.authUser
+            user: this.$store.state.authUser,
+            settingsLoaded:this.$store.state.settings.loaded
           }
         })
         .then(res => {
@@ -316,11 +317,17 @@ export default {
                 });
               }
 
+              // assigning videos
               this.videos = res.data.videos;
               this.hasVideos = hasVideos;
 
+              // setting theme if unset
+              if (!this.$store.state.settings.loaded) {
+                this.$store.commit("SET_SETTINGS",res.data.settings);
+              }
+
             } else if (res.data.error == 1) {
-              console.log("error while fetching videos");
+              console.log("error while fetching dashboard info");
             }
           } catch (err) {
             this.videos = res.data.videos;

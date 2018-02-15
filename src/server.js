@@ -655,7 +655,7 @@ app.post('/api/register', function(req, res) {
 });
 
 // route for getting user's videos
-app.post('/api/getVideos', function(req, res) {
+app.post('/api/dash', function(req, res) {
 
     var returner = {};
 
@@ -709,6 +709,19 @@ app.post('/api/getVideos', function(req, res) {
                             returner.user = docs[0];
                             finished();
                         });
+                    },
+                    function(finished) {
+                        // settings fetch
+                        if (!req.body.settingsLoaded) {
+                            db.settings.find({
+                                active: true
+                            }, function(err, docs) {
+                                returner.settings = docs[0];
+                                finished();
+                            });
+                        } else {
+                            finished();
+                        }
                     }
                 ], function(err) {
                     if (err) {

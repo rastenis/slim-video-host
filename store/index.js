@@ -13,7 +13,11 @@ const store = () => new Vuex.Store({
         authUser: null,
         gifURL: null,
         activeTab: '1',
-        newUploadNotif: 0
+        newUploadNotif: 0,
+        settings: {
+            loaded: false,
+            data: []
+        }
     },
 
     mutations: {
@@ -25,6 +29,10 @@ const store = () => new Vuex.Store({
         },
         RESET_UPLOAD_NOTIFS: function(state) {
             state.newUploadNotif = 0;
+        },
+        SET_SETTINGS: function(state, settingsData) {
+            state.settings.data = settingsData;
+            state.settings.loaded = true;
         }
     },
 
@@ -92,32 +100,6 @@ const store = () => new Vuex.Store({
                     } else {
                         return res.json()
                     }
-                })
-        },
-        getVideos({
-            commit
-        }, {
-            username
-        }) { //DEPRECATED
-            return fetch('/api/getVideos', {
-                    credentials: 'same-origin',
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }, //turetu vis dar paeit username, jei ne tai virsuj i var isidet reiks
-                    body: JSON.stringify({
-                        username
-                    })
-                })
-                .then((res) => {
-                    if (res.status === 555) {
-                        throw new Error('No such user.')
-                    } else {
-                        return res.json()
-                    }
-                })
-                .then((videos) => {
-                    commit('SET_VIDEOS', videos);
                 })
         },
         register({
