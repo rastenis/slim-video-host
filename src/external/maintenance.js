@@ -4,6 +4,7 @@ const du = require('du');
 const chalk = require('chalk');
 const async = require('async');
 const exec = require('child_process').exec;
+const themes = require('../../static/style/themes');
 
 // custom array diff prototype
 Array.prototype.diff = function(a) {
@@ -11,6 +12,8 @@ Array.prototype.diff = function(a) {
         return a.indexOf(i) < 0;
     });
 };
+
+console.log(themes["0"]);
 
 function preLaunch(config) {
 
@@ -31,6 +34,20 @@ function preLaunch(config) {
     du(config.file_path, function(err, size) {
         if (size >= config.total_space) {
             console.log("WARNING! Max space exceeded!");
+        }
+    });
+
+    // inserting settings, if none are present
+    db.settings.find({}, function(err, docs) {
+        if (docs.length == 0) {
+            // inserting default settings
+            db.settings.insert({
+                theme: "0"
+            }, function(err) {
+                if (err) {
+                    console.log(err);
+                }
+            });
         }
     });
 
