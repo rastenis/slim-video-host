@@ -323,7 +323,10 @@ export default {
 
               // setting theme if unset
               if (!this.$store.state.settings.loaded) {
+                console.log(res.data.settings);
                 this.$store.commit("SET_SETTINGS",res.data.settings);
+                console.log(this.$store.state.settings.data.nav["background-color"]);
+                
               }
 
             } else if (res.data.error == 1) {

@@ -1,5 +1,5 @@
 <template>
-  <div class="main">
+  <div :style="$store.state.settings.data.main">
     <el-menu v-if="!$store.state.authUser" class="nav" mode="horizontal" background-color="#545c64" text-color="#fff" active-text-color="#ffd04b" :default-active="$store.state.activeTab" @select="handleSelect">
       <el-menu-item index="1">Intro</el-menu-item>
       <el-menu-item index="2" class="pRight">Register</el-menu-item>
@@ -15,7 +15,7 @@
 
     </el-menu>
 
-    <el-menu v-else class="nav" mode="horizontal" background-color="#545c64" text-color="#fff" active-text-color="#ffd04b" :default-active="$store.state.activeTab" @select="handleSelect">
+    <el-menu v-else class="nav" mode="horizontal" :background-color="theme.nav['background-color']" text-color="#fff" active-text-color="#ffd04b" :default-active="$store.state.activeTab" @select="handleSelect">
       <el-menu-item index="1">
          <nuxt-link to="/" >Intro</nuxt-link>
       </el-menu-item>
@@ -42,6 +42,16 @@
     data() {
       return {
       };
+    },
+    computed:{
+      theme(){
+        if (this.$store.state.settings.loaded) {
+          return this.$store.state.settings.data;
+        }else{
+          return {"main": {"position": "absolute","top": 0,"left": 0,"width": "100%","min-height": "100%","background": "#f0f1e7"},"nav": {"backgroundColor": "#545c64","text-color": "#fff","active-text-color": "#ffd04b"}};
+        }
+
+      }
     },
     methods: {
       handleSelect(key, keyPath) {

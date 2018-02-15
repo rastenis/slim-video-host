@@ -25,6 +25,8 @@ const maintenance = require('./external/maintenance.js');
 const db = require('./external/db.js');
 const favicon = require('serve-favicon');
 const path = require('path');
+const themes = require('../static/style/themes');
+
 
 // removed _ and - from the generator because of issues with nuxt dynamic routing
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
@@ -659,7 +661,7 @@ app.post('/api/dash', function(req, res) {
 
     var returner = {};
 
-    log("VIDEOS | requester : " + req.session.authUser.username, 0);
+    log("DASH | requester : " + req.session.authUser.username, 0);
 
     async.waterfall([
         function(done) {
@@ -667,7 +669,7 @@ app.post('/api/dash', function(req, res) {
                 username: req.session.authUser.username.toLowerCase()
             }, function(err, docs) {
                 if (err) {
-                    log(chalk.bgRed.white("VIDEOS | " + err), 1);
+                    log(chalk.bgRed.white("DASH | " + err), 1);
                     returner.error = 1;
                     return res.json(null);
                 }
@@ -713,10 +715,14 @@ app.post('/api/dash', function(req, res) {
                     function(finished) {
                         // settings fetch
                         if (!req.body.settingsLoaded) {
-                            db.settings.find({
-                                active: true
-                            }, function(err, docs) {
-                                returner.settings = docs[0];
+                            db.settings.find({}, function(err, docs) {
+                                if (docs.length > 1) {
+                                    log("DASH | more than 1 setting stored in db!", 1);
+                                } else if (docs.length < 1) {
+                                    log("DASH | no settings in db", 1);
+                                } else {
+                                    returner.settings = themes[docs[0].theme];
+                                }
                                 finished();
                             });
                         } else {
@@ -725,7 +731,7 @@ app.post('/api/dash', function(req, res) {
                     }
                 ], function(err) {
                     if (err) {
-                        log("VIDEOS | " + err, 1);
+                        log("DASH | " + err, 1);
                     }
                     if (index == (docs.length - 1)) {
                         returner.error = 0;
@@ -737,7 +743,7 @@ app.post('/api/dash', function(req, res) {
         }
     ], function(err) {
         if (err) {
-            log("VIDEOS | " + err, 1);
+            log("DASH | " + err, 1);
         }
     });
 

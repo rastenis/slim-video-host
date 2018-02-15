@@ -7,7 +7,13 @@
             "width": "100%",
             "min-height": "100%",
             "background": "#f0f1e7"
+        },
+        "nav": {
+            "backgroundColor": "#545c64",
+            "text-color": "#fff",
+            "active-text-color": "#ffd04b"
         }
+
     }
 
 }

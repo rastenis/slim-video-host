@@ -4,7 +4,6 @@ const du = require('du');
 const chalk = require('chalk');
 const async = require('async');
 const exec = require('child_process').exec;
-const themes = require('../../static/style/themes');
 
 // custom array diff prototype
 Array.prototype.diff = function(a) {
@@ -13,7 +12,6 @@ Array.prototype.diff = function(a) {
     });
 };
 
-console.log(themes["0"]);
 
 function preLaunch(config) {
 
