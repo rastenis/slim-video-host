@@ -248,6 +248,12 @@ export default {
   },
   mounted() {
 
+    // badge handling
+    if (this.$store.state.newUploadNotif>0) {
+      this.$store.state.newUploadNotif=0;
+    }
+
+    // non logged in bounce
     if (!this.$store.state.authUser) {
       this.$nuxt._router.push("/");
       return;

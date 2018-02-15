@@ -12,22 +12,38 @@ const store = () => new Vuex.Store({
     state: {
         authUser: null,
         gifURL: null,
-        activeTab: '1'
+        activeTab: '1',
+        newUploadNotif: 5
     },
 
     mutations: {
         SET_USER: function(state, user) {
             state.authUser = user
+        },
+        INC_UPLOAD_NOTIFS: function(state, count) {
+            state.newUploadNotif += count;
+        },
+        RESET_UPLOAD_NOTIFS: function(state) {
+            state.newUploadNotif = 0;
         }
     },
 
     actions: {
-        nuxtServerInit({ commit }, { req }) {
+        nuxtServerInit({
+            commit
+        }, {
+            req
+        }) {
             if (req.session && req.session.authUser) {
                 commit('SET_USER', req.session.authUser)
             }
         },
-        login({ commit }, { username, password }) {
+        login({
+            commit
+        }, {
+            username,
+            password
+        }) {
             return fetch('/api/login', {
                     credentials: 'same-origin',
                     method: 'POST',
@@ -55,7 +71,11 @@ const store = () => new Vuex.Store({
 
                 })
         },
-        upload({ commit }, { file }) {
+        upload({
+            commit
+        }, {
+            file
+        }) {
             return fetch('/api/upload', {
                     credentials: 'same-origin',
                     method: 'POST',
@@ -74,7 +94,11 @@ const store = () => new Vuex.Store({
                     }
                 })
         },
-        getVideos({ commit }, { username }) { //DEPRECATED
+        getVideos({
+            commit
+        }, {
+            username
+        }) { //DEPRECATED
             return fetch('/api/getVideos', {
                     credentials: 'same-origin',
                     method: 'POST',
@@ -96,7 +120,15 @@ const store = () => new Vuex.Store({
                     commit('SET_VIDEOS', videos);
                 })
         },
-        register({ commit }, { username, password, passconf, email, code }) {
+        register({
+            commit
+        }, {
+            username,
+            password,
+            passconf,
+            email,
+            code
+        }) {
             return fetch('/api/register', {
                     // Send the client cookies to the server
                     credentials: 'same-origin',
@@ -115,13 +147,19 @@ const store = () => new Vuex.Store({
                 .then((res) => {
                     switch (res.status) {
                         case 599:
-                            throw { msg: "An account with that username already exists." }
+                            throw {
+                                msg: "An account with that username already exists."
+                            }
                             break;
                         case 598:
-                            throw { msg: "The server cannot accept new registrations at this moment." }
+                            throw {
+                                msg: "The server cannot accept new registrations at this moment."
+                            }
                             break;
                         case 597:
-                            throw { msg: "An account with that email already exists." }
+                            throw {
+                                msg: "An account with that email already exists."
+                            }
                             break;
                         default:
                             return res.json()
@@ -132,7 +170,9 @@ const store = () => new Vuex.Store({
                     commit('SET_USER', authUser)
                 })
         },
-        logout({ commit }) {
+        logout({
+            commit
+        }) {
             return fetch('/api/logout', {
                     // Send the client cookies to the server
                     credentials: 'same-origin',

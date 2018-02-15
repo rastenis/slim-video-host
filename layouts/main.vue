@@ -17,7 +17,12 @@
       <el-menu-item index="1">
          <nuxt-link to="/" >Intro</nuxt-link>
       </el-menu-item>
-      <el-menu-item index="2">Dashboard</el-menu-item>
+      <el-menu-item index="2">
+        <span>Dashboard</span>
+        <el-badge style="margin-top:-2h; margin-left:0.5vw;" :value="$store.state.newUploadNotif">
+        </el-badge>
+      </el-menu-item>
+      
       <el-menu-item index="3">Upload</el-menu-item>
       <el-menu-item index="4" class="pRight">Logout</el-menu-item>
       <el-menu-item index="5" class="pRight">Profile</el-menu-item>
