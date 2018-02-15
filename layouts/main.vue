@@ -11,6 +11,8 @@
       </el-menu-item>
       <el-menu-item index="2">Admin Panel</el-menu-item>
       <el-menu-item index="4" class="pRight">Logout</el-menu-item>
+      <el-menu-item index="5" class="pRight">Settings</el-menu-item>
+
     </el-menu>
 
     <el-menu v-else class="nav" mode="horizontal" background-color="#545c64" text-color="#fff" active-text-color="#ffd04b" :default-active="$store.state.activeTab" @select="handleSelect">
@@ -63,7 +65,11 @@
             this.logout();
             break;
           case "5":
-            this.$nuxt._router.push("/profile")
+            if (this.$store.state.authUser.userStatus==1) {
+              this.$nuxt._router.push("/settings");
+            }else{
+              this.$nuxt._router.push("/profile")
+            }
             this.$store.state.activeTab = '5';
             break;
           default:
