@@ -12,6 +12,9 @@
             "backgroundColor": "#545c64",
             "textColor": "#fff",
             "activeTextColor": "#ffd04b"
+        },
+        "containerTheme": {
+            "background": "#e6e7e8"
         }
 
     }
