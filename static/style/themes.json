@@ -17,6 +17,25 @@
             "background": "#e6e7e8"
         }
 
+    },
+    "1": {
+        "main": {
+            "position": "absolute",
+            "top": 0,
+            "left": 0,
+            "width": "100%",
+            "min-height": "100%",
+            "background": null
+        },
+        "nav": {
+            "backgroundColor": null,
+            "textColor": null,
+            "activeTextColor": null
+        },
+        "containerTheme": {
+            "background": "#f7f9f9"
+        }
+
     }
 
 }
