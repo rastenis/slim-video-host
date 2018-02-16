@@ -138,7 +138,7 @@ app.get('/api/cv/:id', function(req, res) {
     returner.ratings = {};
     returner.userRatings = {};
 
-    if (!req.params.id) {} else {
+    if (req.params.id) {
 
         async.waterfall([function(done) {
             //immedately calling an update, won't add a view if the video doesn't exist.
@@ -1224,6 +1224,32 @@ app.post('/api/finalizeUpload', function(req, res) {
 
 });
 
+api.post('/api/themeChange', function(req, res) {
+    // only signed in admins
+    if (req.session.authUser && req.session.authUser.userStatus == 1) {
+        db.settings.update({}, {}, {
+            multi: false,
+            returnUpdatedDocs: true
+        }, function(err, numAffected, affectedDocuments) {
+            if (err) {
+                log("THEME CHANGE | " + err, 1);
+            }
+            if (numAffected > 1) {
+                log("THEME CHANGE | " + "duplicate copies of settings in db!", 1);
+            } else if (numAffected == 0) { // no global settings in db
+                db.settings.insert({
+                    active: true,
+                    theme: req.body.newTheme
+                }, function(err) {
+                    if (err) {
+                        console.log(err);
+                    }
+                });
+            }
+        });
+    }
+});
+
 // postas adminu statistikom
 app.post('/api/getAdminStats', function(req, res) {
 
@@ -1294,7 +1320,6 @@ app.post('/api/getAdminStats', function(req, res) {
 
 // post to remove video
 app.post('/api/removeVideo', function(req, res) {
-    console.log("ROUTED");
     if (!req.session.authUser) {
         res.json({
             msgType: "error",
@@ -1328,7 +1353,6 @@ app.post('/api/removeVideo', function(req, res) {
                                     multi: false
                                 },
                                 function(err, numAffected, affectedDocument) {
-                                    console.log(selection);
                                     if (err) {
                                         log("VIDEO DELETION | " + err, 1);
                                     }
@@ -1336,7 +1360,7 @@ app.post('/api/removeVideo', function(req, res) {
                                     try {
                                         fs.remove(config.file_path + selection.videoID + selection.extension, function(err) {
                                             if (err) {
-                                                console.log(err);
+                                                log(("VIDEO DELETION | " + err), 1);
                                             }
                                         });
                                     } catch (error) {
@@ -1346,7 +1370,7 @@ app.post('/api/removeVideo', function(req, res) {
                                     try {
                                         fs.remove(config.file_path + "thumbs/" + selection.videoID + ".jpg", function(err) {
                                             if (err) {
-                                                console.log(err);
+                                                log(("VIDEO DELETION | " + err), 1);
                                             }
                                         });
                                     } catch (error) {
@@ -1376,12 +1400,10 @@ app.post('/api/removeVideo', function(req, res) {
                                     returner.msgType = "info";
                                     returner.error = 0;
                                     returner.msg = "Successfully deleted video(s)!";
-                                    console.log("okay");
                                     res.json(returner);
                                     done();
                                 } else {
                                     opCount++;
-                                    console.log("okaye");
 
                                     done();
                                 }
@@ -1404,14 +1426,13 @@ app.post('/api/removeVideo', function(req, res) {
                                     multi: false
                                 }, err => {
                                     if (err) {
-                                        console.log(err);
+                                        log(chalk.bgRed.white("VIDEO DELETION | " + err), 1);
                                     }
                                 });
                             }
                             done(); //doesn't really matter if operation doesn't finish before returning
                         }
                     ], function(err) {
-                        console.log("end");
                         if (err) {
                             log("VIDEO DELETION | " + err, 1);
                         }
