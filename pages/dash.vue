@@ -320,10 +320,11 @@ export default {
               // assigning videos
               this.videos = res.data.videos;
               this.hasVideos = hasVideos;
+              console.log(this.$store.state.settings.loaded);
 
               // setting theme if unset
               if (!this.$store.state.settings.loaded) {
-                this.$store.commit("SET_SETTINGS",res.data.settings);
+               this.$store.commit("SET_SETTINGS",res.data.settings);
               }
 
             } else if (res.data.error == 1) {

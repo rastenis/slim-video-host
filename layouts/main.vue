@@ -1,5 +1,5 @@
 <template>
-  <div :style="$store.state.settings.data.main">
+  <div :style="theme.main">
     <el-menu v-if="!$store.state.authUser" class="nav" mode="horizontal" :background-color="theme.nav['backgroundColor']" :text-color="theme.nav['textColor']" :active-text-color="theme.nav['activeTextColor']" :default-active="$store.state.activeTab" @select="handleSelect">
       <el-menu-item index="1">Intro</el-menu-item>
       <el-menu-item index="2" class="pRight">Register</el-menu-item>
@@ -108,15 +108,6 @@
 .el-menu-item {
   font-size: 2.5vh;
   font-family: LatoLight;
-}
-
-.main {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  min-height: 100%;
-  background: #f0f1e7;
 }
 
 .container {
