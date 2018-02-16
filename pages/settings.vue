@@ -1,6 +1,25 @@
 <template>
   <div>
     <h1 class="title">Settings</h1>
+    <el-card class="box-card" style="width:64vw;margin-left:3vw; height:70vh">
+      <div slot="header" class="clearfix">
+        <span style="font-size: 3vh;">Change global theme</span>
+      </div>
+      <el-row>
+        <el-col :span="8" v-for="(o, index) in 2" :key="o" :offset="index > 0 ? 2 : 0">
+          <el-card :body-style="{ padding: '0px' }">
+            <img :src="'/img/themes/'+index+'.png'" class="image">
+            <div style="padding: 14px;">
+              <span>{{index==0? "Dark":"Light"}}</span>
+              <div class="bottom clearfix">
+                <el-button type="text" class="button">Use this theme</el-button>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+          </el-card>
+      
   </div>
 </template>
 
