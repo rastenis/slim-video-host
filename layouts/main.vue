@@ -46,12 +46,11 @@
     computed:{
       theme(){
         if (this.$store.state.settings.loaded) {
-          return this.$store.state.settings.data;
+          return this.$store.state.settings.theme.data;
         }else{
           return {main: {"position": "absolute","top": 0,"left": 0,"width": "100%","min-height": "100%","background": "#f0f1e7"},nav: {"backgroundColor": "#545c64","textColor": "#fff","activeTextColor": "#ffd04b"},containerTheme:{"background": "#e6e7e8"}};
         }
       }
-
     },
     methods: {
       handleSelect(key, keyPath) {

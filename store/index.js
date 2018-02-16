@@ -16,7 +16,10 @@ const store = () => new Vuex.Store({
         newUploadNotif: 0,
         settings: {
             loaded: false,
-            data: {}
+            theme: {
+                id: null,
+                data: {}
+            }
         }
     },
 
@@ -31,7 +34,8 @@ const store = () => new Vuex.Store({
             state.newUploadNotif = 0;
         },
         SET_SETTINGS: function(state, settingsData) {
-            state.settings.data = settingsData;
+            state.settings.theme.data = settingsData.theme;
+            state.settings.theme.id = settingsData.themeID;
             state.settings.loaded = true;
         }
     },

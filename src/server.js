@@ -721,7 +721,9 @@ app.post('/api/dash', function(req, res) {
                                 } else if (docs.length < 1) {
                                     log("DASH | no settings in db", 1);
                                 } else {
-                                    returner.settings = themes[docs[0].theme];
+                                    returner.settings = {};
+                                    returner.settings.theme = themes[docs[0].theme];
+                                    returner.settings.themeID = docs[0].theme;
                                 }
                                 finished();
                             });
@@ -1224,10 +1226,12 @@ app.post('/api/finalizeUpload', function(req, res) {
 
 });
 
-api.post('/api/themeChange', function(req, res) {
+app.post('/api/themeChange', function(req, res) {
     // only signed in admins
+    var returner = {};
+    returner.error = false;
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
-        db.settings.update({}, {}, {
+        db.settings.update({}, { theme: req.body.newTheme }, {
             multi: false,
             returnUpdatedDocs: true
         }, function(err, numAffected, affectedDocuments) {
@@ -1245,6 +1249,13 @@ api.post('/api/themeChange', function(req, res) {
                         console.log(err);
                     }
                 });
+            } else {
+                // return updated settings
+                returner.newSettings = req.body.settings;
+                returner.newSettings.theme.id = req.body.newTheme;
+                returner.newSettings.theme.data = themes[req.body.newTheme];
+                returner.msg = "You have successfully changed the theme!";
+                return res.json(returner);
             }
         });
     }
