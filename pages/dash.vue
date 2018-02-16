@@ -243,14 +243,47 @@ export default {
       currentCopyTooltip: "Click to copy!",
       multipleSelection: [],
       searchTerm: "",
-      warning: null
+      warning: null,
+      settings:{}
     };
+  },
+  asyncData(context){
+    if (context.app.store.state.settings.loaded) {
+      return;
+    }else{
+      return axios({
+        url: "https://cigari.ga/api/settings",
+        method: "get",
+        credentials: "same-origin",
+        data: {
+        }
+      })
+      .then(res => {
+        try {
+          if (res.data.error == 0) {
+            return{
+              settings:res.data.settings
+            };
+          } 
+        } catch (err) {
+          console.log(err);
+        }
+      })
+      .catch(function (e) {
+        console.log(e);
+      });
+    }
   },
   mounted() {
 
     // badge handling
     if (this.$store.state.newUploadNotif>0) {
       this.$store.commit("RESET_UPLOAD_NOTIFS");
+    }
+
+    // storing settings if unset
+    if (!this.$store.state.settings.loaded) {
+      this.$store.commit("SET_SETTINGS",this.settings);
     }
 
     // non logged in bounce
@@ -320,12 +353,6 @@ export default {
               // assigning videos
               this.videos = res.data.videos;
               this.hasVideos = hasVideos;
-              console.log(this.$store.state.settings.loaded);
-
-              // setting theme if unset
-              if (!this.$store.state.settings.loaded) {
-               this.$store.commit("SET_SETTINGS",res.data.settings);
-              }
 
             } else if (res.data.error == 1) {
               console.log("error while fetching dashboard info");
@@ -341,8 +368,6 @@ export default {
           console.log(e);
         });
     }
-
-
   },
   methods: {
     async deleteVideo(selects) {

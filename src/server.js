@@ -711,25 +711,6 @@ app.post('/api/dash', function(req, res) {
                             returner.user = docs[0];
                             finished();
                         });
-                    },
-                    function(finished) {
-                        // settings fetch
-                        if (!req.body.settingsLoaded) {
-                            db.settings.find({}, function(err, docs) {
-                                if (docs.length > 1) {
-                                    log("DASH | more than 1 setting stored in db!", 1);
-                                } else if (docs.length < 1) {
-                                    log("DASH | no settings in db", 1);
-                                } else {
-                                    returner.settings = {};
-                                    returner.settings.theme = themes[docs[0].theme];
-                                    returner.settings.themeID = docs[0].theme;
-                                }
-                                finished();
-                            });
-                        } else {
-                            finished();
-                        }
                     }
                 ], function(err) {
                     if (err) {
@@ -750,6 +731,26 @@ app.post('/api/dash', function(req, res) {
     });
 
 });
+
+app.get('/api/settings', function(req, res) {
+    var returner = {};
+    returner.error = false;
+
+    // settings fetch
+    db.settings.find({}, function(err, docs) {
+        if (docs.length > 1) {
+            log("SETTINGS | more than 1 setting stored in db!", 1);
+        } else if (docs.length < 1) {
+            log("SETTINGS | no settings in db", 1);
+        } else {
+            returner.settings = {};
+            returner.settings.theme = themes[docs[0].theme];
+            returner.settings.themeID = docs[0].theme;
+            return res.json(returner);
+        }
+    });
+});
+
 
 // route for storage upgrades
 app.post('/api/upgrade', function(req, res) {
