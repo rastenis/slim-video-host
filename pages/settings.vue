@@ -11,15 +11,14 @@
             <img :src="'/img/themes/'+index+'.png'" class="image">
             <div style="padding: 14px;">
               <span>{{index==0? "Dark":"Light"}}</span>
-              <div class="bottom clearfix">
-                <el-button type="text" class="button">Use this theme</el-button>
+              <div class="bottom">
+                <el-button type="primary" @click="changeTheme(index)" class="button">Use this theme</el-button>
               </div>
             </div>
           </el-card>
         </el-col>
       </el-row>
-          </el-card>
-      
+    </el-card>
   </div>
 </template>
 
@@ -48,7 +47,7 @@ export default {
         data: {
           user: this.$store.state.authUser,
           newTheme:selection,
-          settings:this.$store.settings
+          settings:this.$store.state.settings
         }
       })
       .then(res => {
@@ -90,5 +89,10 @@ export default {
   font-size: 6vh;
   padding-top: 10vh;
   padding-left: 3vw;
+}
+
+.bottom {
+  margin-top: 13px;
+  line-height: 12px;
 }
 </style>

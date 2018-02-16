@@ -40,7 +40,8 @@ function preLaunch(config) {
         if (docs.length == 0) {
             // inserting default settings
             db.settings.insert({
-                theme: "0"
+                theme: "0",
+                active: true
             }, function(err) {
                 if (err) {
                     console.log(err);

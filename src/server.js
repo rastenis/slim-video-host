@@ -1226,12 +1226,12 @@ app.post('/api/finalizeUpload', function(req, res) {
 
 });
 
-app.post('/api/themeChange', function(req, res) {
+app.post('/api/changeTheme', function(req, res) {
     // only signed in admins
     var returner = {};
     returner.error = false;
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
-        db.settings.update({}, { theme: req.body.newTheme }, {
+        db.settings.update({ active: true }, { $set: { theme: req.body.newTheme } }, {
             multi: false,
             returnUpdatedDocs: true
         }, function(err, numAffected, affectedDocuments) {
@@ -1251,7 +1251,9 @@ app.post('/api/themeChange', function(req, res) {
                 });
             } else {
                 // return updated settings
+                returner.newSettings = {};
                 returner.newSettings = req.body.settings;
+                returner.newSettings.theme = {};
                 returner.newSettings.theme.id = req.body.newTheme;
                 returner.newSettings.theme.data = themes[req.body.newTheme];
                 returner.msg = "You have successfully changed the theme!";
