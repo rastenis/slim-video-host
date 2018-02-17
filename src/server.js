@@ -1228,6 +1228,8 @@ app.post('/api/finalizeUpload', function(req, res) {
 });
 
 app.post('/api/changeTheme', function(req, res) {
+
+    log("THEME CHANGE | requester: " + req.session.authUser.username, 0);
     // only signed in admins
     var returner = {};
     returner.error = false;
@@ -1263,13 +1265,19 @@ app.post('/api/changeTheme', function(req, res) {
                 return res.json(returner);
             }
         });
+    } else {
+        log("BAD CALL @ THEME CHANGE | requester: " + req.session.authUser.username, 1);
+        return;
     }
 });
 
 app.post('/api/runMaintenance', function(req, res) {
+
     var returner = {};
     returner.error = false;
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
+        log("RUN MAINTENANCE | requester: " + req.session.authUser.username, 0);
+
         try {
             maintenance.preLaunch(config);
             returner.msg = "Maintenance successfully started!";
@@ -1281,6 +1289,7 @@ app.post('/api/runMaintenance', function(req, res) {
             return res.json(returner);
         }
     } else {
+        log("BAD CALL @ RUN MAINTENANCE | requester: " + req.session.authUser.username, 1);
         return;
     }
 });
@@ -1289,7 +1298,6 @@ app.post('/api/runMaintenance', function(req, res) {
 app.post('/api/getAdminStats', function(req, res) {
 
     log("FETCHING ADMIN STATS | requester: " + req.session.authUser.username, 0);
-
     var returner = {};
     returner.stats = {};
 
