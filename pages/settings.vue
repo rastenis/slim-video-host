@@ -52,7 +52,7 @@ export default {
     },
     runMaintenance(){
       return axios({
-        url: "https://cigari.ga/api/manualMaintenance",
+        url: "https://cigari.ga/api/runMaintenance",
         method: "post",
         credentials: "same-origin",
         data: {
@@ -97,7 +97,7 @@ export default {
     }
   },
   mounted() {
-    if (this.$store.state.authUser) {
+    if (this.$store.state.authUser && this.$store.state.authUser.userStatus==1 ) {
       this.$store.state.activeTab = '5';
     } else { 
       this.$nuxt._router.push("/");
