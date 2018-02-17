@@ -1252,12 +1252,14 @@ app.post('/api/changeTheme', function(req, res) {
                 });
             } else {
                 // return updated settings
+
                 returner.newSettings = {};
                 returner.newSettings = req.body.settings;
-                returner.newSettings.theme = {};
-                returner.newSettings.theme.id = req.body.newTheme;
-                returner.newSettings.theme.data = themes[req.body.newTheme];
+                returner.newSettings.theme = themes[req.body.newTheme];
+                returner.newSettings.themeID = req.body.newTheme;
                 returner.msg = "You have successfully changed the theme!";
+                returner.msgType = "success";
+
                 return res.json(returner);
             }
         });

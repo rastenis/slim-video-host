@@ -57,9 +57,7 @@ export default {
         });
         if (res.data.error == 0) {
           // updating local settings
-          console.log(this.$store.state.settings);
           this.$store.commit("SET_SETTINGS",res.data.newSettings);
-          this.logout();
         } else if (res.data.error == 1) {
           console.log("failed to change theme");
         }// LEFTOFF: crashes when theme changed?
