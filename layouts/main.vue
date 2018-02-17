@@ -12,7 +12,6 @@
       <el-menu-item index="2">Admin Panel</el-menu-item>
       <el-menu-item index="4" class="pRight">Logout</el-menu-item>
       <el-menu-item index="5" class="pRight">Settings</el-menu-item>
-
     </el-menu>
 
     <el-menu v-else class="nav" mode="horizontal" :background-color="theme.nav['backgroundColor']" :text-color="theme.nav['textColor']" :active-text-color="theme.nav['activeTextColor']" :default-active="$store.state.activeTab" @select="handleSelect">
@@ -24,16 +23,13 @@
         <el-badge style="margin-top:-2h; margin-left:0.5vw;" :value="$store.state.newUploadNotif">
         </el-badge>
       </el-menu-item>
-      
       <el-menu-item index="3">Upload</el-menu-item>
       <el-menu-item index="4" class="pRight">Logout</el-menu-item>
       <el-menu-item index="5" class="pRight">Profile</el-menu-item>
-      
     </el-menu>
     <div :style="theme.containerTheme" class="container">
       <nuxt/>
     </div>
-  
   </div>
 </template>
 

@@ -1234,7 +1234,13 @@ app.post('/api/changeTheme', function(req, res) {
     var returner = {};
     returner.error = false;
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
-        db.settings.update({ active: true }, { $set: { theme: req.body.newTheme } }, {
+        db.settings.update({
+            active: true
+        }, {
+            $set: {
+                theme: req.body.newTheme
+            }
+        }, {
             multi: false,
             returnUpdatedDocs: true
         }, function(err, numAffected, affectedDocuments) {

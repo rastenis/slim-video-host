@@ -13,11 +13,5 @@
         "username": "something@gmail.com",
         "password": "password"
     },
-    "databases": {
-        "db_users_path": "db/users",
-        "db_videos_path": "db/videos",
-        "db_codes_path": "db/codes",
-        "db_ratings_path": "db/ratings",
-        "db_settings_path": "db/settings"
-    }
+    "db_path": "db/"
 }
