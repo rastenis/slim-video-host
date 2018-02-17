@@ -19,5 +19,9 @@ module.exports = {
     ratings: new Datastore({
         filename: config.databases.db_ratings_path,
         autoload: true
+    }),
+    settings: new Datastore({
+        filename: config.databases.db_settings_path,
+        autoload: true
     })
 }

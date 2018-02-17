@@ -25,6 +25,8 @@ const maintenance = require('./external/maintenance.js');
 const db = require('./external/db.js');
 const favicon = require('serve-favicon');
 const path = require('path');
+const themes = require('../static/style/themes');
+
 
 // removed _ and - from the generator because of issues with nuxt dynamic routing
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
@@ -136,7 +138,7 @@ app.get('/api/cv/:id', function(req, res) {
     returner.ratings = {};
     returner.userRatings = {};
 
-    if (!req.params.id) {} else {
+    if (req.params.id) {
 
         async.waterfall([function(done) {
             //immedately calling an update, won't add a view if the video doesn't exist.
@@ -655,11 +657,11 @@ app.post('/api/register', function(req, res) {
 });
 
 // route for getting user's videos
-app.post('/api/getVideos', function(req, res) {
+app.post('/api/dash', function(req, res) {
 
     var returner = {};
 
-    log("VIDEOS | requester : " + req.session.authUser.username, 0);
+    log("DASH | requester : " + req.session.authUser.username, 0);
 
     async.waterfall([
         function(done) {
@@ -667,7 +669,7 @@ app.post('/api/getVideos', function(req, res) {
                 username: req.session.authUser.username.toLowerCase()
             }, function(err, docs) {
                 if (err) {
-                    log(chalk.bgRed.white("VIDEOS | " + err), 1);
+                    log(chalk.bgRed.white("DASH | " + err), 1);
                     returner.error = 1;
                     return res.json(null);
                 }
@@ -712,7 +714,7 @@ app.post('/api/getVideos', function(req, res) {
                     }
                 ], function(err) {
                     if (err) {
-                        log("VIDEOS | " + err, 1);
+                        log("DASH | " + err, 1);
                     }
                     if (index == (docs.length - 1)) {
                         returner.error = 0;
@@ -724,11 +726,31 @@ app.post('/api/getVideos', function(req, res) {
         }
     ], function(err) {
         if (err) {
-            log("VIDEOS | " + err, 1);
+            log("DASH | " + err, 1);
         }
     });
 
 });
+
+app.get('/api/settings', function(req, res) {
+    var returner = {};
+    returner.error = false;
+
+    // settings fetch
+    db.settings.find({}, function(err, docs) {
+        if (docs.length > 1) {
+            log("SETTINGS | more than 1 setting stored in db!", 1);
+        } else if (docs.length < 1) {
+            log("SETTINGS | no settings in db", 1);
+        } else {
+            returner.settings = {};
+            returner.settings.theme = themes[docs[0].theme];
+            returner.settings.themeID = docs[0].theme;
+            return res.json(returner);
+        }
+    });
+});
+
 
 // route for storage upgrades
 app.post('/api/upgrade', function(req, res) {
@@ -1205,6 +1227,45 @@ app.post('/api/finalizeUpload', function(req, res) {
 
 });
 
+app.post('/api/changeTheme', function(req, res) {
+    // only signed in admins
+    var returner = {};
+    returner.error = false;
+    if (req.session.authUser && req.session.authUser.userStatus == 1) {
+        db.settings.update({ active: true }, { $set: { theme: req.body.newTheme } }, {
+            multi: false,
+            returnUpdatedDocs: true
+        }, function(err, numAffected, affectedDocuments) {
+            if (err) {
+                log("THEME CHANGE | " + err, 1);
+            }
+            if (numAffected > 1) {
+                log("THEME CHANGE | " + "duplicate copies of settings in db!", 1);
+            } else if (numAffected == 0) { // no global settings in db
+                db.settings.insert({
+                    active: true,
+                    theme: req.body.newTheme
+                }, function(err) {
+                    if (err) {
+                        console.log(err);
+                    }
+                });
+            } else {
+                // return updated settings
+
+                returner.newSettings = {};
+                returner.newSettings = req.body.settings;
+                returner.newSettings.theme = themes[req.body.newTheme];
+                returner.newSettings.themeID = req.body.newTheme;
+                returner.msg = "You have successfully changed the theme!";
+                returner.msgType = "success";
+
+                return res.json(returner);
+            }
+        });
+    }
+});
+
 // postas adminu statistikom
 app.post('/api/getAdminStats', function(req, res) {
 
@@ -1275,7 +1336,6 @@ app.post('/api/getAdminStats', function(req, res) {
 
 // post to remove video
 app.post('/api/removeVideo', function(req, res) {
-    console.log("ROUTED");
     if (!req.session.authUser) {
         res.json({
             msgType: "error",
@@ -1309,7 +1369,6 @@ app.post('/api/removeVideo', function(req, res) {
                                     multi: false
                                 },
                                 function(err, numAffected, affectedDocument) {
-                                    console.log(selection);
                                     if (err) {
                                         log("VIDEO DELETION | " + err, 1);
                                     }
@@ -1317,7 +1376,7 @@ app.post('/api/removeVideo', function(req, res) {
                                     try {
                                         fs.remove(config.file_path + selection.videoID + selection.extension, function(err) {
                                             if (err) {
-                                                console.log(err);
+                                                log(("VIDEO DELETION | " + err), 1);
                                             }
                                         });
                                     } catch (error) {
@@ -1327,7 +1386,7 @@ app.post('/api/removeVideo', function(req, res) {
                                     try {
                                         fs.remove(config.file_path + "thumbs/" + selection.videoID + ".jpg", function(err) {
                                             if (err) {
-                                                console.log(err);
+                                                log(("VIDEO DELETION | " + err), 1);
                                             }
                                         });
                                     } catch (error) {
@@ -1357,12 +1416,10 @@ app.post('/api/removeVideo', function(req, res) {
                                     returner.msgType = "info";
                                     returner.error = 0;
                                     returner.msg = "Successfully deleted video(s)!";
-                                    console.log("okay");
                                     res.json(returner);
                                     done();
                                 } else {
                                     opCount++;
-                                    console.log("okaye");
 
                                     done();
                                 }
@@ -1385,14 +1442,13 @@ app.post('/api/removeVideo', function(req, res) {
                                     multi: false
                                 }, err => {
                                     if (err) {
-                                        console.log(err);
+                                        log(chalk.bgRed.white("VIDEO DELETION | " + err), 1);
                                     }
                                 });
                             }
                             done(); //doesn't really matter if operation doesn't finish before returning
                         }
                     ], function(err) {
-                        console.log("end");
                         if (err) {
                             log("VIDEO DELETION | " + err, 1);
                         }
