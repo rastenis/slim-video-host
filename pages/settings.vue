@@ -50,6 +50,24 @@ export default {
         this.formError = e.message
       }
     },
+    runMaintenance(){
+      return axios({
+        url: "https://cigari.ga/api/manualMaintenance",
+        method: "post",
+        credentials: "same-origin",
+        data: {
+        }
+      })
+      .then(res => {
+        this.$message({
+          type: res.data.msgType,
+          message: res.data.msg
+        });
+      })
+      .catch(function (e) {
+        console.log(e);
+      });
+    },
     changeTheme(selection){
       return axios({
         url: "https://cigari.ga/api/changeTheme",

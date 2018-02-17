@@ -1266,6 +1266,25 @@ app.post('/api/changeTheme', function(req, res) {
     }
 });
 
+app.post('/api/runMaintenance', function(req, res) {
+    var returner = {};
+    returner.error = false;
+    if (req.session.authUser && req.session.authUser.userStatus == 1) {
+        try {
+            maintenance.preLaunch(config);
+            returner.msg = "Maintenance successfully started!";
+            returner.msgType = "success";
+            return res.json(returner);
+        } catch (e) {
+            returner.msg = "Couldn't start maintenance! " + e;
+            returner.msgType = "danger";
+            return res.json(returner);
+        }
+    } else {
+        return;
+    }
+});
+
 // postas adminu statistikom
 app.post('/api/getAdminStats', function(req, res) {
 
