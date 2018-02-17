@@ -12,6 +12,7 @@ Array.prototype.diff = function(a) {
     });
 };
 
+
 function preLaunch(config) {
 
     // make sure the designated video directory is up
@@ -31,6 +32,21 @@ function preLaunch(config) {
     du(config.file_path, function(err, size) {
         if (size >= config.total_space) {
             console.log("WARNING! Max space exceeded!");
+        }
+    });
+
+    // inserting settings, if none are present
+    db.settings.find({}, function(err, docs) {
+        if (docs.length == 0) {
+            // inserting default settings
+            db.settings.insert({
+                theme: "0",
+                active: true
+            }, function(err) {
+                if (err) {
+                    console.log(err);
+                }
+            });
         }
     });
 
@@ -119,7 +135,6 @@ function preLaunch(config) {
                     }
                 }
             });
-            //LEFTOFF: remove uneeeded thumbs 
             fs.readdir(config.file_path + "thumbs/", (err, files) => {
                 if (docs.length < files.length) {
                     //console.log("WARN! Detected undeleted video thumbnails.");
