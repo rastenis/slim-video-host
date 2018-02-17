@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1 class="title">Settings</h1>
-    <el-card class="box-card" style="width:64vw;margin-left:3vw; height:70vh">
+    <el-card class="box-card settingCard">
       <div slot="header" class="clearfix">
         <span style="font-size: 3vh;">Change global theme</span>
       </div>
@@ -19,6 +19,17 @@
         </el-col>
       </el-row>
     </el-card>
+    <el-card class='box-card settingCard' v-if="$store.state.authUser">
+      <div slot="header" class="clearfix">
+        <span  style="font-size: 3vh;">Manual maintenance</span>
+      </div>
+      <el-form label-position="top" label-width="100px">
+        <el-form-item>
+          <el-button type='success' @click="runMaintenance">Run maintenance</el-button>
+        </el-form-item>
+        <span>It runs every startup.</span>
+      </el-form> 
+  </el-card>
   </div>
 </template>
 
@@ -89,6 +100,12 @@ export default {
   font-size: 6vh;
   padding-top: 10vh;
   padding-left: 3vw;
+}
+
+.settingCard {
+  width: 64vw;
+  margin-left: 3vw;
+  margin-top: 3vh;
 }
 
 .bottom {
