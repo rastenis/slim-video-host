@@ -135,7 +135,6 @@ function preLaunch(config) {
                     }
                 }
             });
-            //LEFTOFF: remove uneeeded thumbs 
             fs.readdir(config.file_path + "thumbs/", (err, files) => {
                 if (docs.length < files.length) {
                     //console.log("WARN! Detected undeleted video thumbnails.");
