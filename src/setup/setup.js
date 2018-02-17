@@ -9,7 +9,7 @@ let config = {
     "file_path": "static/videos/",
     "host_prefix": "https://yourHostname.domain/v/",
     "total_space": 100000000000,
-    "production_logging": 'none',
+    "production_logging": "none",
     "self_hosted": "0",
     "port": 10700,
     "tls": {
@@ -20,12 +20,7 @@ let config = {
         "username": "something@gmail.com",
         "password": "password"
     },
-    "databases": {
-        "db_users_path": "db/users",
-        "db_videos_path": "db/videos",
-        "db_codes_path": "db/codes",
-        "db_ratings_path": "db/ratings"
-    }
+    "db_path": "db/"
 };
 
 // all of this will be more or less sync
