@@ -209,6 +209,7 @@ export default {
   cursor: pointer;
   margin: auto;
   font-family: LatoRegular;
+  font-size: 2vmin;
 }
 
 .forgotPasswordLink:hover {
@@ -225,8 +226,8 @@ export default {
   font-weight: bold;
   padding: 0 4px !important;
   font-size: 4vh !important;
-  height: 7vh !important;
-  width: 20vw !important;
+  height: 7vmin !important;
+  width: 20vmax !important;
   border: solid 5px white !important;
   clip-path: polygon(
     calc(0%) calc(0% + 5px),
@@ -359,6 +360,7 @@ body {
 .loginButton {
   margin: 0 auto;
   font-size: 3vh !important;
+  width: 21vmax !important;
 }
 </style>
 
