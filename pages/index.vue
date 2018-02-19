@@ -4,8 +4,8 @@
     </div>
     <transition name="fadeUp" :duration="{ enter: 1000, leave: 20 }" appear>
       <a class="hvr-fade introMainButton" @click="activateLogin(true)" v-show="!showLogin">
-        <p v-if="!$store.state.authUser" class="nudge">Login</p>
-        <p v-else class="nudge minif">Welcome back</p>
+        <p v-if="!$store.state.authUser" class="indexTitle">Login</p>
+        <p v-else class="indexTitle minif">Welcome back</p>
       </a>
     </transition>
     <div v-show="showLogin" class="introLoginForm">
@@ -139,6 +139,22 @@ export default {
   margin-bottom: 2vh;
 }
 
+@font-face {
+  font-family: "LatoLight";
+  src: url("/fonts/LatoLight/Lato-Light.eot"),
+    url("/fonts/LatoLight/Lato-Light.woff") format("woff"),
+    url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
+  font-style: normal;
+  font-weight: normal;
+}
+
+.indexTitle {
+  font-family: LatoLight;
+  font-weight: bold;
+  font-size: 15vmin;
+  transform: translate(0, -5vmin);
+}
+
 .el-form-item--mini.el-form-item,
 .el-form-item--small.el-form-item {
   margin-bottom: 3px;
@@ -249,10 +265,6 @@ a:hover {
   color: black;
 }
 
-.nudge {
-  margin-top: 10vh;
-}
-
 .topField {
   margin-top: 3vh;
 }
@@ -289,6 +301,7 @@ a:hover {
   font-family: LatoRegular;
   cursor: pointer;
   font-weight: bold;
+  text-align: center;
 }
 
 .introLoginForm {
@@ -304,8 +317,8 @@ a:hover {
 }
 
 .minif {
-  margin-top: 12vh;
-  font-size: 10vh;
+  font-size: 10vmin !important;
+  transform: translate(0, 3vmin) !important;
 }
 
 .hvr-fade {
