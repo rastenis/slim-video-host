@@ -134,7 +134,7 @@ app.get('/api/cv/:id', function(req, res) {
 
     log("FETCHING VIDEO | id: " + req.params.id, 0);
 
-    var returner = {};
+    let returner = genericReturnObject();
     returner.ratings = {};
     returner.userRatings = {};
 
@@ -155,13 +155,11 @@ app.get('/api/cv/:id', function(req, res) {
 
                 if (!affectedDocument) {
                     log("FETCHING VIDEO | no such video!", 0);
-                    returner.video = affectedDocument;
-                    returner.error = 1;
+                    returner.meta.error = 1;
                 } else {
                     log("FETCHING VIDEO | added a view to video " + affectedDocument.videoID, 0);
                     affectedDocument.src = '/videos/' + req.params.id + affectedDocument.extension;
                     returner.video = affectedDocument;
-                    returner.error = 0;
                 }
                 done();
             });
@@ -232,9 +230,12 @@ app.get('/api/cv/:id', function(req, res) {
 
 // token checking route
 app.get('/api/checkToken/:token', function(req, res) {
-    var returner = {};
+
+    let returner = genericReturnObject()
     returner.valid = false;
+
     log("PASS RESET | checking for token " + req.params.token, 0);
+
     db.users.find({
         resetToken: req.params.token,
         tokenExpiry: {
@@ -243,7 +244,7 @@ app.get('/api/checkToken/:token', function(req, res) {
     }, function(err, docs) {
         if (docs.length > 1) {
             log("PASS RESET | duplicate tokens; purging all", 1);
-            returner.error = true;
+            returner.meta.error = true;
             db.users.remove({}, {
                 multi: true
             }, function(err, docs) {
@@ -254,12 +255,12 @@ app.get('/api/checkToken/:token', function(req, res) {
         } else if (docs.length < 1) {
             log("PASS RESET | no such token.", 0);
             returner.token = null;
-            returner.error = true;
+            returner.meta.error = true;
         } else { //token found
             log("PASS RESET | found token!", 0);
             returner.token = docs[0].resetToken;
             returner.valid = true;
-            returner.error = false;
+            returner.meta.error = false;
         }
         res.json(returner);
     });
@@ -273,25 +274,20 @@ app.post('/api/requestReset', function(req, res) {
     }
 
     log("PASS RESET | reset request", 0);
-    var returner = {};
-    returner.error = true;
-    returner.token = null;
+
     db.users.find({
         email: req.body.email
     }, function(err, docs) {
         if (docs.length > 1) {
             log(chalk.bgRed.white("CRITICAL!") + chalk.bgRed.white("PASS RESET | duplicate account emails."), 1);
-            returner.error = true;
+            res.json(genericErrorObject("Internal error. Please try again later."));
         } else if (docs.length < 1) {
             log("PASS RESET | no such user.", 0);
-            returner.error = true;
-            returner.msg = "No account with that email.";
-            returner.msgType = 'error';
-            res.json(returner);
+            res.json(genericErrorObject("No account with that email."));
         } else { //token found
             let token = crypto.randomBytes(23).toString('hex');
 
-            var nmlTrans = nodemailer.createTransport({
+            let nmlTrans = nodemailer.createTransport({
                 service: 'Gmail',
                 auth: {
                     user: config.mail.username,
@@ -299,7 +295,7 @@ app.post('/api/requestReset', function(req, res) {
                 }
             });
 
-            var mailOptions = {
+            let mailOptions = {
                 to: req.body.email,
                 from: 'merchseries.referals@gmail.com',
                 subject: 'Password Reset',
@@ -327,10 +323,7 @@ app.post('/api/requestReset', function(req, res) {
             }, {
                 upsert: false
             }, function(err, docs) {
-                returner.msg = "Success! Check your email for further instructions.";
-                returner.msgType = 'success';
-                returner.error = false;
-                res.json(returner);
+                res.json(genericReturnObject("Success! Check your email for further instructions."));
             });
         }
     });
@@ -449,7 +442,7 @@ app.put('/api/act', function(req, res) {
                 if (docs.length > 2 || docs.length < 0) {
                     log(chalk.bgRed.white("CRITICAL!") + "ACT | rating error.", 1);
                 }
-                var userRatings = {};
+                let userRatings = {};
                 userRatings.liked = false;
                 userRatings.disliked = false;
 
@@ -727,7 +720,7 @@ app.get('/api/dash', function(req, res) {
 });
 
 app.get('/api/settings', function(req, res) {
-    var returner = {};
+    let returner = {};
     returner.error = false;
 
     // settings fetch
