@@ -109,8 +109,8 @@ export default {
             }
           }).then(res => {
             this.$message({
-              type: res.data.msgType,
-              message: res.data.msg
+              type: res.data.meta.msgType,
+              message: res.data.meta.msg
             });
             //clearing forms
             this.passReset.newPassword = "";
@@ -136,11 +136,11 @@ export default {
         }
       }).then(res => {
         this.$message({
-          type: res.data.msgType,
-          message: res.data.msg
+          type: res.data.meta.msgType,
+          message: res.data.meta.msg
         });
         //log out tik jei pass correct ir no error
-        if (!res.data.error) {
+        if (!res.data.meta.error) {
           this.logout();
         }
       }).catch(err => {

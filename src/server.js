@@ -339,11 +339,12 @@ app.post('/api/requestReset', function(req, res) {
 // post to actually change the password (both in-profile and token-based password reset)
 app.patch('/api/changePassword', function(req, res) {
     log("PASSWORD CHANGE || " + (req.body.resetType == 0 ? "normal" : "token"), 0);
-    var returner = {};
+
+    let returner = {};
     returner.error = 0;
     // single route for both the standard password reset and the 'forgot password' token based reset
     if (req.body.resetType == 1) { //token reset
-        var hashedPass = hashUpPass(req.body.newPass);
+        let hashedPass = hashUpPass(req.body.newPass);
         // updating right away
         db.users.update({
             resetToken: req.body.token,
@@ -362,26 +363,21 @@ app.patch('/api/changePassword', function(req, res) {
             log("PASSWORD CHANGE || found the token", 0);
             if (numAffected == 0) {
                 log("PASSWORD CHANGE || password was NOT successfully changed", 0);
-                returner.msg = "Password reset token is invalid or has expired.";
-                returner.msgType = "error";
-                returner.error = 1;
+                returner = genericErrorObject("Password reset token is invalid or has expired.");
+
             } else if (numAffected > 1) {
                 //shouldnt ever happen, severe edge
                 log(chalk.bgRed.white("CRITICAL!") + "PASSWORD CHANGE || multiple passwords updated somehow", 1);
             } else {
                 //all ok
                 log("PASSWORD CHANGE || password was successfully changed", 0);
-                returner.msg = "You have successfully changed your password!";
-                returner.msgType = "success";
-                returner.error = 0;
+                returner = genericReturnObject("You have successfully changed your password!");
                 res.json(returner);
             }
         });
     } else { // regular reset
         if (!req.session.authUser) { // cannot initiate password change without logging in 
-            returner.msg = "You are not authorized for this action.";
-            returner.msgType = "error";
-            returner.error = 1;
+            returner = genericErrorObject("You are not authorized for this action.");
             res.json(returner);
         } else { // user is logged in 
             // password checks
@@ -402,7 +398,7 @@ app.patch('/api/changePassword', function(req, res) {
             }, function(valid, done) {
                 if (valid) { //all fine
                     // hashing the new password
-                    var hashedPass = hashUpPass(req.body.newPassword);
+                    let hashedPass = hashUpPass(req.body.newPassword);
 
                     // changing the password
                     db.users.update({
@@ -417,14 +413,12 @@ app.patch('/api/changePassword', function(req, res) {
                         if (err) {
                             log("PASSWORD CHANGE || " + err, 1);
                         } else {
-                            returner.msg = "You have successfully changed your password!";
-                            returner.msgType = "success";
+                            returner = genericReturnObject("You have successfully changed your password!");
                             done(null);
                         }
                     });
                 } else {
-                    returner.msg = "Incorrect old password!";
-                    returner.msgType = "error";
+                    returner = genericErrorObject("Incorrect old password!");
                     done(null);
                 }
             }], function(err) {
@@ -472,7 +466,7 @@ app.put('/api/act', function(req, res) {
             });
         },
         function(userRatings, done) {
-            var prep = {};
+            let prep = {};
             prep.action = req.body.action;
             prep.revert = false;
             if (prep.action) { // like
@@ -529,7 +523,7 @@ app.post('/api/register', function(req, res) {
         return;
     }
     async.waterfall([function(done) {
-        var enoughSpace = true;
+        let enoughSpace = true;
         db.users.find({
             username: req.body.username.toLowerCase()
         }, function(err, docs) {
@@ -555,8 +549,8 @@ app.post('/api/register', function(req, res) {
                 error: 'The server cannot accept new registrations at this moment.'
             });
         } else { //ok, proceeding with the creation
-            var storageSpace = defaultStorageSpace;
-            var userStatus = defaultUserStatus;
+            let storageSpace = defaultStorageSpace;
+            let userStatus = defaultUserStatus;
             log(chalk.bgRed(chalk.bgCyanBright.black("REGISTRATION | no duplicate account! proceeding with the creation of the account.")), 0);
             async.waterfall([
                 function(done) {
@@ -614,7 +608,7 @@ app.post('/api/register', function(req, res) {
                 function(done) {
                     //handling admin assignment for freshly run systems
                     db.users.find({}, function(err, docs) {
-                        var userCount = 0;
+                        let userCount = 0;
                         docs.forEach(function(doc) {
                             userCount++;
                         });
@@ -659,7 +653,7 @@ app.post('/api/register', function(req, res) {
 // route for getting user's videos
 app.get('/api/dash', function(req, res) {
 
-    var returner = {};
+    let returner = {};
 
     log("DASH | requester : " + req.session.authUser.username, 0);
 
@@ -755,7 +749,7 @@ app.get('/api/settings', function(req, res) {
 // route for storage upgrades
 app.post('/api/upgrade', function(req, res) {
 
-    var returner = {};
+    let returner = {};
     returner.error = 0;
     log("UPGRADE | requester : " + req.session.authUser.username + ", code:" + req.body.code, 0);
 
@@ -765,15 +759,11 @@ app.post('/api/upgrade', function(req, res) {
     }, function(err, docs) {
         if (err) {
             log(chalk.bgRed.white("UPGRADE | " + err), 1);
-            returner.error = 1;
-            returner.msg = "server error :(";
-            returner.msgType = "error";
+            res.json(genericErrorObject("Server error :("));
         }
         if (docs.length == 0) {
-            returner.error = 1;
-            returner.msg = "No such code exists.";
-            returner.msgType = "error";
             log("UPGRADE | unsuccessful: no such code", 0);
+            res.json(genericErrorObject("No such code exists."));
         } else {
             // adding granted benefit:
             // space
@@ -796,9 +786,7 @@ app.post('/api/upgrade', function(req, res) {
                     req.session.authUser = affectedDocument;
 
                     // res
-                    returner.msg = "You have successfully expanded your space limit!";
-                    returner.msgType = "success";
-                    res.json(returner);
+                    res.json(genericReturnObject("You have successfully expanded your space limit!"));
                 });
                 // admin status
             } else if (docs[0].benefit == 1) {
@@ -819,9 +807,7 @@ app.post('/api/upgrade', function(req, res) {
                     req.session.authUser = affectedDocument;
 
                     // res
-                    returner.msg = "You are now an admin!";
-                    returner.msgType = "success";
-                    res.json(returner);
+                    res.json(genericReturnObject("You are now an admin!"));
                 });
             } else if (docs[0].benefit == 2) {
                 db.users.update({
@@ -841,9 +827,7 @@ app.post('/api/upgrade', function(req, res) {
                     req.session.authUser = affectedDocument;
 
                     // res
-                    returner.msg = "Your account standing has been cleared!";
-                    returner.msgType = "success";
-                    res.json(returner);
+                    res.json(genericReturnObject("Your account standing has been cleared!"));
                 });
             }
 
@@ -1267,7 +1251,7 @@ app.post('/api/changeTheme', function(req, res) {
 
 app.post('/api/runMaintenance', function(req, res) {
 
-    var returner = {};
+    let returner = {};
     returner.error = false;
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
         log("RUN MAINTENANCE | requester: " + req.session.authUser.username, 0);
