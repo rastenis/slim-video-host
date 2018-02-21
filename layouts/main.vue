@@ -93,6 +93,11 @@
       }
     },
     created: function () {
+    },
+    head:{
+      meta:[
+        { property: "viewport",  content:"width=device-width, initial-scale=1.0"}
+      ]
     }
   }
 </script>
