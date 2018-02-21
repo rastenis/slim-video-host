@@ -339,6 +339,7 @@ export default {
           }
         })
         .then(res => {
+          console.log("got a then");
           try {
             if (res.data.meta.error == 0) {
               let hasVideos = false;
@@ -358,8 +359,8 @@ export default {
               console.log("error while fetching dashboard info");
             }
           } catch (err) {
-            this.videos = res.data.videos;
-            this.hasVideos = hasVideos;
+            this.videos = [];
+            this.hasVideos = false;
           }
           this.dataLoads.loading.videoList = false;
 
