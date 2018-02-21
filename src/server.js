@@ -938,6 +938,7 @@ app.delete('/api/deleteAccount', function(req, res) {
                 if (err) {
                     log("ACCOUNT DELETION | " + err, 1);
                 }
+                done();
             });
         }], function(err) {
             if (err) {
@@ -1425,7 +1426,19 @@ app.delete('/api/removeVideo', function(req, res) {
                                 //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
                                 //return errors from foreach async operations.
 
-                                //TODO: remove ratings
+
+                            });
+                        },
+                        function(done) {
+                            db.ratings.remove({
+                                videoID: selection.videoID
+                            }, {
+                                multi: true
+                            }, function(err, docs) {
+                                if (err) {
+                                    log("AVIDEO DELETION | " + err, 1);
+                                }
+                                done();
                             });
                         },
                         function(done) {
