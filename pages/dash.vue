@@ -449,10 +449,10 @@ export default {
             })
             .then(res => {
               this.$message({
-                type: res.data.msgType,
-                message: res.data.msg
+                type: res.data.meta.msgType,
+                message: res.data.meta.msg
               });
-              if (res.data.error == 0) {
+              if (res.data.meta.error == 0) {
                 //resetting selection
                 this.toggleSelection();
 
@@ -465,7 +465,7 @@ export default {
                     }
                   });
                 });
-              } else if (res.data.error == 1) {
+              } else if (res.data.meta.error == 1) {
                 console.log("error while bulk requesting new ids");
               }
             })

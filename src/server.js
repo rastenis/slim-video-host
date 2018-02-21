@@ -869,15 +869,12 @@ app.post('/api/upgrade', function(req, res) {
 // route for account deletion
 app.delete('/api/deleteAccount', function(req, res) {
     log("ACCOUNT DELETION | requester: " + req.session.authUser.username, 0);
-    var returner = {};
-    returner.error = false;
-    var opCount = 0;
+
+    let returner = genericReturnObject(),
+        opCount = 0;
+
     if (!req.session.authUser) {
-        res.json({
-            error: true,
-            msg: "No authentication. Please sign in.",
-            msgType: "error"
-        });
+        res.json(genericErrorObject("No authentication. Please sign in."));
     } else {
         async.waterfall([function(done) {
             db.users.find({
@@ -908,12 +905,10 @@ app.delete('/api/deleteAccount', function(req, res) {
             });
         }, function(valid, done) {
             if (!valid) { //wrong confirmation password
-                returner.msg = "The confirmation password is incorrect! Try again.";
-                returner.msgType = "error";
+                returner = genericErrorObject("The confirmation password is incorrect! Try again.");
                 done();
             } else if (returner.error) {
-                returner.msg = "An error occured when deleting your account. Please try again later.";
-                returner.msgType = "error";
+                returner = genericErrorObject("An error occured when deleting your account. Please try again later.");
                 done();
             } else {
                 db.users.remove({
@@ -923,13 +918,9 @@ app.delete('/api/deleteAccount', function(req, res) {
                 }, function(err) {
                     if (err) {
                         log("ACCOUNT DELETION | " + err, 1);
-                        returner.error = 1;
-                        returner.msg = "An internal error occured. Please try again later.";
-                        returner.msgType = "error";
+                        returner = genericErrorObject("An internal error occured. Please try again later.");
                     } else {
-                        returner.error = 0;
-                        returner.msg = "You have successfully deleted your account!";
-                        returner.msgType = "success";
+                        returner = genericReturnObject("You have successfully deleted your account!");
                     }
                     done();
                 });
@@ -948,9 +939,9 @@ app.delete('/api/deleteAccount', function(req, res) {
 app.patch('/api/newLink', function(req, res) {
     log("NEW LINKS | requester: " + req.session.authUser.username, 0);
 
-    var returner = {};
-    returner.error = false;
-    var opCount = 0;
+    let returner = genericReturnObject(),
+        opCount = 0;
+
     if (!req.session.authUser) {
         res.json({
             error: true,
@@ -960,8 +951,8 @@ app.patch('/api/newLink', function(req, res) {
     } else {
         returner.newData = req.body.selection;
         req.body.selection.forEach((sel, index) => {
-            var newVideoID = shortid.generate();
-            var newVidLink = config.host_prefix + "v/" + newVideoID;
+            let newVideoID = shortid.generate();
+            let newVidLink = config.host_prefix + "v/" + newVideoID;
 
             async.waterfall([function(done) {
                 db.videos.update({
@@ -980,9 +971,7 @@ app.patch('/api/newLink', function(req, res) {
                 });
             }, function(numAffected, done) {
                 if (numAffected < 1) {
-                    returner.error = true;
-                    returner.msgType = "error";
-                    returner.msg = "Link regeneration failed.";
+                    returner = genericErrorObject("Link regeneration failed.");
                 }
 
                 returner.newData[index].newVideoID = newVideoID;
@@ -1032,8 +1021,7 @@ app.patch('/api/newLink', function(req, res) {
                 }
                 if (opCount == req.body.selection.length - 1) {
                     if (!returner.error) {
-                        returner.msgType = "success";
-                        returner.msg = "Links successfully updated!";
+                        returner.meta.msg = "Links successfully updated!";
                     }
                     return res.json(returner);
                 } else {
@@ -1050,7 +1038,7 @@ app.patch('/api/newLink', function(req, res) {
 app.post('/api/rename', function(req, res) {
     log("RENAME | requester: " + req.session.authUser.username, 0);
 
-    var returner = {};
+    let returner = {};
     if (!req.session.authUser) {
         res.json({
             error: true,
@@ -1231,7 +1219,7 @@ app.post('/api/changeTheme', function(req, res) {
 
     log("THEME CHANGE | requester: " + req.session.authUser.username, 0);
     // only signed in admins
-    var returner = {};
+    let returner = {};
     returner.error = false;
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
         db.settings.update({
@@ -1718,5 +1706,25 @@ function log(message, type) {
         console.log(message);
     } else if (config.production_logging === "error" && type === 1) {
         console.log(message);
+    }
+}
+
+function genericReturnObject(message) {
+    return {
+        meta: {
+            error: false,
+            msgType: "success",
+            msg: message ? message : null
+        }
+    }
+}
+
+function genericErrorObject(message) {
+    return {
+        meta: {
+            error: true,
+            msgType: "error",
+            msg: message ? message : "An error has occured."
+        }
     }
 }
