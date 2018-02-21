@@ -104,8 +104,8 @@ export default {
             }
           }).then(res => {
             this.$message({
-              type: res.data.msgType,
-              message: res.data.msg
+              type: res.data.meta.msgType,
+              message: res.data.meta.msg
             });
             this.$refs["resetForm"].resetFields();
           }).catch(e => {

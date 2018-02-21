@@ -645,7 +645,7 @@ app.post('/api/register', function(req, res) {
 // route for getting user's videos
 app.get('/api/dash', function(req, res) {
 
-    let returner = {};
+    let returner = genericReturnObject();
 
     log("DASH | requester : " + req.session.authUser.username, 0);
 
