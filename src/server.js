@@ -929,6 +929,16 @@ app.delete('/api/deleteAccount', function(req, res) {
                     done();
                 }
             });
+        }, function(done) {
+            db.ratings.remove({
+                username: req.session.authUser.username
+            }, {
+                multi: true
+            }, function(err, docs) {
+                if (err) {
+                    log("ACCOUNT DELETION | " + err, 1);
+                }
+            });
         }], function(err) {
             if (err) {
                 log("ACCOUNT DELETION | " + err, 1);
