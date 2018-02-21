@@ -26,6 +26,7 @@ const db = require('./external/db.js');
 const favicon = require('serve-favicon');
 const path = require('path');
 const themes = require('../static/style/themes');
+const jsonfile = require('jsonfile');
 
 
 // removed _ and - from the generator because of issues with nuxt dynamic routing
@@ -731,6 +732,9 @@ app.get('/api/settings', function(req, res) {
             returner.settings = {};
             returner.settings.theme = themes[docs[0].theme];
             returner.settings.themeID = docs[0].theme;
+            themes.current = docs[0].theme;
+            jsonfile.writeFile("static/style/themes.json", themes);
+
             return res.json(returner);
         }
     });
