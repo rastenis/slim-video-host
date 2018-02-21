@@ -124,7 +124,6 @@ export default {
 
 <style scoped>
 .el-button {
-  font-weight: bold !important;
   border: none !important;
   background: rgba(0, 0, 0, 0.801) !important;
   color: #ffffff !important;
@@ -147,7 +146,6 @@ export default {
 
 .indexTitle {
   font-family: LatoLight;
-  font-weight: bold;
   font-size: 15vmin;
   transform: translate(0, -5vmin);
 }
@@ -220,7 +218,6 @@ export default {
   font-family: LatoRegular !important;
   background: rgba(0, 0, 0, 0.5) !important;
   color: white !important;
-  font-weight: bold;
   padding: 0 4px !important;
   font-size: 4vh !important;
   height: 7vmin !important;
@@ -298,7 +295,6 @@ a:hover {
   border: solid 0.5vw white;
   font-family: LatoRegular;
   cursor: pointer;
-  font-weight: bold;
   text-align: center;
 }
 
