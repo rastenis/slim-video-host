@@ -49,7 +49,7 @@ export default {
       },
       formError: null,
       showLogin: false,
-      gifTags:['illusion','psychedelic','trippy','abstract','3d']
+      gifTags:['psychedelic','trippy','abstract','3d']
     }
   },
   computed:{
@@ -73,9 +73,6 @@ export default {
     }
   },
   methods: {
-    hotkey(event){
-      alert("ASDASD");
-    },
     activateLogin(bool) {
       if (!this.$store.state.authUser) {
         this.showLogin = bool;
