@@ -4,8 +4,8 @@
     </div>
     <transition name="fadeUp" :duration="{ enter: 1000, leave: 20 }" appear>
       <a class="hvr-fade introMainButton" @click="activateLogin(true)" v-show="!showLogin">
-        <p v-if="!$store.state.authUser" class="nudge">Login</p>
-        <p v-else class="nudge minif">Welcome back</p>
+        <p v-if="!$store.state.authUser" class="indexTitle">Login</p>
+        <p v-else class="indexTitle minif">Welcome back</p>
       </a>
     </transition>
     <div v-show="showLogin" class="introLoginForm">
@@ -49,7 +49,7 @@ export default {
       },
       formError: null,
       showLogin: false,
-      gifTags:['illusion','psychedelic','trippy','abstract','3d']
+      gifTags:['psychedelic','trippy','abstract','3d']
     }
   },
   computed:{
@@ -73,9 +73,6 @@ export default {
     }
   },
   methods: {
-    hotkey(event){
-      alert("ASDASD");
-    },
     activateLogin(bool) {
       if (!this.$store.state.authUser) {
         this.showLogin = bool;
@@ -127,7 +124,6 @@ export default {
 
 <style scoped>
 .el-button {
-  font-weight: bold !important;
   border: none !important;
   background: rgba(0, 0, 0, 0.801) !important;
   color: #ffffff !important;
@@ -137,6 +133,21 @@ export default {
   width: 21vw;
   height: 8vh;
   margin-bottom: 2vh;
+}
+
+@font-face {
+  font-family: "LatoLight";
+  src: url("/fonts/LatoLight/Lato-Light.eot"),
+    url("/fonts/LatoLight/Lato-Light.woff") format("woff"),
+    url("/fonts/LatoLight/Lato-Light.ttf") format("truetype");
+  font-style: normal;
+  font-weight: normal;
+}
+
+.indexTitle {
+  font-family: LatoLight;
+  font-size: 15vmin;
+  transform: translate(0, -5vmin);
 }
 
 .el-form-item--mini.el-form-item,
@@ -193,6 +204,7 @@ export default {
   cursor: pointer;
   margin: auto;
   font-family: LatoRegular;
+  font-size: 2vmin;
 }
 
 .forgotPasswordLink:hover {
@@ -206,11 +218,10 @@ export default {
   font-family: LatoRegular !important;
   background: rgba(0, 0, 0, 0.5) !important;
   color: white !important;
-  font-weight: bold;
   padding: 0 4px !important;
   font-size: 4vh !important;
-  height: 7vh !important;
-  width: 20vw !important;
+  height: 7vmin !important;
+  width: 20vmax !important;
   border: solid 5px white !important;
   clip-path: polygon(
     calc(0%) calc(0% + 5px),
@@ -249,10 +260,6 @@ a:hover {
   color: black;
 }
 
-.nudge {
-  margin-top: 10vh;
-}
-
 .topField {
   margin-top: 3vh;
 }
@@ -288,7 +295,7 @@ a:hover {
   border: solid 0.5vw white;
   font-family: LatoRegular;
   cursor: pointer;
-  font-weight: bold;
+  text-align: center;
 }
 
 .introLoginForm {
@@ -304,8 +311,8 @@ a:hover {
 }
 
 .minif {
-  margin-top: 12vh;
-  font-size: 10vh;
+  font-size: 10vmin !important;
+  transform: translate(0, 3vmin) !important;
 }
 
 .hvr-fade {
@@ -346,6 +353,7 @@ body {
 .loginButton {
   margin: 0 auto;
   font-size: 3vh !important;
+  width: 21vmax !important;
 }
 </style>
 
