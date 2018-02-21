@@ -920,11 +920,7 @@ app.patch('/api/newLink', function(req, res) {
         opCount = 0;
 
     if (!req.session.authUser) {
-        res.json({
-            error: true,
-            msg: "No authentication. Please sign in.",
-            msgType: "error"
-        });
+        res.json(genericErrorObject("No authentication. Please sign in."));
     } else {
         returner.newData = req.body.selection;
         req.body.selection.forEach((sel, index) => {
@@ -1005,9 +1001,7 @@ app.patch('/api/newLink', function(req, res) {
                     opCount++;
                 }
             });
-
         });
-
     }
 });
 
@@ -1015,13 +1009,10 @@ app.patch('/api/newLink', function(req, res) {
 app.post('/api/rename', function(req, res) {
     log("RENAME | requester: " + req.session.authUser.username, 0);
 
-    let returner = {};
+    let returner = genericReturnObject();
+
     if (!req.session.authUser) {
-        res.json({
-            error: true,
-            msg: "No authentication. Please sign in.",
-            msgType: "error"
-        });
+        res.json(res.json(genericErrorObject("No authentication. Please sign in.")));
     } else {
         //updating the requested video's name
         db.videos.update({
@@ -1038,13 +1029,9 @@ app.post('/api/rename', function(req, res) {
                 log("RENAME | " + err, 1);
             }
             if (numAffected < 1) {
-                returner.error = true;
-                returner.msgType = "error";
-                returner.msg = "Renaming failed; No such video.";
+                returner = genericErrorObject("Renaming failed; No such video.");
             } else {
-                returner.error = false;
-                returner.msgType = "success";
-                returner.msg = "Video successfully renamed!";
+                returner = genericReturnObject("Video successfully renamed!")
             }
             returner.newName = req.body.newName;
 
@@ -1055,25 +1042,18 @@ app.post('/api/rename', function(req, res) {
 
 // route for video upload finalization (cancel or confirm)
 app.post('/api/finalizeUpload', function(req, res) {
-
     log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username, 0);
-    let returner = {},
+
+    let returner = genericReturnObject(),
         opCount = 0;
+
     if (!req.session.authUser) {
-        return res.json({
-            error: true,
-            msg: "No authentication. Please sign in.",
-            msgType: "error"
-        });
+        return res.json(genericErrorObject("No authentication. Please sign in."));
     }
 
     if (req.body.cancelled) {
         log(chalk.red("UPLOAD FINALIZATION | upload(s) cancelled"), 0);
-
-        returner.error = 1;
-        returner.msgType = "danger";
-        returner.msg = "You have cancelled the upload.";
-        res.json(returner);
+        res.json(genericErrorObject("You have cancelled the upload."));
     }
 
     // proceeding to name assignment, if the upload wasn't cancelled
@@ -1086,7 +1066,7 @@ app.post('/api/finalizeUpload', function(req, res) {
             if (req.body.newNames.hasOwnProperty(oldName)) {
                 log("UPLOAD FINALIZATION | got new name " + req.body.newNames[oldName] + " for " + oldName, 0);
 
-                const newName = req.body.newNames[oldName].replace(/[^a-z0-9\s]/gi, ""); // should already be clean coming from the client, redundancy
+                let newName = req.body.newNames[oldName].replace(/[^a-z0-9\s]/gi, ""); // should already be clean coming from the client, redundancy
                 let cleanedName = oldName.replace(/[^a-z0-9]/gi, "");
 
                 db.videos.update({
@@ -1106,14 +1086,11 @@ app.post('/api/finalizeUpload', function(req, res) {
                     function(err, numAffected, affectedDocuments) {
                         if (err) {
                             log(chalk.bgRed.white("UPLOAD FINALIZATION | " + err), 1);
-                            returner.error = 1;
+                            returner.meta.error = 1;
                         }
 
                         if (opCount === Object.keys(req.body.newNames).length - 1) {
-                            returner.error = 0;
-                            returner.msg = "You successfully uploaded the video.";
-                            returner.msgType = "success";
-                            res.json(returner);
+                            res.json(genericReturnObject("You successfully uploaded the video."));
                             done();
                         } else {
                             opCount++;
@@ -1167,7 +1144,6 @@ app.post('/api/finalizeUpload', function(req, res) {
 
                         // updating active user
                         req.session.authUser = affectedDocument;
-
                     });
 
                     db.videos.remove({
@@ -1196,8 +1172,8 @@ app.post('/api/changeTheme', function(req, res) {
 
     log("THEME CHANGE | requester: " + req.session.authUser.username, 0);
     // only signed in admins
-    let returner = {};
-    returner.error = false;
+    let returner = genericReturnObject();
+
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
         db.settings.update({
             active: true
@@ -1225,13 +1201,11 @@ app.post('/api/changeTheme', function(req, res) {
                 });
             } else {
                 // return updated settings
-
                 returner.newSettings = {};
                 returner.newSettings = req.body.settings;
                 returner.newSettings.theme = themes[req.body.newTheme];
                 returner.newSettings.themeID = req.body.newTheme;
                 returner.msg = "You have successfully changed the theme!";
-                returner.msgType = "success";
 
                 return res.json(returner);
             }
@@ -1244,19 +1218,17 @@ app.post('/api/changeTheme', function(req, res) {
 
 app.post('/api/runMaintenance', function(req, res) {
 
-    let returner = {};
+    let returner = genericReturnObject();
     returner.error = false;
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
         log("RUN MAINTENANCE | requester: " + req.session.authUser.username, 0);
 
         try {
             maintenance.preLaunch(config);
-            returner.msg = "Maintenance successfully started!";
-            returner.msgType = "success";
+            returner.meta.msg = "Maintenance successfully started!";
             return res.json(returner);
         } catch (e) {
-            returner.msg = "Couldn't start maintenance! " + e;
-            returner.msgType = "danger";
+            returner.meta.msg = "Couldn't start maintenance! " + e;
             return res.json(returner);
         }
     } else {
@@ -1269,7 +1241,7 @@ app.post('/api/runMaintenance', function(req, res) {
 app.post('/api/getAdminStats', function(req, res) {
 
     log("FETCHING ADMIN STATS | requester: " + req.session.authUser.username, 0);
-    var returner = {};
+    let returner = genericReturnObject();
     returner.stats = {};
 
     if (req.session.authUser.userStatus != 1) {
@@ -1291,9 +1263,8 @@ app.post('/api/getAdminStats', function(req, res) {
             db.videos.count({}, function(err, count) {
                 if (err) {
                     log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
-                    returner.error = 1;
+                    returner.meta.error = 1;
                 }
-
                 returner.stats.videoCount = count;
                 done();
             });
@@ -1314,7 +1285,6 @@ app.post('/api/getAdminStats', function(req, res) {
                     usedSpace += Math.abs(video.size);
                 });
 
-                returner.error = 0;
                 returner.stats.totalViews = totalViews;
                 returner.stats.totalSpaceA = config.total_space;
                 returner.stats.usedSpaceA = usedSpace.toFixed(2);
@@ -1325,7 +1295,7 @@ app.post('/api/getAdminStats', function(req, res) {
     ], function(err) {
         if (err) {
             log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
-            returner.error = 1;
+            returner.meta.error = 1;
         }
         return res.json(returner);
     });
@@ -1335,25 +1305,21 @@ app.post('/api/getAdminStats', function(req, res) {
 // post to remove video
 app.post('/api/removeVideo', function(req, res) {
     if (!req.session.authUser) {
-        res.json({
-            msgType: "error",
-            error: 1,
-            msg: "You are not auhorized to do that action!"
-        });
+        res.json(genericErrorObject("You are not auhorized to do that action!"));
     } else {
         log("VIDEO DELETION | " + "requester: " + req.session.authUser.username, 0);
-        var returner = {};
+        let returner = genericReturnObject();
         returner.selection = req.body.selection;
-        var opCount = 0;
-        returner.error = 0;
+        let opCount = 0;
+
         req.body.selection.forEach(selection => {
             db.videos.find({
                 videoID: selection.videoID
             }, function(err, docs) {
                 if (err) {
                     log(chalk.bgRed.white("VIDEO DELETION | " + err), 1);
-                    returner.error = 1;
-                    returner.msg = "Internal error. Try again.";
+                    returner.meta.error = 1;
+                    returner.meta.msg = "Internal error. Try again.";
                 } else {
                     async.waterfall([function(done) {
                             db.users.update({
@@ -1405,15 +1371,15 @@ app.post('/api/removeVideo', function(req, res) {
                             }, function(err, docs) {
                                 if (err) {
                                     log(chalk.bgRed.white("VIDEO DELETION | " + err), 1);
-                                    returner.error = 1;
-                                    returner.msg = "Internal error. Try again.";
+                                    returner.meta.error = 1;
+                                    returner.meta.msg = "Internal error. Try again.";
                                     res.json(returner);
                                 }
 
                                 if (opCount == req.body.selection.length - 1) {
-                                    returner.msgType = "info";
-                                    returner.error = 0;
-                                    returner.msg = "Successfully deleted video(s)!";
+                                    returner.meta.msgType = "info";
+                                    returner.meta.error = 0;
+                                    returner.meta.msg = "Successfully deleted video(s)!";
                                     res.json(returner);
                                     done();
                                 } else {
@@ -1465,9 +1431,8 @@ app.post('/api/upload', function(req, res) {
             error: 'User not signed in.'
         });
     } else {
-        let returner = {},
+        let returner = genericReturnObject(),
             opCount = 0;
-        returner.error = 0;
         returner.newVideos = [];
 
         async.waterfall([function(done) {
@@ -1475,9 +1440,8 @@ app.post('/api/upload', function(req, res) {
             du('static/videos', function(err, size) {
                 if (size >= config.total_space) {
                     log('UPLOAD | Max space exceeded! Interrupting download...', 1);
-                    returner.error = 1;
-                    returner.msg = "The server cannot accept videos at the moment. Try again later!";
-                    returner.msgType = "info";
+                    returner = genericErrorObject("The server cannot accept videos at the moment. Try again later!");
+                    returner.meta.msgType = "info";
                     return res.json(returner);
                 }
                 done();
@@ -1601,7 +1565,6 @@ app.post('/api/upload', function(req, res) {
                             if (err) {
                                 log("UPLOAD | " + err, 1);
                             }
-
                         });
                     }
                 }
