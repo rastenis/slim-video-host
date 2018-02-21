@@ -653,6 +653,18 @@ img {
 </style>
 
 <style>
+h1 {
+  font-weight: normal;
+  -webkit-text-stroke: 0.2vmin;
+}
+h2,
+h3,
+h4,
+h5 {
+  font-weight: normal;
+  -webkit-text-stroke: 0.1vmin;
+}
+
 body {
   overflow: scroll;
 }
@@ -691,7 +703,7 @@ body {
 }
 
 .headerOfStatCard {
-  font-size: 3vh;
+  font-size: 3vmin;
 }
 
 .statCard {
@@ -724,6 +736,7 @@ body {
 
 .title {
   font-family: LatoLight;
+  -webkit-font-smoothing: antialiased;
   font-size: 50px;
   padding-top: 10vh;
   padding-left: 3vw;
