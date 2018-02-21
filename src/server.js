@@ -135,7 +135,7 @@ app.get('/api/cv/:id', function(req, res) {
 
     log("FETCHING VIDEO | id: " + req.params.id, 0);
 
-    let returner = genericReturnObject();
+    let returner = genericResponseObject();
     returner.ratings = {};
     returner.userRatings = {};
 
@@ -232,7 +232,7 @@ app.get('/api/cv/:id', function(req, res) {
 // token checking route
 app.get('/api/checkToken/:token', function(req, res) {
 
-    let returner = genericReturnObject();
+    let returner = genericResponseObject();
     returner.valid = false;
 
     log("PASS RESET | checking for token " + req.params.token, 0);
@@ -326,7 +326,7 @@ app.post('/api/requestReset', function(req, res) {
             }, {
                 upsert: false
             }, function(err, docs) {
-                res.json(genericReturnObject("Success! Check your email for further instructions."));
+                res.json(genericResponseObject("Success! Check your email for further instructions."));
             });
         }
     });
@@ -336,7 +336,7 @@ app.post('/api/requestReset', function(req, res) {
 app.patch('/api/changePassword', function(req, res) {
     log("PASSWORD CHANGE || " + (req.body.resetType == 0 ? "normal" : "token"), 0);
 
-    let returner = genericReturnObject();
+    let returner = genericResponseObject();
     // single route for both the standard password reset and the 'forgot password' token based reset
     if (req.body.resetType == 1) { //token reset
         let hashedPass = hashUpPass(req.body.newPass);
@@ -366,7 +366,7 @@ app.patch('/api/changePassword', function(req, res) {
             } else {
                 //all ok
                 log("PASSWORD CHANGE || password was successfully changed", 0);
-                returner = genericReturnObject("You have successfully changed your password!");
+                returner = genericResponseObject("You have successfully changed your password!");
                 res.json(returner);
             }
         });
@@ -408,7 +408,7 @@ app.patch('/api/changePassword', function(req, res) {
                         if (err) {
                             log("PASSWORD CHANGE || " + err, 1);
                         } else {
-                            returner = genericReturnObject("You have successfully changed your password!");
+                            returner = genericResponseObject("You have successfully changed your password!");
                             done(null);
                         }
                     });
@@ -648,7 +648,7 @@ app.post('/api/register', function(req, res) {
 // route for getting user's videos
 app.get('/api/dash', function(req, res) {
 
-    let returner = genericReturnObject();
+    let returner = genericResponseObject();
 
     log("DASH | requester : " + req.session.authUser.username, 0);
 
@@ -722,7 +722,7 @@ app.get('/api/dash', function(req, res) {
 });
 
 app.get('/api/settings', function(req, res) {
-    let returner = genericReturnObject();
+    let returner = genericResponseObject();
 
     // settings fetch
     db.settings.find({}, function(err, docs) {
@@ -746,7 +746,7 @@ app.get('/api/settings', function(req, res) {
 // route for storage upgrades
 app.post('/api/upgrade', function(req, res) {
 
-    let returner = genericReturnObject();
+    let returner = genericResponseObject();
     log("UPGRADE | requester : " + req.session.authUser.username + ", code:" + req.body.code, 0);
 
     db.codes.find({
@@ -782,7 +782,7 @@ app.post('/api/upgrade', function(req, res) {
                     req.session.authUser = affectedDocument;
 
                     // res
-                    res.json(genericReturnObject("You have successfully expanded your space limit!"));
+                    res.json(genericResponseObject("You have successfully expanded your space limit!"));
                 });
                 // admin status
             } else if (docs[0].benefit == 1) {
@@ -803,7 +803,7 @@ app.post('/api/upgrade', function(req, res) {
                     req.session.authUser = affectedDocument;
 
                     // res
-                    res.json(genericReturnObject("You are now an admin!"));
+                    res.json(genericResponseObject("You are now an admin!"));
                 });
             } else if (docs[0].benefit == 2) {
                 db.users.update({
@@ -823,7 +823,7 @@ app.post('/api/upgrade', function(req, res) {
                     req.session.authUser = affectedDocument;
 
                     // res
-                    res.json(genericReturnObject("Your account standing has been cleared!"));
+                    res.json(genericResponseObject("Your account standing has been cleared!"));
                 });
             }
 
@@ -850,7 +850,7 @@ app.post('/api/upgrade', function(req, res) {
 app.delete('/api/deleteAccount', function(req, res) {
     log("ACCOUNT DELETION | requester: " + req.session.authUser.username, 0);
 
-    let returner = genericReturnObject(),
+    let returner = genericResponseObject(),
         opCount = 0;
 
     if (!req.session.authUser) {
@@ -900,12 +900,11 @@ app.delete('/api/deleteAccount', function(req, res) {
                         log("ACCOUNT DELETION | " + err, 1);
                         returner = genericErrorObject("An internal error occured. Please try again later.");
                     } else {
-                        returner = genericReturnObject("You have successfully deleted your account!");
+                        returner = genericResponseObject("You have successfully deleted your account!");
                     }
                     done();
                 });
             }
-            //TODO: cycle-remove all videos, thumbnails. Export video deletion to a promise probably
         }, function(done) {
             db.users.find({
                 username: req.session.authUser.username
@@ -953,7 +952,7 @@ app.delete('/api/deleteAccount', function(req, res) {
 app.patch('/api/newLink', function(req, res) {
     log("NEW LINKS | requester: " + req.session.authUser.username, 0);
 
-    let returner = genericReturnObject(),
+    let returner = genericResponseObject(),
         opCount = 0;
 
     if (!req.session.authUser) {
@@ -1046,7 +1045,7 @@ app.patch('/api/newLink', function(req, res) {
 app.patch('/api/rename', function(req, res) {
     log("RENAME | requester: " + req.session.authUser.username, 0);
 
-    let returner = genericReturnObject();
+    let returner = genericResponseObject();
 
     if (!req.session.authUser) {
         res.json(res.json(genericErrorObject("No authentication. Please sign in.")));
@@ -1068,7 +1067,7 @@ app.patch('/api/rename', function(req, res) {
             if (numAffected < 1) {
                 returner = genericErrorObject("Renaming failed; No such video.");
             } else {
-                returner = genericReturnObject("Video successfully renamed!")
+                returner = genericResponseObject("Video successfully renamed!")
             }
             returner.newName = req.body.newName;
 
@@ -1081,7 +1080,7 @@ app.patch('/api/rename', function(req, res) {
 app.put('/api/finalizeUpload', function(req, res) {
     log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username, 0);
 
-    let returner = genericReturnObject(),
+    let returner = genericResponseObject(),
         opCount = 0;
 
     if (!req.session.authUser) {
@@ -1127,7 +1126,7 @@ app.put('/api/finalizeUpload', function(req, res) {
                         }
 
                         if (opCount === Object.keys(req.body.newNames).length - 1) {
-                            res.json(genericReturnObject("You successfully uploaded the video."));
+                            res.json(genericResponseObject("You successfully uploaded the video."));
                             done();
                         } else {
                             opCount++;
@@ -1209,7 +1208,7 @@ app.post('/api/changeTheme', function(req, res) {
 
     log("THEME CHANGE | requester: " + req.session.authUser.username, 0);
     // only signed in admins
-    let returner = genericReturnObject();
+    let returner = genericResponseObject();
 
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
         db.settings.update({
@@ -1255,7 +1254,7 @@ app.post('/api/changeTheme', function(req, res) {
 
 app.post('/api/runMaintenance', function(req, res) {
 
-    let returner = genericReturnObject();
+    let returner = genericResponseObject();
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
         log("RUN MAINTENANCE | requester: " + req.session.authUser.username, 0);
 
@@ -1277,7 +1276,7 @@ app.post('/api/runMaintenance', function(req, res) {
 app.get('/api/getAdminStats', function(req, res) {
 
     log("FETCHING ADMIN STATS | requester: " + req.session.authUser.username, 0);
-    let returner = genericReturnObject();
+    let returner = genericResponseObject();
     returner.stats = {};
 
     if (req.session.authUser.userStatus != 1) {
@@ -1344,7 +1343,7 @@ app.delete('/api/removeVideo', function(req, res) {
         res.json(genericErrorObject("You are not auhorized to do that action!"));
     } else {
         log("VIDEO DELETION | " + "requester: " + req.session.authUser.username, 0);
-        let returner = genericReturnObject();
+        let returner = genericResponseObject();
         returner.selection = req.body.selection;
         let opCount = 0;
 
@@ -1357,7 +1356,8 @@ app.delete('/api/removeVideo', function(req, res) {
                     returner.meta.error = 1;
                     returner.meta.msg = "Internal error. Try again.";
                 } else {
-                    async.waterfall([function(done) {
+                    async.waterfall([
+                        function(done) {
                             db.users.update({
                                     username: selection.username
                                 }, {
@@ -1400,7 +1400,8 @@ app.delete('/api/removeVideo', function(req, res) {
 
                                     done();
                                 });
-                        }, function(done) {
+                        },
+                        function(done) {
 
                             db.videos.remove({
                                 videoID: selection.videoID
@@ -1425,8 +1426,6 @@ app.delete('/api/removeVideo', function(req, res) {
                                 }
                                 //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant 
                                 //return errors from foreach async operations.
-
-
                             });
                         },
                         function(done) {
@@ -1479,7 +1478,7 @@ app.post('/api/upload', function(req, res) {
             error: 'User not signed in.'
         });
     } else {
-        let returner = genericReturnObject(),
+        let returner = genericResponseObject(),
             opCount = 0;
         returner.newVideos = [];
 
@@ -1697,7 +1696,8 @@ function log(message, type) {
     }
 }
 
-function genericReturnObject(message) {
+// a base object for most api responses
+function genericResponseObject(message) {
     return {
         meta: {
             error: false,
