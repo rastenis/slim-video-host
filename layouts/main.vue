@@ -138,6 +138,18 @@ nuxt-link {
 
 
 <style>
+h1 {
+  font-weight: normal;
+  -webkit-text-stroke: 0.2vmin;
+}
+h2,
+h3,
+h4,
+h5 {
+  font-weight: normal;
+  -webkit-text-stroke: 0.05vmin;
+}
+
 @font-face {
   font-family: "LatoRegular";
   src: url("/fonts/LatoRegular/Lato-Regular.eot"),

@@ -60,8 +60,8 @@ export default {
       })
       .then(res => {
         this.$message({
-          type: res.data.msgType,
-          message: res.data.msg
+          type: res.data.meta.msgType,
+          message: res.data.meta.msg
         });
       })
       .catch(function (e) {
@@ -81,13 +81,13 @@ export default {
       })
       .then(res => {
         this.$message({
-          type: res.data.msgType,
-          message: res.data.msg
+          type: res.data.meta.msgType,
+          message: res.data.meta.msg
         });
-        if (res.data.error == 0) {
+        if (res.data.meta.error == 0) {
           // updating local settings
           this.$store.commit("SET_SETTINGS",res.data.newSettings);
-        } else if (res.data.error == 1) {
+        } else if (res.data.meta.error == 1) {
           console.log("failed to change theme");
         }// LEFTOFF: crashes when theme changed?
       })

@@ -71,7 +71,7 @@ export default {
         }
       })
       .then((res) => {
-        if (res.data.error == 0) {
+        if (res.data.meta.error == 0) {
           video = res.data.video;
           ratings = res.data.ratings;
           userRatings=res.data.userRatings;
@@ -113,7 +113,7 @@ export default {
       }
       axios({
         url: 'https://cigari.ga/api/act',
-        method: 'post',
+        method: 'put',
         credentials: 'same-origin',
         data: {
           user: this.$store.state.authUser,
@@ -122,7 +122,7 @@ export default {
         }
       })
       .then((res) => {
-        if (res.data.error) {
+        if (res.data.meta.error) {
           console.log("error while performing "+(action==0 ? "dislike" : "like"));
         }
       }).catch(function (e) {

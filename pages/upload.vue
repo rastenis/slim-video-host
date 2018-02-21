@@ -164,7 +164,7 @@ export default {
         this.irreversibleUploadCommenced=true;
         axios({
           url: "https://cigari.ga/api/finalizeUpload",
-          method: "post",
+          method: "put",
           credentials: "same-origin",
           data: {
             user: this.$store.state.authUser,
@@ -190,23 +190,23 @@ export default {
 
             this.dialog.input.disabled = false;
 
-            if (res.data.error == 0) {
-              this.uploadedNotification(res.data.msg, res.data.msgType);
+            if (res.data.meta.error == 0) {
+              this.uploadedNotification(res.data.meta.msg, res.data.meta.msgType);
               this.progressBar.status = "";
               this.progressBar.percentage = 0;
-            } else if (res.data.error == 2) {
+            } else if (res.data.meta.error == 2) {
               this.progressBar.status = "";
               this.progressBar.percentage = 0;
               this.$message({
-                type: res.data.msgType,
-                message: res.data.msg
+                type: res.data.meta.msgType,
+                message: res.data.meta.msg
               });
               //removing naming storage
               this.newNames = [];
             } else {
               this.$message({
-                type: res.data.msgType,
-                message: res.data.msg
+                type: res.data.meta.msgType,
+                message: res.data.meta.msg
               });
             }
           })

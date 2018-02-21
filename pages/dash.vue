@@ -260,7 +260,7 @@ export default {
       })
       .then(res => {
         try {
-          if (res.data.error == 0) {
+          if (res.data.meta.error == 0) {
             return{
               settings:res.data.settings
             };
@@ -305,14 +305,14 @@ export default {
       //fetchinam additional stats
       return axios({
           url: "https://cigari.ga/api/getAdminStats",
-          method: "post",
+          method: "get",
           credentials: "same-origin",
           data: {
             user: this.$store.state.authUser
           }
         })
         .then(res => {
-          if (res.data.error == 0) {
+          if (res.data.meta.error == 0) {
             this.stats = res.data.stats;
             this.videos = res.data.videos;
 
@@ -321,7 +321,7 @@ export default {
               this.dataLoads.loading.videoList = false;
             }, 200);
 
-          } else if (res.data.error == 1) {
+          } else if (res.data.meta.error == 1) {
             //handling?
           }
         })
@@ -331,7 +331,7 @@ export default {
     } else {
       return axios({
           url: "https://cigari.ga/api/dash",
-          method: "post",
+          method: "get",
           credentials: "same-origin",
           data: {
             user: this.$store.state.authUser,
@@ -340,7 +340,7 @@ export default {
         })
         .then(res => {
           try {
-            if (res.data.error == 0) {
+            if (res.data.meta.error == 0) {
               let hasVideos = false;
               if (res.data.videos.length != 0) {
                 hasVideos = true;
@@ -354,7 +354,7 @@ export default {
               this.videos = res.data.videos;
               this.hasVideos = hasVideos;
 
-            } else if (res.data.error == 1) {
+            } else if (res.data.meta.error == 1) {
               console.log("error while fetching dashboard info");
             }
           } catch (err) {
@@ -387,7 +387,7 @@ export default {
 
           axios({
               url: "https://cigari.ga/api/removeVideo",
-              method: "post",
+              method: "delete",
               credentials: "same-origin",
               data: {
                 user: this.$store.state.authUser,
@@ -396,7 +396,7 @@ export default {
             }).then(res => {
               //resetting selection
               this.toggleSelection();
-              if (res.data.error == 0) {
+              if (res.data.meta.error == 0) {
 
                 res.data.selection.forEach(selection => {
                   this.videos.forEach((video, index) => {
@@ -413,13 +413,13 @@ export default {
                     }
                   });
                 });
-              } else if (res.data.error == 1) {
+              } else if (res.data.meta.error == 1) {
                 console.log("error while bulk deleting videos");
               }
               this.loading = false;
               this.$message({
-                type: res.data.msgType,
-                message: res.data.msg
+                type: res.data.meta.msgType,
+                message: res.data.meta.msg
               });
             })
             .catch(function (e) {
@@ -440,7 +440,7 @@ export default {
         .then(() => {
           axios({
               url: "https://cigari.ga/api/newLink",
-              method: "post",
+              method: "patch",
               credentials: "same-origin",
               data: {
                 user: this.$store.state.authUser,
@@ -449,10 +449,10 @@ export default {
             })
             .then(res => {
               this.$message({
-                type: res.data.msgType,
-                message: res.data.msg
+                type: res.data.meta.msgType,
+                message: res.data.meta.msg
               });
-              if (res.data.error == 0) {
+              if (res.data.meta.error == 0) {
                 //resetting selection
                 this.toggleSelection();
 
@@ -465,7 +465,7 @@ export default {
                     }
                   });
                 });
-              } else if (res.data.error == 1) {
+              } else if (res.data.meta.error == 1) {
                 console.log("error while bulk requesting new ids");
               }
             })
@@ -513,7 +513,7 @@ export default {
           var videoID = this.videos[index].videoID;
           axios({
               url: "https://cigari.ga/api/rename",
-              method: "post",
+              method: "patch",
               credentials: "same-origin",
               data: {
                 user: this.$store.state.authUser,
@@ -523,10 +523,10 @@ export default {
             })
             .then(res => {
               this.$message({
-                type: res.data.msgType,
-                message: res.data.msg
+                type: res.data.meta.msgType,
+                message: res.data.meta.msg
               });
-              if (res.data.error) {
+              if (res.data.meta.error) {
                 console.log("error while asking for new video name");
               } else {
                 this.videos[index].name = res.data.newName;
@@ -575,8 +575,8 @@ export default {
           })
           .then(res => {
             this.$message({
-              type: res.data.msgType,
-              message: res.data.msg
+              type: res.data.meta.msgType,
+              message: res.data.meta.msg
             });
           })
           .catch(function (e) {
@@ -653,18 +653,6 @@ img {
 </style>
 
 <style>
-h1 {
-  font-weight: normal;
-  -webkit-text-stroke: 0.2vmin;
-}
-h2,
-h3,
-h4,
-h5 {
-  font-weight: normal;
-  -webkit-text-stroke: 0.1vmin;
-}
-
 body {
   overflow: scroll;
 }
