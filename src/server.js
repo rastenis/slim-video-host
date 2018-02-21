@@ -337,8 +337,8 @@ app.post('/api/requestReset', function(req, res) {
 });
 
 // post to actually change the password (both in-profile and token-based password reset)
-app.post('/api/changePassword', function(req, res) {
-    log("PASSWORD CHANGE || " + (req.body.resetType == 1 ? "normal" : "token"), 0);
+app.patch('/api/changePassword', function(req, res) {
+    log("PASSWORD CHANGE || " + (req.body.resetType == 0 ? "normal" : "token"), 0);
     var returner = {};
     returner.error = 0;
     // single route for both the standard password reset and the 'forgot password' token based reset
