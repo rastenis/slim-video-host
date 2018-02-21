@@ -113,7 +113,7 @@ export default {
       }
       axios({
         url: 'https://cigari.ga/api/act',
-        method: 'post',
+        method: 'put',
         credentials: 'same-origin',
         data: {
           user: this.$store.state.authUser,

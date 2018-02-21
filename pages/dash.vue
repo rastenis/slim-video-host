@@ -331,7 +331,7 @@ export default {
     } else {
       return axios({
           url: "https://cigari.ga/api/dash",
-          method: "post",
+          method: "get",
           credentials: "same-origin",
           data: {
             user: this.$store.state.authUser,

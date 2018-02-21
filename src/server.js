@@ -439,7 +439,7 @@ app.patch('/api/changePassword', function(req, res) {
 });
 
 // route for video actions (like/dislike)
-app.post('/api/act', function(req, res) {
+app.put('/api/act', function(req, res) {
     //ignore unauthorized acts
     if (!req.session.authUser) {
         return;
@@ -657,7 +657,7 @@ app.post('/api/register', function(req, res) {
 });
 
 // route for getting user's videos
-app.post('/api/dash', function(req, res) {
+app.get('/api/dash', function(req, res) {
 
     var returner = {};
 
