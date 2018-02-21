@@ -339,7 +339,6 @@ export default {
           }
         })
         .then(res => {
-          console.log("got a then");
           try {
             if (res.data.meta.error == 0) {
               let hasVideos = false;

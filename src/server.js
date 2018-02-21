@@ -246,7 +246,9 @@ app.get('/api/checkToken/:token', function(req, res) {
         if (docs.length > 1) {
             log("PASS RESET | duplicate tokens; purging all", 1);
             returner.meta.error = true;
-            db.users.remove({}, {
+            db.users.remove({
+                resetToken: req.params.token
+            }, {
                 multi: true
             }, function(err, docs) {
                 if (err) {
@@ -904,6 +906,29 @@ app.delete('/api/deleteAccount', function(req, res) {
                 });
             }
             //TODO: cycle-remove all videos, thumbnails. Export video deletion to a promise probably
+        }, function(done) {
+            db.users.find({
+                username: req.session.authUser.username
+            }, function(err, docs) {
+                if (err) {
+                    log("ACCOUNT DELETION | " + err, 1);
+                } else {
+                    docs.forEach(video => {
+                        try {
+                            fs.unlink(config.file_path + video.videoID + selection.extension);
+                        } catch (err) {
+                            log("ACCOUNT DELETION | " + err, 1);
+                        }
+                        try {
+                            fs.unlink(config.file_path + "thumbs/" + video.videoID + ".jpg");
+                        } catch (err) {
+                            log("ACCOUNT DELETION | " + err, 1);
+                        }
+                    });
+                    // deletion cycles wont be finished yet but who cares
+                    done();
+                }
+            });
         }], function(err) {
             if (err) {
                 log("ACCOUNT DELETION | " + err, 1);
