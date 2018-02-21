@@ -129,7 +129,7 @@ export default {
       this.accountDeletion.dialogOpen = false;
       axios({
         url: 'https://cigari.ga/api/deleteAccount',
-        method: 'post',
+        method: 'delete',
         credentials: 'same-origin',
         data: {
           passwordConfirmation: this.accountDeletion.passwordConfirmation

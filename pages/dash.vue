@@ -440,7 +440,7 @@ export default {
         .then(() => {
           axios({
               url: "https://cigari.ga/api/newLink",
-              method: "post",
+              method: "patch",
               credentials: "same-origin",
               data: {
                 user: this.$store.state.authUser,

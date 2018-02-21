@@ -867,7 +867,7 @@ app.post('/api/upgrade', function(req, res) {
 });
 
 // route for account deletion
-app.post('/api/deleteAccount', function(req, res) {
+app.delete('/api/deleteAccount', function(req, res) {
     log("ACCOUNT DELETION | requester: " + req.session.authUser.username, 0);
     var returner = {};
     returner.error = false;
@@ -945,7 +945,7 @@ app.post('/api/deleteAccount', function(req, res) {
 });
 
 // new link generation
-app.post('/api/newLink', function(req, res) {
+app.patch('/api/newLink', function(req, res) {
     log("NEW LINKS | requester: " + req.session.authUser.username, 0);
 
     var returner = {};
