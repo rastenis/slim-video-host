@@ -231,7 +231,7 @@ app.get('/api/cv/:id', function(req, res) {
 // token checking route
 app.get('/api/checkToken/:token', function(req, res) {
 
-    let returner = genericReturnObject()
+    let returner = genericReturnObject();
     returner.valid = false;
 
     log("PASS RESET | checking for token " + req.params.token, 0);
@@ -333,8 +333,7 @@ app.post('/api/requestReset', function(req, res) {
 app.patch('/api/changePassword', function(req, res) {
     log("PASSWORD CHANGE || " + (req.body.resetType == 0 ? "normal" : "token"), 0);
 
-    let returner = {};
-    returner.error = 0;
+    let returner = genericReturnObject();
     // single route for both the standard password reset and the 'forgot password' token based reset
     if (req.body.resetType == 1) { //token reset
         let hashedPass = hashUpPass(req.body.newPass);
@@ -657,7 +656,7 @@ app.get('/api/dash', function(req, res) {
             }, function(err, docs) {
                 if (err) {
                     log(chalk.bgRed.white("DASH | " + err), 1);
-                    returner.error = 1;
+                    returner.meta.error = 1;
                     return res.json(null);
                 }
                 if (docs.length > 0) {
@@ -704,7 +703,7 @@ app.get('/api/dash', function(req, res) {
                         log("DASH | " + err, 1);
                     }
                     if (index == (docs.length - 1)) {
-                        returner.error = 0;
+                        returner.meta.error = 0;
                         returner.videos = docs;
                         return res.json(returner);
                     }
@@ -720,8 +719,7 @@ app.get('/api/dash', function(req, res) {
 });
 
 app.get('/api/settings', function(req, res) {
-    let returner = {};
-    returner.error = false;
+    let returner = genericReturnObject();
 
     // settings fetch
     db.settings.find({}, function(err, docs) {
@@ -742,8 +740,7 @@ app.get('/api/settings', function(req, res) {
 // route for storage upgrades
 app.post('/api/upgrade', function(req, res) {
 
-    let returner = {};
-    returner.error = 0;
+    let returner = genericReturnObject();
     log("UPGRADE | requester : " + req.session.authUser.username + ", code:" + req.body.code, 0);
 
     db.codes.find({
@@ -862,10 +859,10 @@ app.delete('/api/deleteAccount', function(req, res) {
                 } else {
                     if (docs.length == 0) {
                         log(chalk.bgRed.white("CRITICAL!") + "ACCOUNT DELETION | delete reqests for non-existent accounts!", 1);
-                        returner.error = 1;
+                        returner.meta.error = 1;
                     } else if (docs.length > 1) {
                         log(chalk.bgRed.white("CRITICAL!") + "ACCOUNT DELETION | delete reqest matches multiple accounts!", 1);
-                        returner.error = 1;
+                        returner.meta.error = 1;
                     } else { //all fine, re-fetching to make sure there are no duplicates and that this exact account gets deleted.
                         done(null, docs[0]);
                     }
@@ -876,7 +873,7 @@ app.delete('/api/deleteAccount', function(req, res) {
                 if (err) {
                     log("ACCOUNT DELETION | " + err, 1);
                 } else {
-                    returner.error = !valid;
+                    returner.meta.error = !valid;
                     done(null, valid);
                 }
             });
@@ -884,7 +881,7 @@ app.delete('/api/deleteAccount', function(req, res) {
             if (!valid) { //wrong confirmation password
                 returner = genericErrorObject("The confirmation password is incorrect! Try again.");
                 done();
-            } else if (returner.error) {
+            } else if (returner.meta.error) {
                 returner = genericErrorObject("An error occured when deleting your account. Please try again later.");
                 done();
             } else {
@@ -970,7 +967,7 @@ app.patch('/api/newLink', function(req, res) {
                 });
             }, function(done) {
                 // video file renaming
-                if (!returner.error) {
+                if (!returner.meta.error) {
                     fs.rename(config.file_path + sel.videoID + sel.extension, config.file_path + newVideoID + sel.extension, function(err) {
                         if (err) {
                             log("NEW LINKS | " + err, 1);
@@ -980,7 +977,7 @@ app.patch('/api/newLink', function(req, res) {
                 }
             }, function(done) {
                 // thumbnail renaming
-                if (!returner.error) {
+                if (!returner.meta.error) {
                     fs.rename(config.file_path + "thumbs/" + sel.videoID + ".jpg", config.file_path + "thumbs/" + newVideoID + ".jpg", function(err) {
                         if (err) {
                             log("NEW LINKS | " + err, 1);
@@ -993,7 +990,7 @@ app.patch('/api/newLink', function(req, res) {
                     log("NEW LINKS | " + err, 1);
                 }
                 if (opCount == req.body.selection.length - 1) {
-                    if (!returner.error) {
+                    if (!returner.meta.error) {
                         returner.meta.msg = "Links successfully updated!";
                     }
                     return res.json(returner);
@@ -1205,7 +1202,7 @@ app.post('/api/changeTheme', function(req, res) {
                 returner.newSettings = req.body.settings;
                 returner.newSettings.theme = themes[req.body.newTheme];
                 returner.newSettings.themeID = req.body.newTheme;
-                returner.msg = "You have successfully changed the theme!";
+                returner.meta.msg = "You have successfully changed the theme!";
 
                 return res.json(returner);
             }
@@ -1219,7 +1216,6 @@ app.post('/api/changeTheme', function(req, res) {
 app.post('/api/runMaintenance', function(req, res) {
 
     let returner = genericReturnObject();
-    returner.error = false;
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
         log("RUN MAINTENANCE | requester: " + req.session.authUser.username, 0);
 
@@ -1253,7 +1249,7 @@ app.post('/api/getAdminStats', function(req, res) {
             db.users.count({}, function(err, count) {
                 if (err) {
                     log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
-                    returner.error = 1;
+                    returner.meta.error = 1;
                 }
                 returner.stats.userCount = count;
                 done();
@@ -1273,7 +1269,7 @@ app.post('/api/getAdminStats', function(req, res) {
             db.videos.find({}, function(err, docs) {
                 if (err) {
                     log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
-                    returner.error = 1;
+                    returner.meta.error = 1;
                 }
 
                 let totalViews = 0,
