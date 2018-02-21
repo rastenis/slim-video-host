@@ -1003,7 +1003,7 @@ app.patch('/api/newLink', function(req, res) {
 });
 
 // route for video name changes
-app.post('/api/rename', function(req, res) {
+app.patch('/api/rename', function(req, res) {
     log("RENAME | requester: " + req.session.authUser.username, 0);
 
     let returner = genericReturnObject();
@@ -1038,7 +1038,7 @@ app.post('/api/rename', function(req, res) {
 });
 
 // route for video upload finalization (cancel or confirm)
-app.post('/api/finalizeUpload', function(req, res) {
+app.put('/api/finalizeUpload', function(req, res) {
     log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username, 0);
 
     let returner = genericReturnObject(),
@@ -1234,7 +1234,7 @@ app.post('/api/runMaintenance', function(req, res) {
 });
 
 // postas adminu statistikom
-app.post('/api/getAdminStats', function(req, res) {
+app.get('/api/getAdminStats', function(req, res) {
 
     log("FETCHING ADMIN STATS | requester: " + req.session.authUser.username, 0);
     let returner = genericReturnObject();
@@ -1299,7 +1299,7 @@ app.post('/api/getAdminStats', function(req, res) {
 });
 
 // post to remove video
-app.post('/api/removeVideo', function(req, res) {
+app.delete('/api/removeVideo', function(req, res) {
     if (!req.session.authUser) {
         res.json(genericErrorObject("You are not auhorized to do that action!"));
     } else {

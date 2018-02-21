@@ -305,7 +305,7 @@ export default {
       //fetchinam additional stats
       return axios({
           url: "https://cigari.ga/api/getAdminStats",
-          method: "post",
+          method: "get",
           credentials: "same-origin",
           data: {
             user: this.$store.state.authUser
@@ -313,8 +313,8 @@ export default {
         })
         .then(res => {
           if (res.data.meta.error == 0) {
-            this.stats = res.data.meta.stats;
-            this.videos = res.data.meta.videos;
+            this.stats = res.data.stats;
+            this.videos = res.data.videos;
 
             // allow some time for the table to hydrate
             setTimeout(() => {
@@ -387,7 +387,7 @@ export default {
 
           axios({
               url: "https://cigari.ga/api/removeVideo",
-              method: "post",
+              method: "delete",
               credentials: "same-origin",
               data: {
                 user: this.$store.state.authUser,
@@ -513,7 +513,7 @@ export default {
           var videoID = this.videos[index].videoID;
           axios({
               url: "https://cigari.ga/api/rename",
-              method: "post",
+              method: "patch",
               credentials: "same-origin",
               data: {
                 user: this.$store.state.authUser,
