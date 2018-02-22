@@ -26,6 +26,7 @@ const db = require('./external/db.js');
 const favicon = require('serve-favicon');
 const path = require('path');
 const themes = require('../static/style/themes');
+var settings = require('../' + config.db_path + 'system/settings.json');
 const jsonfile = require('jsonfile');
 
 
@@ -725,21 +726,15 @@ app.get('/api/settings', function(req, res) {
     let returner = genericResponseObject();
 
     // settings fetch
-    db.settings.find({}, function(err, docs) {
-        if (docs.length > 1) {
-            log("SETTINGS | more than 1 setting stored in db!", 1);
-        } else if (docs.length < 1) {
-            log("SETTINGS | no settings in db", 1);
-        } else {
-            returner.settings = {};
-            returner.settings.theme = themes[docs[0].theme];
-            returner.settings.themeID = docs[0].theme;
-            themes.current = docs[0].theme;
-            jsonfile.writeFile("static/style/themes.json", themes);
+    if (settings.theme !== null) {
+        returner.settings = {};
+        returner.settings.theme = themes[settings.theme];
+        returner.settings.themeID = settings.theme;
+    } else {
+        log("SETTINGS | no settings in db", 1);
+    }
 
-            return res.json(returner);
-        }
-    });
+    return res.json(returner);
 });
 
 

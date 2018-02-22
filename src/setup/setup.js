@@ -5,7 +5,7 @@ const configPath = 'config.json';
 const figlet = require('figlet');
 
 //base values (example config)
-let config = require('./../../config-example.json');
+let config = require('../../config-example.json');
 // all of this will be more or less sync
 
 // outputting intro splash
@@ -55,7 +55,7 @@ if (config.self_hosted == "1") {
         }
     }
 } else {
-    config.tls.port = prompt('Enter port (ENTER for default 10700): ', config.port);
+    config.port = prompt('Enter port (ENTER for default 10700): ', config.port);
 }
 
 console.log(chalk.bgYellow.black("                                                    "));

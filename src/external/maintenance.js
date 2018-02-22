@@ -35,20 +35,20 @@ function preLaunch(config) {
         }
     });
 
-    // inserting settings, if none are present
-    db.settings.find({}, function(err, docs) {
-        if (docs.length == 0) {
-            // inserting default settings
-            db.settings.insert({
-                theme: "0",
-                active: true
-            }, function(err) {
-                if (err) {
-                    console.log(err);
-                }
-            });
-        }
-    });
+    // // inserting settings, if none are present
+    // db.settings.find({}, function(err, docs) {
+    //     if (docs.length == 0) {
+    //         // inserting default settings
+    //         db.settings.insert({
+    //             theme: "0",
+    //             active: true
+    //         }, function(err) {
+    //             if (err) {
+    //                 console.log(err);
+    //             }
+    //         });
+    //     }
+    // });
 
     let videoNames = [],
         thumbnailNames = [];
