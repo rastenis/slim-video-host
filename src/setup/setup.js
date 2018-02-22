@@ -5,24 +5,7 @@ const configPath = 'config.json';
 const figlet = require('figlet');
 
 //base values (example config)
-let config = {
-    "file_path": "static/videos/",
-    "host_prefix": "https://yourHostname.domain/v/",
-    "total_space": 100000000000,
-    "production_logging": "none",
-    "self_hosted": "0",
-    "port": 10700,
-    "tls": {
-        "email": "email@example.com",
-        "domains": ["domain1.com", "domain2.com"]
-    },
-    "mail": {
-        "username": "something@gmail.com",
-        "password": "password"
-    },
-    "db_path": "db/"
-};
-
+let config = require('./../../config-example.json');
 // all of this will be more or less sync
 
 // outputting intro splash
