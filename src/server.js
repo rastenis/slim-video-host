@@ -86,7 +86,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         secure: (config.self_hosted == "1"),
-        maxAge: 6 * 60 * 60 * 1000
+        maxAge: config.infinite_sessions == "1" ? null : 24 * 60 * 60 * 1000 //24 hours or infinite, depending on the config
     },
     store: new NedbStore({
         filename: 'db/persistance'
