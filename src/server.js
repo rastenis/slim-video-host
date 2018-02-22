@@ -1208,41 +1208,17 @@ app.post('/api/changeTheme', function(req, res) {
     let returner = genericResponseObject();
 
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
-        db.settings.update({
-            active: true
-        }, {
-            $set: {
-                theme: req.body.newTheme
-            }
-        }, {
-            multi: false,
-            returnUpdatedDocs: true
-        }, function(err, numAffected, affectedDocuments) {
-            if (err) {
-                log("THEME CHANGE | " + err, 1);
-            }
-            if (numAffected > 1) {
-                log("THEME CHANGE | " + "duplicate copies of settings in db!", 1);
-            } else if (numAffected == 0) { // no global settings in db
-                db.settings.insert({
-                    active: true,
-                    theme: req.body.newTheme
-                }, function(err) {
-                    if (err) {
-                        console.log(err);
-                    }
-                });
-            } else {
-                // return updated settings
-                returner.newSettings = {};
-                returner.newSettings = req.body.settings;
-                returner.newSettings.theme = themes[req.body.newTheme];
-                returner.newSettings.themeID = req.body.newTheme;
-                returner.meta.msg = "You have successfully changed the theme!";
+        settings.theme = req.body.newTheme;
+        jsonfile.writeFileSync(config.db_path + 'system/settings.json', settings);
 
-                return res.json(returner);
-            }
-        });
+        // return updated settings
+        returner.newSettings = {};
+        returner.newSettings = req.body.settings;
+        returner.newSettings.theme = themes[req.body.newTheme];
+        returner.newSettings.themeID = req.body.newTheme;
+        returner.meta.msg = "You have successfully changed the theme!";
+
+        return res.json(returner);
     } else {
         log("BAD CALL @ THEME CHANGE | requester: " + req.session.authUser.username, 1);
         return;
