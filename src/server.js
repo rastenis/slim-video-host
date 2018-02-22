@@ -40,6 +40,9 @@ var defaultTokenExpiry = 1800000; // 30 mins
 // on-start auto maintenance
 maintenance.preLaunch(config);
 
+// post maintenance requires
+var settings = require('../' + config.db_path + 'system/settings.json');
+
 // optional cert generation
 if (config.self_hosted == "1") {
     // returns an instance of node-greenlock with additional helper methods
@@ -725,21 +728,15 @@ app.get('/api/settings', function(req, res) {
     let returner = genericResponseObject();
 
     // settings fetch
-    db.settings.find({}, function(err, docs) {
-        if (docs.length > 1) {
-            log("SETTINGS | more than 1 setting stored in db!", 1);
-        } else if (docs.length < 1) {
-            log("SETTINGS | no settings in db", 1);
-        } else {
-            returner.settings = {};
-            returner.settings.theme = themes[docs[0].theme];
-            returner.settings.themeID = docs[0].theme;
-            themes.current = docs[0].theme;
-            jsonfile.writeFile("static/style/themes.json", themes);
+    if (settings.theme !== null) {
+        returner.settings = {};
+        returner.settings.theme = themes[settings.theme];
+        returner.settings.themeID = settings.theme;
+    } else {
+        log("SETTINGS | no settings in db", 1);
+    }
 
-            return res.json(returner);
-        }
-    });
+    return res.json(returner);
 });
 
 
@@ -1211,41 +1208,17 @@ app.post('/api/changeTheme', function(req, res) {
     let returner = genericResponseObject();
 
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
-        db.settings.update({
-            active: true
-        }, {
-            $set: {
-                theme: req.body.newTheme
-            }
-        }, {
-            multi: false,
-            returnUpdatedDocs: true
-        }, function(err, numAffected, affectedDocuments) {
-            if (err) {
-                log("THEME CHANGE | " + err, 1);
-            }
-            if (numAffected > 1) {
-                log("THEME CHANGE | " + "duplicate copies of settings in db!", 1);
-            } else if (numAffected == 0) { // no global settings in db
-                db.settings.insert({
-                    active: true,
-                    theme: req.body.newTheme
-                }, function(err) {
-                    if (err) {
-                        console.log(err);
-                    }
-                });
-            } else {
-                // return updated settings
-                returner.newSettings = {};
-                returner.newSettings = req.body.settings;
-                returner.newSettings.theme = themes[req.body.newTheme];
-                returner.newSettings.themeID = req.body.newTheme;
-                returner.meta.msg = "You have successfully changed the theme!";
+        settings.theme = req.body.newTheme;
+        jsonfile.writeFileSync(config.db_path + 'system/settings.json', settings);
 
-                return res.json(returner);
-            }
-        });
+        // return updated settings
+        returner.newSettings = {};
+        returner.newSettings = req.body.settings;
+        returner.newSettings.theme = themes[req.body.newTheme];
+        returner.newSettings.themeID = req.body.newTheme;
+        returner.meta.msg = "You have successfully changed the theme!";
+
+        return res.json(returner);
     } else {
         log("BAD CALL @ THEME CHANGE | requester: " + req.session.authUser.username, 1);
         return;
@@ -1715,4 +1688,4 @@ function genericErrorObject(message) {
             msg: message ? message : "An error has occured."
         }
     }
-}
+};

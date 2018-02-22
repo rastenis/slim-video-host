@@ -1,5 +1,6 @@
 const fs = require('fs-extra');
 var db = require('../external/db.js');
+const jsonfile = require('jsonfile');
 const du = require('du');
 const chalk = require('chalk');
 const async = require('async');
@@ -11,7 +12,6 @@ Array.prototype.diff = function(a) {
         return a.indexOf(i) < 0;
     });
 };
-
 
 function preLaunch(config) {
 
@@ -35,25 +35,27 @@ function preLaunch(config) {
         }
     });
 
-    // inserting settings, if none are present
-    db.settings.find({}, function(err, docs) {
-        if (docs.length == 0) {
-            // inserting default settings
-            db.settings.insert({
-                theme: "0",
-                active: true
-            }, function(err) {
-                if (err) {
-                    console.log(err);
-                }
-            });
+    // checking if settings exist & creating them if not
+    try {
+        let settings = require(config.db_path + 'system/settings.json');
+        if (settings !== undefined || settings.theme !== undefined) {
+            // settings in place!
         }
-    });
+
+    } catch (e) {
+        // overwrite w/ defaults
+
+        let defaults = {
+            "theme": 0
+        };
+
+        jsonfile.writeFileSync(config.db_path + 'system/settings.json', defaults);
+    }
 
     let videoNames = [],
         thumbnailNames = [];
 
-    //checking through all thumbnails & the videos themselves
+    // checking through all thumbnails & the videos themselves
     db.videos.find({}, function(err, docs) {
         if (err) {
             console.log(err);
