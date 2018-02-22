@@ -39,7 +39,7 @@ function preLaunch(config) {
 
     // checking if settings exist & creating them if not
     try {
-        let settings = require(config.db_path + 'system/settings.json');
+        let settings = require("../../" + config.db_path + 'system/settings.json');
         if (settings !== undefined || settings.theme !== undefined || settings.ss !== undefined) {
             // settings in place!
         }
