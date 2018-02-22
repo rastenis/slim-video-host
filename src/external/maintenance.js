@@ -5,6 +5,8 @@ const du = require('du');
 const chalk = require('chalk');
 const async = require('async');
 const exec = require('child_process').exec;
+const crypto = require('crypto');
+
 
 // custom array diff prototype
 Array.prototype.diff = function(a) {
@@ -38,15 +40,15 @@ function preLaunch(config) {
     // checking if settings exist & creating them if not
     try {
         let settings = require(config.db_path + 'system/settings.json');
-        if (settings !== undefined || settings.theme !== undefined) {
+        if (settings !== undefined || settings.theme !== undefined || settings.ss !== undefined) {
             // settings in place!
         }
-
     } catch (e) {
         // overwrite w/ defaults
 
         let defaults = {
-            "theme": 0
+            "theme": 0,
+            "ss": crypto.randomBytes(23).toString('hex')
         };
 
         jsonfile.writeFileSync(config.db_path + 'system/settings.json', defaults);
