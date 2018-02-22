@@ -26,7 +26,6 @@ const db = require('./external/db.js');
 const favicon = require('serve-favicon');
 const path = require('path');
 const themes = require('../static/style/themes');
-var settings = require('../' + config.db_path + 'system/settings.json');
 const jsonfile = require('jsonfile');
 
 
@@ -40,6 +39,9 @@ var defaultTokenExpiry = 1800000; // 30 mins
 
 // on-start auto maintenance
 maintenance.preLaunch(config);
+
+// post maintenance requires
+var settings = require('../' + config.db_path + 'system/settings.json');
 
 // optional cert generation
 if (config.self_hosted == "1") {
@@ -1710,4 +1712,4 @@ function genericErrorObject(message) {
             msg: message ? message : "An error has occured."
         }
     }
-}
+};
