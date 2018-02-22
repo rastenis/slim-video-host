@@ -27,8 +27,9 @@ config.mail.username = prompt('Enter gmail username: ');
 
 config.mail.password = prompt('Enter gmail password: ', null, { echo: "*" });
 
-config.production_logging = prompt('Select production logging mode (all/error/none): ');
+config.production_logging = prompt('Select production logging mode (all/error/none): ', config.production_logging);
 
+config.infinite_sessions = prompt('Should infinite sessions be allowed when logging in? (1:yes, 0:no): ', config.infinite_sessions);
 
 console.log("Enter video link generation prefix,");
 config.host_prefix = prompt('(Example: https://yourHostname.domain/): ');
