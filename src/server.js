@@ -81,7 +81,7 @@ app.use(fileUpload({
 }));
 app.use(bodyParser.json());
 app.use(session({
-    secret: crypto.randomBytes(23).toString('hex'),
+    secret: settings.ss,
     resave: false,
     saveUninitialized: false,
     cookie: {

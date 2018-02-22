@@ -13,5 +13,6 @@
         "username": "something@gmail.com",
         "password": "password"
     },
-    "db_path": "db/"
+    "db_path": "db/",
+    "infinite_sessions": "1"
 }
