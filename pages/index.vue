@@ -115,18 +115,24 @@ export default {
         this.intro.backgroundImage = 'url(' + res.data.data.image_original_url + ')';
       })
       .catch(e=>{});
-      console.log(this.$nuxt);
-    document.addEventListener('keyup', function(event) {
-      // global enter triggers login button
-      if (event.keyCode == 13) { 
-        this.activateLogin(true);
-      }
-    });
+  },
+  mounted(){
+    if (process.browser) {
+      window.addEventListener('keyup', function(event) {
+        // global enter triggers login button
+        if (event.keyCode == 13) { 
+          this.activateLogin(true);
+        }
+      });
+    }
   },
   head:{
     title:"Welcome"
   }
 }
+
+
+
 </script>
 
 <style scoped>
