@@ -81,6 +81,11 @@ export default {
         this.$store.state.activeTab = '2';
       }
     },
+    handleListener(event){
+      if (event.keyCode==13) {
+        this.activateLogin(true);
+      }
+    },
     async redirectToRegister() {
       this.$nuxt._router.push("/regg")
       this.$store.state.activeTab = '2';
@@ -115,23 +120,15 @@ export default {
         this.intro.backgroundImage = 'url(' + res.data.data.image_original_url + ')';
       })
       .catch(e=>{});
-  },
-  mounted(){
+
     if (process.browser) {
-      window.addEventListener('keyup', function(event) {
-        // global enter triggers login button
-        if (event.keyCode == 13) { 
-          this.activateLogin(true);
-        }
-      });
+      window.addEventListener('keyup', event=>{this.handleListener(event)});
     }
   },
   head:{
     title:"Welcome"
   }
 }
-
-
 
 </script>
 
