@@ -1,5 +1,5 @@
 <template>
-  <div class="hiddenOverflow">
+  <div class="hiddenOverflow" @keyup.enter="activateLogin(true)">
     <div :style="background" ref="introBCG">
     </div>
     <transition name="fadeUp" :duration="{ enter: 1000, leave: 20 }" appear>
@@ -81,6 +81,11 @@ export default {
         this.$store.state.activeTab = '2';
       }
     },
+    handleListener(event){
+      if (event.keyCode==13) {
+        this.activateLogin(true);
+      }
+    },
     async redirectToRegister() {
       this.$nuxt._router.push("/regg")
       this.$store.state.activeTab = '2';
@@ -115,11 +120,21 @@ export default {
         this.intro.backgroundImage = 'url(' + res.data.data.image_original_url + ')';
       })
       .catch(e=>{});
+
+    if (process.browser) {
+      window.addEventListener('keyup', event=>{this.handleListener(event)});
+    }
+  },
+  destroyed(){
+    if (process.browser) {
+      window.removeEventListener('keyup', event=>{this.handleListener(event)});
+    }
   },
   head:{
     title:"Welcome"
   }
 }
+
 </script>
 
 <style scoped>

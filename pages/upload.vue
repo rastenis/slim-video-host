@@ -17,15 +17,15 @@
       <div slot="header" class="clearfix">
         <span>Uploading videos</span>
       </div>
-        <el-form>
+        <el-form @submit.native.prevent>
           <div v-for="(video, index) in uploadedFileList" :item="video" :index="index" :key="video.videoID">
             <el-progress v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="parseFloat(video.percentage.toFixed(2))" :status="video.status"></el-progress>
             <el-form-item :label="video.name">
-              <el-input v-model="newNames[video.name]" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.enter.native="finishUpload(0,false)"></el-input>
+              <el-input v-model="newNames[video.name]" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.13.native="finishUpload(0)"></el-input>
             </el-form-item> <!-- TODO: update enter shortcut to validate all video names and submit -->
           </div>
-          <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(0,false)">Finish upload</el-button>
-          <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(1,false)">Cancel</el-button>
+          <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(0)">Finish upload</el-button>
+          <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(1)">Cancel</el-button>
         </el-form>
     </el-card>
     <el-card class="uploadForm" v-if="upload.declined">
@@ -145,18 +145,17 @@ export default {
         title: "Information",
         message: msg,
         type: type,
-        duration: 4000
+        duration: 2000
       });
     },
-    finishUpload(status, specialPass) {
+    finishUpload(status) {
       if (!this.$store.state.authUser) {
         this.$message.error("You are not signed in!");
         this.$nuxt._router.push("/");
         return false;
       }
-
       // check if all videos have finished uploading
-      if (this.completeCount>=this.uploadedFileList.length || specialPass == true) {
+      if (this.completeCount>=this.uploadedFileList.length) {
         // if (!name && status == 0) {
         //   //validate form of all new video names
         //   this.$message.error("Please enter a valid name!");

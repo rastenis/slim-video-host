@@ -17,15 +17,15 @@
       <div slot="header" class="clearfix">
         <span>Password Change</span>
       </div>
-      <el-form size="small" label-position="top" :model="passReset" label-width="100px" ref="passwordResetForm" :rules="passResetFormRules">
+      <el-form v-loading="passReset.loading" size="medium" label-position="top" :model="passReset" label-width="100px" ref="passwordResetForm" :rules="passResetFormRules">
         <el-form-item prop="currentPassword" label="Current password:">
-          <el-input type="password" v-model="passReset.currentPassword" ></el-input>
+          <el-input @keypress.enter.native="changePassword" type="password" v-model="passReset.currentPassword" ></el-input>
         </el-form-item>
         <el-form-item prop="newPassword" label="New password:">
-          <el-input type="password" v-model="passReset.newPassword" ></el-input>
+          <el-input @keypress.enter.native="changePassword" type="password" v-model="passReset.newPassword" ></el-input>
         </el-form-item>
         <el-form-item prop="newPasswordConf" label="Confirm new password:">
-          <el-input type="password" v-model="passReset.newPasswordConf"></el-input>
+          <el-input @keypress.enter.native="changePassword" type="password" v-model="passReset.newPasswordConf"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button @click="changePassword">Reset Password</el-button>
@@ -59,7 +59,8 @@ export default {
       passReset: {
         currentPassword: '',
         newPassword: '',
-        newPasswordConf: ''
+        newPasswordConf: '',
+        loading:false
       },
       passResetFormRules: {
         currentPassword: [{
@@ -94,9 +95,10 @@ export default {
     confirmation(msg, type, settings) {
       return this.$confirm(msg, type, settings);
     },
-    async changePassword() {
+    changePassword() {
       this.$refs["passwordResetForm"].validate((valid) => {
         if (valid) {
+          this.passReset.loading=true;
           axios({
             url: 'https://cigari.ga/api/changePassword',
             method: 'patch',
@@ -116,6 +118,7 @@ export default {
             this.passReset.newPassword = "";
             this.passReset.newPasswordConf = "";
             this.passReset.currentPassword = "";
+            this.passReset.loading=false;
           }).catch(e => {
             console.log(e);
           });
