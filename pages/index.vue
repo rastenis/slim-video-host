@@ -125,6 +125,11 @@ export default {
       window.addEventListener('keyup', event=>{this.handleListener(event)});
     }
   },
+  destroyed(){
+    if (process.browser) {
+      window.removeEventListener('keyup', event=>{this.handleListener(event)});
+    }
+  },
   head:{
     title:"Welcome"
   }
