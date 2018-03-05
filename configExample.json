@@ -1,6 +1,6 @@
 {
     "file_path": "static/videos/",
-    "host_prefix": "https://yourHostname.domain/v/",
+    "host_prefix": "yourHostname.domain",
     "total_space": 100000000000,
     "production_logging": "none",
     "self_hosted": "0",

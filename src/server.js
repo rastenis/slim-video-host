@@ -958,7 +958,7 @@ app.patch('/api/newLink', function(req, res) {
         returner.newData = req.body.selection;
         req.body.selection.forEach((sel, index) => {
             let newVideoID = shortid.generate();
-            let newVidLink = config.host_prefix + "v/" + newVideoID;
+            let newVidLink = prefixProtocol() + config.host_prefix + "/v/" + newVideoID;
 
             async.waterfall([function(done) {
                 db.videos.update({
@@ -1518,7 +1518,7 @@ app.post('/api/upload', function(req, res) {
                             } else {
                                 // dedam video i storage
                                 var videoID = shortid.generate();
-                                var vidLink = config.host_prefix + "v/" + videoID;
+                                var vidLink = prefixProtocol() + config.host_prefix + "/v/" + videoID;
                                 log(chalk.green("UPLOAD | storing video!"), 0);
 
                                 db.videos.insert({
@@ -1688,4 +1688,8 @@ function genericErrorObject(message) {
             msg: message ? message : "An error has occured."
         }
     }
-};
+}
+
+function prefixProtocol() {
+    return config.self_hosted == "1" ? "https://" : "http://";
+}
