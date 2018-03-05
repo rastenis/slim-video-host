@@ -95,7 +95,7 @@ export default {
             //send it
             setTimeout(() => {
               this.finishUpload(this.upload.name, this.upload.action, true);
-            }, 1000);
+            }, 200);
           }
         }
     },
@@ -106,7 +106,7 @@ export default {
         this.$nuxt._router.push("/");
         return false;
       }
-      var mbFilesize = file.size / 1024 / 1024;
+      let mbFilesize = file.size / 1024 / 1024;
 
       if (this.$store.state.authUser.remainingSpace < mbFilesize) {
         this.$message.error(
