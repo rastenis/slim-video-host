@@ -2,18 +2,20 @@
   <div class="hiddenOverflow" @keyup.enter="activateLogin(true)">
     <div :style="background" ref="introBCG">
     </div>
+    <!-- both the "welcome back" and "login" buttons -->
     <transition name="fadeUp" :duration="{ enter: 1000, leave: 20 }" appear>
       <a class="hvr-fade introMainButton" @click="activateLogin(true)" v-show="!showLogin">
         <p v-if="!$store.state.authUser" class="indexTitle">Login</p>
         <p v-else class="indexTitle minif">Welcome back</p>
       </a>
     </transition>
+    <!-- login form/redirection notice -->
     <div v-show="showLogin" class="introLoginForm">
       <div class="centerHor" v-if="!$store.state.authUser">
         <el-form v-on:submit.prevent="login" class="formField" size="small" autocomplete="on">
           <p class="error" v-if="formError">{{ formError }}</p>
           <el-form-item prop="username">
-            <input class="substituteInput topField" autocorrect="off" autocapitalize="off" spellcheck="false" @keyup.alt.82="redirectToRegister" placeholder="Username" autocomplete="username" type="text" v-model="form.username" name="username"/>
+            <input class="substituteInput topField" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Username" autocomplete="username" type="text" v-model="form.username" name="username"/>
           </el-form-item>
           <el-form-item prop="password">
             <input class="substituteInput bottomField" @keydown.enter="login" placeholder="Password" type="password" v-model="form.password" autocomplete="current-password" name="password" />
@@ -53,6 +55,7 @@ export default {
     }
   },
   computed:{
+    // used to make both blur and the gif dynamic
     background(){
       return {
         position: 'absolute',
@@ -76,7 +79,7 @@ export default {
     activateLogin(bool) {
       if (!this.$store.state.authUser) {
         this.showLogin = bool;
-      } else { //user pressed welcome back. Redirect to dashboard
+      } else { //user pressed "welcome back". Redirect to dashboard
         this.$nuxt._router.push("/dash")
         this.$store.state.activeTab = '2';
       }
@@ -85,8 +88,12 @@ export default {
       if (event.keyCode==13) {
         this.activateLogin(true);
       }
+      // registration hotkey
+      if (event.altKey&&event.keyCode==82) {
+        this.redirectToRegister();
+      }
     },
-    async redirectToRegister() {
+    redirectToRegister() {
       this.$nuxt._router.push("/regg")
       this.$store.state.activeTab = '2';
     },
@@ -120,7 +127,6 @@ export default {
         this.intro.backgroundImage = 'url(' + res.data.data.image_original_url + ')';
       })
       .catch(e=>{});
-
     if (process.browser) {
       window.addEventListener('keyup', event=>{this.handleListener(event)});
     }
