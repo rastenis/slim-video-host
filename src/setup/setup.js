@@ -32,7 +32,7 @@ config.production_logging = prompt('Select production logging mode (all/error/no
 config.infinite_sessions = prompt('Should infinite sessions be allowed when logging in? (1:yes, 0:no): ', config.infinite_sessions);
 
 console.log("Enter video link generation prefix,");
-config.host_prefix = prompt('(Example: https://yourHostname.domain/): ');
+config.host_prefix = prompt('(Example: ' + config.host_prefix + '): ');
 
 config.self_hosted = prompt('Independant TLS? (will require ports 80 and 443) (1:yes, 0:no): ');
 
