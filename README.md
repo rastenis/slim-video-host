@@ -27,7 +27,7 @@ npm run dev
 
 * The application can now be accessed at localhost:10700
 * The first registered user will be set as admin
-* The registration page is accessible by pressing Alt+R while editing the username field in the landing/login page or by going to the regg route (https://hostname.domain/regg)
+* The registration page is accessible by pressing **Alt+R** in the landing/login page or by going to the /regg route( `//hostname.domain/regg` )
 
 ## Prerequisites:
 
