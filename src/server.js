@@ -1518,7 +1518,7 @@ app.post('/api/upload', function(req, res) {
                             } else {
                                 // dedam video i storage
                                 var videoID = shortid.generate();
-                                var vidLink = prefixProtocol() + config.host_prefix + "v/" + videoID;
+                                var vidLink = prefixProtocol() + config.host_prefix + "/v/" + videoID;
                                 log(chalk.green("UPLOAD | storing video!"), 0);
 
                                 db.videos.insert({

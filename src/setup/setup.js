@@ -5,7 +5,7 @@ const configPath = 'config.json';
 const figlet = require('figlet');
 
 //base values (example config)
-let config = require('../../config-example.json');
+let config = require('../../configExample.json');
 // all of this will be more or less sync
 
 // outputting intro splash
