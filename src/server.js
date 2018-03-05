@@ -1472,7 +1472,7 @@ app.post('/api/upload', function(req, res) {
             for (const file in req.files) { //turetu tik po viena faila postai eit
                 if (req.files.hasOwnProperty(file)) {
                     // filesize handlingas
-                    let fileSizeInBytes = req.files[file].data.byteLength;
+                    let fileSizeInBytes = req.files[file].dataSize;
                     let fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
                     log("UPLOAD | uploaded video size is " + fileSizeInMegabytes + "mb", 0);
 
