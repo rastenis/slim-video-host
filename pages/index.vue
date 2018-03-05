@@ -121,12 +121,14 @@ export default {
     }
   },
   created() {
-    var randomTag = this.gifTags[Math.floor(Math.random()*this.gifTags.length)];
+    /// choosing a random tag and retrieving a gif
+    let randomTag = this.gifTags[Math.floor(Math.random()*this.gifTags.length)];
     axios.get('https://api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag='+randomTag)
       .then((res) => {
         this.intro.backgroundImage = 'url(' + res.data.data.image_original_url + ')';
       })
       .catch(e=>{});
+    // listener for various key combos
     if (process.browser) {
       window.addEventListener('keyup', event=>{this.handleListener(event)});
     }
@@ -336,26 +338,6 @@ a:hover {
   transform: translate(0, 3vmin) !important;
 }
 
-.hvr-fade {
-  display: inline-block;
-  vertical-align: middle;
-  -webkit-transform: perspective(1px) translateZ(0);
-  transform: perspective(1px) translateZ(0);
-  box-shadow: 0 0 1px transparent;
-  overflow: hidden;
-  -webkit-transition-duration: 0.3s;
-  transition-duration: 0.3s;
-  -webkit-transition-property: color, background-color;
-  transition-property: color, background-color;
-}
-
-.hvr-fade:hover,
-.hvr-fade:focus,
-.hvr-fade:active {
-  background-color: white;
-  color: black;
-  opacity: 0.95;
-}
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
