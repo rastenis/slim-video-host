@@ -1,9 +1,12 @@
 <template>
+  <!-- unauthed users forbidden -->
   <div v-if="$store.state.authUser">
     <h1 class="title breaker">Upload</h1>
+    <!-- upload ban notice -->
     <el-card class="uploadCard uploadForm clickableCard" v-if="$store.state.authUser.accountStanding==2">
       <i class="fa fa-times"><p style="font-family:LatoLight;display:inline; margin-left:1vh;">You are prohibited from uploading videos. Ask an admin to provide you with a reset code for your account status.</p>  </i>
     </el-card>
+    <!-- initial upload drag-box -->
     <el-card class="uploadCard uploadForm clickableCard" v-if="!uploading && !upload.declined && $store.state.authUser.accountStanding!=2">
         <el-upload ref="uploader" :multiple="true" :on-success="onUploadSuccess" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
           <i class="el-icon-upload"></i>
@@ -13,21 +16,25 @@
           <div class="el-upload__tip" slot="tip">.mp4, .ogg, .webm files with a size less than 5GB</div>
         </el-upload>
     </el-card>
+    <!-- modal-style panel for monitoring upload progress & naming -->
     <el-card class="uploadForm fileList" v-if="uploading && !upload.declined" v-loading="irreversibleUploadCommenced">
       <div slot="header" class="clearfix">
         <span>Uploading videos</span>
       </div>
+        <!-- naming fields -->
         <el-form @submit.native.prevent>
           <div v-for="(video, index) in uploadedFileList" :item="video" :index="index" :key="video.videoID">
             <el-progress v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="parseFloat(video.percentage.toFixed(2))" :status="video.status"></el-progress>
             <el-form-item :label="video.name">
               <el-input v-model="newNames[video.name]" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.13.native="finishUpload(0)"></el-input>
-            </el-form-item> <!-- TODO: update enter shortcut to validate all video names and submit -->
+            </el-form-item>
           </div>
+          <!-- action buttons at the bottom of the iterated list -->
           <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(0)">Finish upload</el-button>
           <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(1)">Cancel</el-button>
         </el-form>
     </el-card>
+    <!-- upload-blocking notice, if the server didn't accept an upload. Forces a refresh, at the very least. -->
     <el-card class="uploadForm" v-if="upload.declined">
       <h2 style="color:red;">Upload declined!</h2> 
       <h3> Try again later.</h3>
@@ -36,8 +43,6 @@
 </template>
 <script>
 import axios from "axios";
-
-// :on-close="finishUpload(currentVidName,1)"
 
 export default {
   layout: "main",
@@ -79,20 +84,19 @@ export default {
   methods: {
       onUploadSuccess(res, file, fileList) {
         if (res.error) {
+          // force the user to do a refresh. The backend may be down.
           this.upload.declined=true;
           this.$message({
             message:res.msg,
             type:res.msgType
           });
-         // red progress bar, disabled buttons
         } else {
-          //displaying naming fields
+          // displaying naming fields
           this.uploadedFileList = fileList;
           this.newVideos = res.newVideos;
           this.completeCount++;
-          //LEFTOFF: keeping tabs on videos for naming
           if (this.upload.ready && this.completeCount >= this.uploadedFileList.length) {
-            //send it
+            // minor delay
             setTimeout(() => {
               this.finishUpload(this.upload.name, this.upload.action, true);
             }, 200);
@@ -106,8 +110,10 @@ export default {
         this.$nuxt._router.push("/");
         return false;
       }
+      
       let mbFilesize = file.size / 1024 / 1024;
 
+      // checking if user has sufficient space available
       if (this.$store.state.authUser.remainingSpace < mbFilesize) {
         this.$message.error(
           "You do not have enough space remaining to upload this video! Delete some existing videos or request a storage upgrade."
@@ -119,7 +125,7 @@ export default {
         this.uploading = false;
         return false;
       }
-
+      // checking if the filetype is allowed, TODO: switch not needed
       switch (file.type) {
         case "video/webm":
             break;
@@ -135,10 +141,8 @@ export default {
       }
     },
     uploadProgress(event, file, fileList) {
+      // updates all file progresses at once
       this.uploadedFileList = fileList;
-      // console.log(event);
-      // console.log(file);
-      // console.log(fileList);
     },
     uploadedNotification(msg, type) {
       this.$notify({
