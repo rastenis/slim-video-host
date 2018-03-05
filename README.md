@@ -7,15 +7,21 @@
 ## Features
 
 * Uncompressed video hosting, resulting in fast uploads and minuscule processing times
+* 'Bufferless' upload process - files larger than available RAM can be uploaded
 * Link-based video sharing, no public video searching and/or display
 * Anonymous likes/dislikes
 * Admin panel:
   * Content management, cumulative video list
   * Space management
   * User stats
+  * Content management:
+    * Cumulative  video list
+    * Video deletion
+    * User warnings/bans for inappropriate uploads
 * User dashboard:
   * Statistics
   * Video list w/ video renaming, removal and link regeneration
+  * Code entry dialog, used for space expansion/priviledge elevation
 
 ## Quick setup
 
@@ -36,7 +42,7 @@ npm run dev
   > The config generator gets automatically launched after the initial installation. Be sure to fill everything in correctly! It can be rerun with `npm run setup`
 
 1. `file_path` - video storage path, must also be served as static content, relative to the root dir
-2. `session_key` - a random string, needed for the express-session module
+2. `host_prefix` - set up the domain you want your website to be accessible through. HTTP/HTTPS will be automatically added according to the `self_hosted` setting.
 3. `total_space` - the total amount of space you are willing to dedicate for the website. It will not allow any more registrations when the amount of reserved user space exceeds **(in bytes)**
 4. `production_logging` - either "all", "error" or "none" - sets production-time logging severity
 5. `port` - custom port for http mode
@@ -44,9 +50,9 @@ npm run dev
     * 1 - takes over ports 80 and 443, automatically generates TLS certs, must run as root.
     * 2 - run on port defined in config, http only. Use when a routing system is setup(Apache, etc.)
 7. `tls` - Letsencrypt options
-8. `mail` - `username` and `password` - gmail account credentials, will be used for password resets
-9. `databases` - `db_users_path`, `db_videos_path`,`db_codes_path` and `db_ratings_path` - database paths, relative to root dir. No need to change the default values.
-10. `video_link_prefix` - set up the domain you want your website to be accessible through. Pay attention to HTTP and HTTPS, choose whichever is right for you!
+8. `mail` - `username` and `password` - gmail account credentials, used for password resets
+9. `db_path` - database path, relative to root dir. No need to change the default value.
+10. `infinite_sessions` - whether user sessions should persist forever ar have a 24h lifespan.
 
 * A config-example.json file is in the root dir with demo settings set. If needed, use it as guidance while filling out `npm run setup`
 
