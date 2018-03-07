@@ -31,8 +31,8 @@ function preLaunch(config) {
         }
     });
 
-    // and the cache dir
-    fs.ensureDir("static/tmp/", err => {
+    // empties or creates a tmp dir for uploads
+    fs.emptyDir("static/tmp/", err => {
         if (err) {
             console.log(err);
         }
