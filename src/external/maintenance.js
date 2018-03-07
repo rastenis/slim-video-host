@@ -31,6 +31,13 @@ function preLaunch(config) {
         }
     });
 
+    // and the cache dir
+    fs.ensureDir("static/tmp/", err => {
+        if (err) {
+            console.log(err);
+        }
+    });
+
     du(config.file_path, function(err, size) {
         if (size >= config.total_space) {
             console.log("WARNING! Max space exceeded!");

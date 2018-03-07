@@ -17,7 +17,7 @@ mainLoop: while (true) {
 
     switch (choice) {
         case "1":
-            require('../external/maintenance.js').preLaunch(config.file_path);
+            require('../external/maintenance.js').preLaunch(config);
             console.log(chalk.green("DONE! Maintenance launched!"));
             break;
         case "2":
