@@ -1,4 +1,4 @@
-# [WIP] s-vidhost
+# s-vidhost
 
 ### a redistributable private video hosting platform.
 
@@ -11,7 +11,6 @@
 * Link-based video sharing, no public video searching and/or display
 * Anonymous likes/dislikes
 * Admin panel:
-  * Content management, cumulative video list
   * Space management
   * User stats
   * Content management:
