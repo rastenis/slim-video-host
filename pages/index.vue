@@ -4,7 +4,7 @@
     </div>
     <!-- both the "welcome back" and "login" buttons -->
     <transition name="fadeUp" :duration="{ enter: 1000, leave: 20 }" appear>
-      <a class="hvr-fade introMainButton" @click="activateLogin(true)" v-show="!showLogin">
+      <a class="introMainButton" @click="activateLogin(true)" v-show="!showLogin">
         <p v-if="!$store.state.authUser" class="indexTitle">Login</p>
         <p v-else class="indexTitle minif">Welcome back</p>
       </a>
@@ -319,6 +319,13 @@ a:hover {
   font-family: LatoRegular;
   cursor: pointer;
   text-align: center;
+}
+
+.introMainButton:hover,
+.introMainButton:focus,
+.introMainButton:active {
+  background: rgba(255, 255, 255, 0.801) !important;
+  color: black !important;
 }
 
 .introLoginForm {
