@@ -1,5 +1,5 @@
 //deps
-process.env.DEBUG = process.env.NODE_ENV === 'production' ? '' : 'nuxt:*'
+process.env.DEBUG = process.env.NODE_ENV === 'production' ? '' : 'nuxt:*';
 const bcrypt = require('bcrypt');
 const shortid = require('shortid');
 const chalk = require('chalk');
@@ -58,7 +58,7 @@ if (config.self_hosted == "1") {
         }),
         approveDomains: function(opts, certs, cb) {
             if (certs) {
-                opts.domains = config.tls.domains
+                opts.domains = config.tls.domains;
             } else {
                 opts.email = config.tls.email,
                     opts.agreeTos = config.tls.agree_tos == "1";
@@ -169,9 +169,14 @@ app.get('/api/cv/:id', function(req, res) {
             });
         }, function(done) {
             //check if requested video exists
+
+            let path;
+
             try {
-                var path = config.file_path + req.params.id + returner.video.extension;
-            } catch (e) {}
+                path = config.file_path + req.params.id + returner.video.extension;
+            } catch (e) {
+                path = "/doesnt/exist";
+            }
 
             if (returner.video && fs.existsSync(path)) {
                 done();
@@ -204,7 +209,7 @@ app.get('/api/cv/:id', function(req, res) {
                     done();
                 });
             } else {
-                log("FETCHING VIDEO | anonymous viewer", 0);;
+                log("FETCHING VIDEO | anonymous viewer", 0);
                 done();
             }
         }, function(done) {
@@ -472,7 +477,7 @@ app.put('/api/act', function(req, res) {
                     prep.revert = true;
                     prep.increment = -1;
                 } else { // just like
-                    prep.increment = 1
+                    prep.increment = 1;
                 }
             } else { // dislike
                 if (userRatings.disliked) { // revert
@@ -526,12 +531,12 @@ app.post('/api/register', function(req, res) {
             username: req.body.username.toLowerCase()
         }, function(err, docs) {
             du('static/videos', function(err, size) {
-                log('REGISTRATION | The size of the video folder is:' + size + 'bytes', 0)
+                log('REGISTRATION | The size of the video folder is:' + size + 'bytes', 0);
                 if (size >= config.total_space) {
                     enoughSpace = false;
                 }
                 done(null, docs, enoughSpace);
-            })
+            });
         });
     }, function(docs, enoughSpace, done) {
 
@@ -611,7 +616,7 @@ app.post('/api/register', function(req, res) {
                             userCount++;
                         });
                         if (userCount == 0) { // no users; first one will become an admin
-                            userStatus = 1
+                            userStatus = 1;
                         } else {
                             userStatus = 0;
                         }
@@ -1064,7 +1069,7 @@ app.patch('/api/rename', function(req, res) {
             if (numAffected < 1) {
                 returner = genericErrorObject("Renaming failed; No such video.");
             } else {
-                returner = genericResponseObject("Video successfully renamed!")
+                returner = genericResponseObject("Video successfully renamed!");
             }
             returner.newName = req.body.newName;
 
@@ -1165,14 +1170,14 @@ app.put('/api/finalizeUpload', function(req, res) {
                         // removing video from storage
                         try {
                             fs.unlink(config.file_path + selection.videoID + selection.extension);
-                        } catch (err) {
-                            log("UPLOAD FINALIZATION | " + err, 1);
+                        } catch (e) {
+                            log("UPLOAD FINALIZATION | " + e, 1);
                         }
                         // removing thumbnail
                         try {
                             fs.unlink(config.file_path + "thumbs/" + selection.videoID + ".jpg");
-                        } catch (err) {
-                            log("UPLOAD FINALIZATION | " + err, 1);
+                        } catch (e) {
+                            log("UPLOAD FINALIZATION | " + e, 1);
                         }
 
                         // updating active user
@@ -1547,7 +1552,7 @@ app.post('/api/upload', function(req, res) {
                                                         log("UPLOAD | " + err, 1);
                                                     }
                                                 });
-                                            } catch (err) {
+                                            } catch (e) {
                                                 log(chalk.bgYellow.black("WARN") + "failed to save thumbnail ", 1);
                                             }
 
@@ -1606,14 +1611,14 @@ app.post('/api/logout', function(req, res) {
 
 //nuxt config
 let nuxt_config = require('../nuxt.config.js');
-nuxt_config.dev = !(process.env.NODE_ENV === 'production');
+nuxt_config.dev = (process.env.NODE_ENV !== 'production');
 const nuxt = new Nuxt(nuxt_config);
 
 //nuxt build
 if (nuxt_config.dev) {
     const builder = new Builder(nuxt);
     builder.build();
-};
+}
 // No build in production
 
 app.use(nuxt.render);
@@ -1625,7 +1630,7 @@ if (config.self_hosted == "1") {
     });
 
     // https handler
-    var server = require('https').createServer(lex.httpsOptions, lex.middleware(app))
+    var server = require('https').createServer(lex.httpsOptions, lex.middleware(app));
     server.listen(443, function() {
         console.log("Listening for ACME tls-sni-01 challenges and serve app on", this.address());
     });
@@ -1677,7 +1682,7 @@ function genericResponseObject(message) {
             msgType: "success",
             msg: message ? message : null
         }
-    }
+    };
 }
 
 function genericErrorObject(message) {
@@ -1687,7 +1692,7 @@ function genericErrorObject(message) {
             msgType: "error",
             msg: message ? message : "An error has occured."
         }
-    }
+    };
 }
 
 function prefixProtocol() {
