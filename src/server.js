@@ -313,9 +313,7 @@ app.post('/api/requestReset', function(req, res) {
                 text: 'You are receiving this because a password reset for your account was requested.\n\n' +
                     'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
                     'http://' + req.headers.host + '/r/' + token + '\n\n' +
-                    'If you did not request this, please ignore this email and your password will remain unchanged.\n\n' +
-                    'Sincerely,\n' +
-                    'Scharkee-v team.'
+                    'If you did not request this, please ignore this email and your password will remain unchanged.\n\n'
             };
             nmlTrans.sendMail(mailOptions, function(err) {
                 if (err) {
