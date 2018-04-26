@@ -308,7 +308,7 @@ app.post('/api/requestReset', function(req, res) {
 
             let mailOptions = {
                 to: req.body.email,
-                from: 'merchseries.referals@gmail.com',
+                from: config.mail.username,
                 subject: 'Password Reset',
                 text: 'You are receiving this because a password reset for your account was requested.\n\n' +
                     'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
