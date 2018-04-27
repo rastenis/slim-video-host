@@ -163,6 +163,9 @@ app.get('/api/cv/:id', function(req, res) {
                 } else {
                     log("FETCHING VIDEO | added a view to video " + affectedDocument.videoID, 0);
                     affectedDocument.src = '/videos/' + req.params.id + affectedDocument.extension;
+                    //removing traces of the user that uploaded
+                    delete affectedDocument.username;
+
                     returner.video = affectedDocument;
                 }
                 done();
