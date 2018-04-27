@@ -1659,7 +1659,7 @@ function performSecurityChecks(docs) {
 
 // password hashing function
 function hashUpPass(pass) {
-    var hash = bcrypt.hashSync(pass, 11);
+    var hash = bcrypt.hashSync(pass, 12);
     return hash;
 }
 
