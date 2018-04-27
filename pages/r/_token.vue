@@ -95,7 +95,7 @@ export default {
         if (valid) {
           axios({
             url: 'https://cigari.ga/api/changePassword',
-            method: 'post',
+            method: 'patch',
             credentials: 'same-origin',
             data: {
               resetType:1,
