@@ -58,6 +58,9 @@ function preLaunch(config) {
             "ss": crypto.randomBytes(23).toString('hex')
         };
 
+        //make sure the directory exists first
+        fs.ensureDirSync(config.db_path + 'system/');
+        //write the change
         jsonfile.writeFileSync(config.db_path + 'system/settings.json', defaults);
     }
 
