@@ -41,26 +41,7 @@ var defaultTokenExpiry = 1800000; // 30 mins
 maintenance.preLaunch(config);
 
 // post maintenance requires
-var settings;
-try {
-    settings = require('../' + config.db_path + 'system/settings.json');
-} catch (e) {
-    let defaults = {
-        "theme": 0,
-        "ss": crypto.randomBytes(23).toString('hex')
-    };
-
-    //make sure the directory exists first
-    fs.ensureDirSync(config.db_path + 'system/');
-    //write the change
-    jsonfile.writeFile(config.db_path + 'system/settings.json', defaults, function(err) {
-        if (err) {
-            console.log(err);
-        }
-        settings = require('../' + config.db_path + 'system/settings.json');
-    });
-
-}
+var settings = require('../' + config.db_path + 'system/settings.json');
 
 // optional cert generation
 if (config.self_hosted == "1") {

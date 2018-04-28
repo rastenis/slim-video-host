@@ -3,6 +3,8 @@ const chalk = require('chalk');
 const prompt = require('prompt-sync')({ sigint: true });
 const configPath = 'config.json';
 const figlet = require('figlet');
+const crypto = require('crypto');
+
 
 //base values (example config)
 let config = require('../../configExample.json');
