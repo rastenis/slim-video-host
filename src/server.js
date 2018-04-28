@@ -57,7 +57,7 @@ try {
         if (err) {
             console.log(err);
         }
-        settings = require('../' + config.db_path + 'system/settings.json');
+        settings = require(config.db_path + 'system/settings.json');
     });
 
 }
