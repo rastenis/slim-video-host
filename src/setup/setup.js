@@ -64,3 +64,9 @@ console.log(chalk.bgYellow.black.bold("SETUP DONE!                              
 console.log(chalk.bgYellow.black("                                                    "));
 
 jsonfile.writeFileSync(configPath, config);
+
+// base system settings
+jsonfile.writeFile(config.db_path + 'system/settings.json', {
+    "theme": 0,
+    "ss": crypto.randomBytes(23).toString('hex')
+});

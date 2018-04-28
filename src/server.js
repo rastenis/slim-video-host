@@ -51,13 +51,13 @@ try {
     };
 
     //make sure the directory exists first
-    fs.ensureDirSync('../' + config.db_path + 'system/');
+    fs.ensureDirSync(config.db_path + 'system/');
     //write the change
-    jsonfile.writeFile('../' + config.db_path + 'system/settings.json', defaults, function(err) {
+    jsonfile.writeFile(config.db_path + 'system/settings.json', defaults, function(err) {
         if (err) {
             console.log(err);
         }
-        settings = require(config.db_path + 'system/settings.json');
+        settings = require('../' + config.db_path + 'system/settings.json');
     });
 
 }
