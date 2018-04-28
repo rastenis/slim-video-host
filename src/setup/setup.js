@@ -4,6 +4,7 @@ const prompt = require('prompt-sync')({ sigint: true });
 const configPath = 'config.json';
 const figlet = require('figlet');
 const crypto = require('crypto');
+const fs = require("fs-extra");
 
 
 //base values (example config)
@@ -68,7 +69,8 @@ console.log(chalk.bgYellow.black("                                              
 jsonfile.writeFileSync(configPath, config);
 
 // base system settings
-jsonfile.writeFile(config.db_path + 'system/settings.json', {
+fs.ensureDirSync(config.db_path + 'system/');
+jsonfile.writeFileSync(config.db_path + 'system/settings.json', {
     "theme": 0,
     "ss": crypto.randomBytes(23).toString('hex')
 });
