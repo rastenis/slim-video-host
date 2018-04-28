@@ -41,7 +41,15 @@ var defaultTokenExpiry = 1800000; // 30 mins
 maintenance.preLaunch(config);
 
 // post maintenance requires
-var settings = require('../' + config.db_path + 'system/settings.json');
+var settings;
+try {
+    settings = require('../' + config.db_path + 'system/settings.json');
+} catch (e) {
+    settings = {
+        "theme": 0,
+        "ss": crypto.randomBytes(23).toString('hex')
+    };
+}
 
 // optional cert generation
 if (config.self_hosted == "1") {
