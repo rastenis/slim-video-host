@@ -9,7 +9,6 @@ module.exports = {
     }),
     codes: new Datastore({
         filename: config.db_path + "codes",
-        autoload: true,
         corruptAlertThreshold: 1 // headway manually pridetiems kodams
     }),
     videos: new Datastore({

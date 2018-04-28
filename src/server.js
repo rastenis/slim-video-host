@@ -572,31 +572,35 @@ app.post('/api/register', function(req, res) {
                     });
                 },
                 function(done) { // checking for matching privelege codes
-                    db.codes.find({
-                        code: req.body.code,
-                        active: true,
-                        type: "reg"
-                    }, function(err, docs) {
-                        if (docs.length == 0) {
-                            //no matching code, go on
-                            done(null, null);
-                        } else {
-                            // got a matching code!
-                            // setting the code to 'inactive' state
-                            db.codes.update({
-                                code: req.body.code
-                            }, {
-                                $set: {
-                                    active: false
-                                }
-                            }, {}, function(err) {
-                                if (err) {
-                                    log("REGISTRATION | " + err, 1);
-                                }
-                            });
-                            done(null, docs[0]);
-                        }
+                    db.codes.loadDatabase(function(err) {
+                        db.codes.find({
+                            code: req.body.code,
+                            active: true,
+                            type: "reg"
+                        }, function(err, docs) {
+                            if (docs.length == 0) {
+                                //no matching code, go on
+                                done(null, null);
+                            } else {
+                                // got a matching code!
+                                // setting the code to 'inactive' state
+                                db.codes.update({
+                                    code: req.body.code
+                                }, {
+                                    $set: {
+                                        active: false
+                                    }
+                                }, {}, function(err) {
+                                    if (err) {
+                                        log("REGISTRATION | " + err, 1);
+                                    }
+                                });
+                                done(null, docs[0]);
+                            }
+                        });
                     });
+
+
                 },
                 function(code, done) {
                     // adding code benefits
@@ -752,101 +756,105 @@ app.post('/api/upgrade', function(req, res) {
     let returner = genericResponseObject();
     log("UPGRADE | requester : " + req.session.authUser.username + ", code:" + req.body.code, 0);
 
-    db.codes.find({
-        code: req.body.code,
-        active: true
-    }, function(err, docs) {
-        if (err) {
-            log(chalk.bgRed.white("UPGRADE | " + err), 1);
-            res.json(genericErrorObject("Server error :("));
-        }
-        if (docs.length == 0) {
-            log("UPGRADE | unsuccessful: no such code", 0);
-            res.json(genericErrorObject("No such code exists."));
-        } else {
-            // adding granted benefit:
-            // space
-            if (docs[0].benefit == 0) {
-                db.users.update({
-                    username: req.session.authUser.username.toLowerCase()
-                }, {
-                    $inc: {
-                        totalSpace: docs[0].space,
-                        remainingSpace: docs[0].space
-                    }
-                }, {
-                    returnUpdatedDocs: true,
-                    multi: false
-                }, function(err, numAffected, affectedDocument) {
-                    if (err) {
-                        log("UPGRADE | " + err, 1);
-                    }
-                    // refreshing session
-                    req.session.authUser = affectedDocument;
-
-                    // res
-                    res.json(genericResponseObject("You have successfully expanded your space limit!"));
-                });
-                // admin status
-            } else if (docs[0].benefit == 1) {
-                db.users.update({
-                    username: req.session.authUser.username.toLowerCase()
-                }, {
-                    $set: {
-                        userStatus: 1
-                    }
-                }, {
-                    returnUpdatedDocs: true,
-                    multi: false
-                }, function(err, numAffected, affectedDocument) {
-                    if (err) {
-                        log("UPGRADE | " + err, 1);
-                    }
-                    // refreshing session
-                    req.session.authUser = affectedDocument;
-
-                    // res
-                    res.json(genericResponseObject("You are now an admin!"));
-                });
-            } else if (docs[0].benefit == 2) {
-                db.users.update({
-                    username: req.session.authUser.username.toLowerCase()
-                }, {
-                    $set: {
-                        accountStanding: 0
-                    }
-                }, {
-                    returnUpdatedDocs: true,
-                    multi: false
-                }, function(err, numAffected, affectedDocument) {
-                    if (err) {
-                        log("UPGRADE | " + err, 1);
-                    }
-                    // refreshing session
-                    req.session.authUser = affectedDocument;
-
-                    // res
-                    res.json(genericResponseObject("Your account standing has been cleared!"));
-                });
+    db.codes.loadDatabase(function(err) {
+        db.codes.find({
+            code: req.body.code,
+            active: true
+        }, function(err, docs) {
+            if (err) {
+                log(chalk.bgRed.white("UPGRADE | " + err), 1);
+                res.json(genericErrorObject("Server error :("));
             }
+            if (docs.length == 0) {
+                log("UPGRADE | unsuccessful: no such code", 0);
+                res.json(genericErrorObject("No such code exists."));
+            } else {
+                // adding granted benefit:
+                // space
+                if (docs[0].benefit == 0) {
+                    db.users.update({
+                        username: req.session.authUser.username.toLowerCase()
+                    }, {
+                        $inc: {
+                            totalSpace: docs[0].space,
+                            remainingSpace: docs[0].space
+                        }
+                    }, {
+                        returnUpdatedDocs: true,
+                        multi: false
+                    }, function(err, numAffected, affectedDocument) {
+                        if (err) {
+                            log("UPGRADE | " + err, 1);
+                        }
+                        // refreshing session
+                        req.session.authUser = affectedDocument;
 
+                        // res
+                        res.json(genericResponseObject("You have successfully expanded your space limit!"));
+                    });
+                    // admin status
+                } else if (docs[0].benefit == 1) {
+                    db.users.update({
+                        username: req.session.authUser.username.toLowerCase()
+                    }, {
+                        $set: {
+                            userStatus: 1
+                        }
+                    }, {
+                        returnUpdatedDocs: true,
+                        multi: false
+                    }, function(err, numAffected, affectedDocument) {
+                        if (err) {
+                            log("UPGRADE | " + err, 1);
+                        }
+                        // refreshing session
+                        req.session.authUser = affectedDocument;
 
-            // disable code
-            db.codes.update({
-                code: req.body.code
-            }, {
-                $set: {
-                    active: false
+                        // res
+                        res.json(genericResponseObject("You are now an admin!"));
+                    });
+                } else if (docs[0].benefit == 2) {
+                    db.users.update({
+                        username: req.session.authUser.username.toLowerCase()
+                    }, {
+                        $set: {
+                            accountStanding: 0
+                        }
+                    }, {
+                        returnUpdatedDocs: true,
+                        multi: false
+                    }, function(err, numAffected, affectedDocument) {
+                        if (err) {
+                            log("UPGRADE | " + err, 1);
+                        }
+                        // refreshing session
+                        req.session.authUser = affectedDocument;
+
+                        // res
+                        res.json(genericResponseObject("Your account standing has been cleared!"));
+                    });
                 }
-            }, {}, function(err, doc) {
-                if (err) {
-                    log("UPGRADE | " + err, 1);
-                }
-            });
 
-            log("UPGRADE | successful upgrade", 0);
-        }
+
+                // disable code
+                db.codes.update({
+                    code: req.body.code
+                }, {
+                    $set: {
+                        active: false
+                    }
+                }, {}, function(err, doc) {
+                    if (err) {
+                        log("UPGRADE | " + err, 1);
+                    }
+                });
+
+                log("UPGRADE | successful upgrade", 0);
+            }
+        });
     });
+
+
 });
 
 // route for account deletion

@@ -6,7 +6,7 @@ var db = {};
 db.codes = new Datastore({
     filename: 'db/codes',
     autoload: true,
-    corruptAlertThreshold: 0.5 //added for testing
+    corruptAlertThreshold: 1
 });
 
 
@@ -53,7 +53,7 @@ mainLoop: while (true) {
         case "4":
             var code = prompt('enter code:');
             var active = prompt('enter state (0 for inactive, 1 for active):');
-            db.codes.update({ code: code }, { $set: { active: active } }, {});
+            db.codes.update({ code: code }, { $set: { active: Boolean(active) } }, {});
             console.log(chalk.green("DONE!"));
             break;
         case "5":
