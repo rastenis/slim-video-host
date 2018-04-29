@@ -1644,8 +1644,8 @@ if (config.self_hosted == "1") {
         console.log("Listening for ACME tls-sni-01 challenges and serve app on", this.address());
     });
 } else {
-    app.listen(10700);
-    console.log('Server is listening on http://localhost:10700');
+    app.listen(config.port);
+    console.log('Server is listening on http://localhost:' + config.port);
 }
 
 
