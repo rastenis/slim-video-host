@@ -1,15 +1,21 @@
 <template>
   <div>
     <h1 class="title">Password reset</h1>
-    <el-card class='ResetForm' v-if="!$store.state.authUser">
-      <el-form label-position="top" :model="resetForm" label-width="100px" ref="tokenReqForm" :rules="formRules">
+    <el-card class="ResetForm" v-if="!$store.state.authUser">
+      <el-form
+        label-position="top"
+        :model="resetForm"
+        label-width="100px"
+        ref="tokenReqForm"
+        :rules="formRules"
+      >
         <el-form-item label="Email" prop="email">
           <el-input v-model="resetForm.email"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" plain @click="askForToken">Request reset</el-button>
         </el-form-item>
-      </el-form> 
+      </el-form>
     </el-card>
     <div v-else>
       <h1>You already have an account!</h1>
@@ -18,52 +24,53 @@
 </template>
 
 <script>
-
-import axios from 'axios';
+import axios from "axios";
 
 export default {
   data() {
     return {
       resetForm: {
-        email: ''
+        email: ""
       },
       formRules: {
-        email: [{
+        email: [
+          {
             required: true,
-            message: 'Please enter an email address',
-            trigger: 'change'
+            message: "Please enter an email address",
+            trigger: "change"
           },
           {
-            type: 'email',
-            message: 'Please enter a valid email address',
-            trigger: 'blur'
+            type: "email",
+            message: "Please enter a valid email address",
+            trigger: "blur"
           }
         ]
       }
-    }
+    };
   },
   methods: {
     async askForToken() {
-      this.$refs["tokenReqForm"].validate((valid) => {
+      this.$refs["tokenReqForm"].validate(valid => {
         if (valid) {
           axios({
-            url: 'https://cigari.ga/api/requestReset',
-            method: 'post',
-            credentials: 'same-origin',
+            url: "/api/requestReset",
+            method: "post",
+            credentials: "same-origin",
             data: {
-              email:this.resetForm.email
+              email: this.resetForm.email
             }
-          }
-          ).then(res=>{
-            this.$message({
-              type:res.data.meta.msgType,
-              message:res.data.meta.msg
+          })
+            .then(res => {
+              this.$message({
+                type: res.data.meta.msgType,
+                message: res.data.meta.msg
+              });
+            })
+            .catch(e => {
+              console.log(e);
             });
-          }).catch(e=>{
-            console.log(e);
-          });
         } else {
-          console.log('validation error');
+          console.log("validation error");
           return false;
         }
       });
@@ -71,17 +78,18 @@ export default {
   },
   mounted() {
     if (!this.$store.state.authUser) {
-      this.$store.state.activeTab = '9';
-    } else { //if user has an account, push him to dashboard
-      this.$nuxt._router.push("/dash")
+      this.$store.state.activeTab = "9";
+    } else {
+      //if user has an account, push him to dashboard
+      this.$nuxt._router.push("/dash");
     }
   },
-  layout: 'main',
-  transition:'mainTransition',
-  head:{
-    title:"Password Reset"
+  layout: "main",
+  transition: "mainTransition",
+  head: {
+    title: "Password Reset"
   }
-}
+};
 </script>
 
 

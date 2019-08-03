@@ -1,22 +1,21 @@
-const config = require('../../config.json');
-var Datastore = require('nedb');
-
+const config = require("../../config.json");
+var Datastore = require("nedb");
 
 module.exports = {
-    users: new Datastore({
-        filename: config.db_path + "users",
-        autoload: true
-    }),
-    codes: new Datastore({
-        filename: config.db_path + "codes",
-        corruptAlertThreshold: 1 // headway manually pridetiems kodams
-    }),
-    videos: new Datastore({
-        filename: config.db_path + "videos",
-        autoload: true
-    }),
-    ratings: new Datastore({
-        filename: config.db_path + "ratings",
-        autoload: true
-    })
-}
+  users: new Datastore({
+    filename: config.dbPath + "users",
+    autoload: true
+  }),
+  codes: new Datastore({
+    filename: config.dbPath + "codes",
+    corruptAlertThreshold: 1 // headway manually pridetiems kodams
+  }),
+  videos: new Datastore({
+    filename: config.dbPath + "videos",
+    autoload: true
+  }),
+  ratings: new Datastore({
+    filename: config.dbPath + "ratings",
+    autoload: true
+  })
+};
