@@ -3,9 +3,9 @@ var db = require("../external/db.js");
 const du = require("du");
 const chalk = require("chalk");
 const async = require("async");
-const exec = require("child_process").exec;
 const crypto = require("crypto");
 const path = require("path");
+const extractFrames = require("ffmpeg-extract-frames");
 
 // custom array diff prototype
 Array.prototype.diff = function(a) {
@@ -87,83 +87,57 @@ function preLaunch(config) {
       videoNames.push(video.videoID + video.extension);
       thumbnailNames.push(video.videoID + ".jpg");
 
-      async.waterfall(
-        [
-          function(done) {
-            fs.pathExists(
-              config.storagePath + video.videoID + video.extension,
-              (err, exists) => {
+      fs.pathExists(
+        path.resolve(config.storagePath, video.videoID + video.extension)
+      )
+        .then(exists => {
+          if (!exists) {
+            // removing ghost video and returning
+            db.videos.remove(
+              {
+                videoID: video.videoID
+              },
+              {},
+              function(err) {
                 if (err) {
                   console.log(err);
                 }
-                if (!exists) {
-                  //console.log(chalk.bgRed.black("ERROR! Video " + video.videoID + " has no file! Deleting..."));
-                  db.videos.remove(
-                    {
-                      videoID: video.videoID
-                    },
-                    {},
-                    function(err) {
-                      if (err) {
-                        console.log(err);
-                      }
-                    }
-                  );
-                }
-                done();
               }
             );
-          },
-          function(done) {
-            fs.pathExists(
-              path.resolve(
-                config.storagePath,
-                "thumbs",
-                video.videoID + ".jpg"
-              ),
-              (err, exists) => {
-                if (err) {
-                  console.log(err);
-                }
-                if (!exists) {
-                  //console.log(chalk.bgYellow.black("WARN! Video " + video.videoID + " has no thumbnail! Creating..."));
-                  //savinu thumbnail
-                  try {
-                    exec(
-                      `ffmpeg -i '${path.resolve(
-                        config.storagePath,
-                        video.videoID + video.extension
-                      )}' -ss 0 -vframes 1 '${path.resolve(
-                        config.storagePath,
-                        "thumbs",
-                        video.videoID + ".jpg"
-                      )}`,
-                      {
-                        cwd: __dirname
-                      },
-                      function(error, stdout, stderr) {
-                        if (error) {
-                          console.log(error);
-                        }
-                      }
-                    );
-                  } catch (e) {
-                    console.log(
-                      chalk.bgYellow.black("WARN") + "failed to save thumbnail "
-                    );
-                  }
-                }
-                done();
-              }
-            );
+            return;
           }
-        ],
-        function(err) {
-          if (err) {
-            console.log(err);
+
+          return fs.pathExists(
+            path.resolve(config.storagePath, "thumbs", video.videoID + ".jpg")
+          );
+        })
+        .then(exists => {
+          if (exists) {
+            return;
           }
-        }
-      );
+          // generating thumbnail if it does not exist
+          extractFrames({
+            input: path.resolve(
+              config.storagePath,
+              video.videoID + video.extension
+            ),
+            output: path.resolve(
+              config.storagePath,
+              "thumbs",
+              video.videoID + ".jpg"
+            ),
+            offsets: [0]
+          })
+            .then(r => {})
+            .catch(e => {
+              console.log(
+                chalk.bgYellow.black("WARN") + "failed to save thumbnail "
+              );
+            });
+        })
+        .catch(e => {
+          console.error("Could not generate thumbnails:", e);
+        });
     });
 
     fs.readdir(config.storagePath, (err, files) => {
@@ -187,6 +161,7 @@ function preLaunch(config) {
         }
       }
     });
+
     fs.readdir(config.storagePath + "thumbs/", (err, files) => {
       if (docs.length < files.length) {
         //console.log("WARN! Detected undeleted video thumbnails.");
