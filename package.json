@@ -29,6 +29,7 @@
     "express": "^4.16.2",
     "express-fileupload": "git+https://github.com/Scharkee/express-fileupload-membufferless",
     "express-session": "^1.15.6",
+    "ffmpeg-extract-frames": "^2.0.2",
     "figlet": "^1.2.0",
     "fs-extra": "^8.1.0",
     "greenlock-express": "^2.0.12",

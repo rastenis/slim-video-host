@@ -2,12 +2,14 @@ const chalk = require("chalk");
 const prompt = require("prompt-sync")({ sigint: true });
 const figlet = require("figlet");
 const crypto = require("crypto");
+const path = require("path");
+
 const fs = require("fs-extra");
 
 const configPath = "config.json";
 
 //base values (example config)
-let config = require("../../configExample.json");
+let config = require(path.resolve("configExample.json"));
 // all of this will be more or less sync
 
 // outputting intro splash
@@ -31,14 +33,14 @@ console.log(
   chalk.bgYellow.black("                                                    ")
 );
 
-config.storagePath = prompt(
-  `Enter video storage path (${config.storagePath}): `,
-  config.storagePath
-);
-
 config.spaceLimit = prompt(
   "Enter total space in bytes (100GB): ",
   config.spaceLimit
+);
+
+config.storagePath = prompt(
+  `Enter video storage path (${config.storagePath}): `,
+  config.storagePath
 );
 
 config.mail.username = prompt(`Enter gmail username:`);
@@ -104,9 +106,10 @@ fs.writeJSONSync(configPath, config);
 
 // base system settings
 console.log("Writing base system settings...");
-fs.ensureDirSync(config.dbPath + "system/");
+fs.ensureDirSync(path.resolve(config.dbPath, "system"));
 console.log("Generating session secret...");
-fs.writeJSONSync(config.dbPath + "system/settings.json", {
+
+fs.writeJSONSync(path.resolve(config.dbPath, "system", "settings.json"), {
   theme: 0,
   ss: crypto.randomBytes(23).toString("hex")
 });
