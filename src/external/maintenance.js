@@ -1,6 +1,5 @@
 const fs = require("fs-extra");
 var db = require("../external/db.js");
-const jsonfile = require("jsonfile");
 const du = require("du");
 const chalk = require("chalk");
 const async = require("async");
@@ -63,7 +62,7 @@ function preLaunch(config) {
     //make sure the directory exists first
     fs.ensureDirSync(config.dbPath + "system/");
     //write the change
-    jsonfile.writeFileSync(config.dbPath + "system/settings.json", defaults);
+    fs.writeJSONSync(config.dbPath + "system/settings.json", defaults);
   }
 
   let videoNames = [],

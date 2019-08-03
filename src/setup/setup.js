@@ -52,12 +52,12 @@ config.productionLogging = prompt(
 config.infiniteSessions =
   prompt(
     "Should infinite sessions be allowed when logging in? (Y/n): ",
-   "Y"
+    "Y"
   ).toUpperCase() == "Y"
     ? true
     : false;
 
-config.host = prompt(`Enter host url (${config.host}):`,config.host);
+config.host = prompt(`Enter host url (${config.host}):`, config.host);
 
 config.selfHosted =
   prompt(
@@ -71,8 +71,10 @@ if (config.selfHosted) {
   console.log(chalk.yellow("Showing additional TLS options:"));
   config.tls.email = prompt("Enter Letsencrypt email (your email): ");
   config.tls.tos =
-    prompt("Do you agree with the Letsencrypt TOS? (y/N): ","N").toUpperCase() ==
-    "Y"
+    prompt(
+      "Do you agree with the Letsencrypt TOS? (y/N): ",
+      "N"
+    ).toUpperCase() == "Y"
       ? true
       : false;
   if (!config.tls.tos) {

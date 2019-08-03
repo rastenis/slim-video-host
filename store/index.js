@@ -60,7 +60,7 @@ const store = () =>
               case 556:
                 throw new Error("Bad credentials.");
               case 555:
-                throw new Error("No user with those credentials found.");    
+                throw new Error("No user with those credentials found.");
               case 557:
                 throw new Error("Server error.");
               default:
