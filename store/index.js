@@ -50,20 +50,21 @@ const store = () =>
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({
+          data: JSON.stringify({
             username,
             password
           })
         })
           .then(res => {
-            if (res.status === 556) {
-              throw new Error("Bad credentials.");
-            } else if (res.status === 555) {
-              throw new Error("No user with those credentials found.");
-            } else if (res.status === 557) {
-              throw new Error("Server error.");
-            } else {
-              return res.json();
+            switch (res.status) {
+              case 556:
+                throw new Error("Bad credentials.");
+              case 555:
+                throw new Error("No user with those credentials found.");    
+              case 557:
+                throw new Error("Server error.");
+              default:
+                return res.data;
             }
           })
           .then(authUser => {
@@ -77,14 +78,14 @@ const store = () =>
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({
+          data: JSON.stringify({
             file
           })
         }).then(res => {
           if (res.status === 555) {
             throw new Error("Not a valid file to upload.");
           } else {
-            return res.json();
+            return res.data;
           }
         });
       },
@@ -96,7 +97,7 @@ const store = () =>
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({
+          data: JSON.stringify({
             username,
             password,
             passconf,
@@ -110,21 +111,17 @@ const store = () =>
                 throw {
                   msg: "An account with that username already exists."
                 };
-                break;
               case 598:
                 throw {
                   msg:
                     "The server cannot accept new registrations at this moment."
                 };
-                break;
               case 597:
                 throw {
                   msg: "An account with that email already exists."
                 };
-                break;
               default:
-                return res.json();
-                break;
+                return res.data;
             }
           })
           .then(authUser => {
