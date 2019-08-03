@@ -1323,45 +1323,49 @@ app.patch("/api/newLink", function(req, res) {
           },
           function(done) {
             // video file renaming
-            if (!returner.meta.error) {
-              fs.rename(
+            // TODO: ensure ownership
+            fs.rename(
+              path.resolve(
                 "static",
-                config.storagePath + sel.videoID + sel.extension,
+                config.storagePath,
+                sel.videoID + sel.extension
+              ),
+              path.resolve(
                 "static",
-                config.storagePath + newVideoID + sel.extension,
-                function(err) {
-                  if (err) {
-                    log("NEW LINKS | " + err, 1);
-                  }
-                  return done();
-                }
-              );
-            }
+                config.storagePath,
+                newVideoID + sel.extension
+              )
+            )
+              .then(r => {
+                return done();
+              })
+              .catch(e => {
+                log("NEW LINKS | " + e, 1);
+              });
           },
           function(done) {
             // thumbnail renaming
-            if (!returner.meta.error) {
-              fs.rename(
-                path.resolve(
-                  "static",
-                  config.storagePath,
-                  thumb,
-                  sel.videoID + ".jpg"
-                ),
-                path.resolve(
-                  "static",
-                  config.storagePath,
-                  thumb,
-                  newVideoID + ".jpg"
-                ),
-                function(err) {
-                  if (err) {
-                    log("NEW LINKS | " + err, 1);
-                  }
-                  return done();
-                }
-              );
-            }
+
+            fs.rename(
+              path.resolve(
+                "static",
+                config.storagePath,
+                "thumbs",
+                sel.videoID + ".jpg"
+              ),
+              path.resolve(
+                "static",
+                config.storagePath,
+                "thumbs",
+                newVideoID + ".jpg"
+              )
+            )
+              .then(r => {
+                return done();
+              })
+              .catch(e => {
+                log("NEW LINKS | " + e, 1);
+              });
           }
         ],
         function(err) {
