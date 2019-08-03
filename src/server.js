@@ -142,133 +142,134 @@ app.get("/api/cv/:id", function(req, res) {
   returner.ratings = {};
   returner.userRatings = {};
 
-  if (req.params.id) {
-    async.waterfall(
-      [
-        function(done) {
-          //immedately calling an update, won't add a view if the video doesn't exist.
-          db.videos.update(
+  if (!req.params.id) {
+    return res.json(genericErrorObject());
+  }
+
+  async.waterfall(
+    [
+      function(done) {
+        //immedately calling an update, won't add a view if the video doesn't exist.
+        db.videos.update(
+          {
+            videoID: req.params.id
+          },
+          {
+            $inc: {
+              views: 1
+            }
+          },
+          {
+            returnUpdatedDocs: true,
+            multi: false
+          },
+          function(err, numAffected, affectedDocument, upsert) {
+            if (!affectedDocument) {
+              log("FETCHING VIDEO | no such video!", 0);
+              returner.meta.error = 1;
+              return res.json(returner);
+            }
+            log(
+              "FETCHING VIDEO | added a view to video " +
+                affectedDocument.videoID,
+              0
+            );
+            affectedDocument.src =
+              "/" +
+              config.storagePath +
+              "/" +
+              req.params.id +
+              affectedDocument.extension;
+            //removing traces of the user that uploaded
+            delete affectedDocument.username;
+
+            returner.video = affectedDocument;
+            return done();
+          }
+        );
+      },
+      function(done) {
+        //check if requested video exists
+        let vidPath = path.resolve(
+          "static",
+          config.storagePath,
+          req.params.id + returner.video.extension
+        );
+
+        if (returner.video && fs.existsSync(vidPath)) {
+          return done();
+        }
+        //else just return it; no point in going forward
+        return res.json(returner);
+      },
+      function(done) {
+        if (req.body.user) {
+          db.ratings.find(
             {
+              username: req.body.user.username,
               videoID: req.params.id
             },
-            {
-              $inc: {
-                views: 1
-              }
-            },
-            {
-              returnUpdatedDocs: true,
-              multi: false
-            },
-            function(err, numAffected, affectedDocument, upsert) {
-              if (!affectedDocument) {
-                log("FETCHING VIDEO | no such video!", 0);
-                returner.meta.error = 1;
-              } else {
+            {},
+            function(err, docs) {
+              if (docs.length > 2 || docs.length < 0) {
                 log(
-                  "FETCHING VIDEO | added a view to video " +
-                    affectedDocument.videoID,
-                  0
+                  chalk.yellow("FETCHING VIDEO | RATING ERROR==========="),
+                  1
                 );
-                affectedDocument.src =
-                  "/videos/" + req.params.id + affectedDocument.extension;
-                //removing traces of the user that uploaded
-                delete affectedDocument.username;
-
-                returner.video = affectedDocument;
               }
-              done();
-            }
-          );
-        },
-        function(done) {
-          //check if requested video exists
+              returner.userRatings.liked = false;
+              returner.userRatings.disliked = false;
 
-          let path;
-
-          try {
-            path =
-              config.storagePath + req.params.id + returner.video.extension;
-          } catch (e) {
-            path = "/doesnt/exist";
-          }
-
-          if (returner.video && fs.existsSync(path)) {
-            done();
-          } else {
-            //else just return it; no point in going forward
-            return res.json(returner);
-          }
-        },
-        function(done) {
-          if (req.body.user) {
-            db.ratings.find(
-              {
-                username: req.body.user.username,
-                videoID: req.params.id
-              },
-              {},
-              function(err, docs) {
-                if (docs.length > 2 || docs.length < 0) {
-                  log(
-                    chalk.yellow("FETCHING VIDEO | RATING ERROR==========="),
-                    1
-                  );
+              //assigning likes/dislikes
+              docs.forEach(doc => {
+                if (doc.action == 0) {
+                  //disliked
+                  returner.userRatings.disliked = true;
+                } else if (doc.action == 1) {
+                  returner.userRatings.liked = true;
                 }
-                returner.userRatings.liked = false;
-                returner.userRatings.disliked = false;
+              });
 
-                //assigning likes/dislikes
-                docs.forEach(doc => {
-                  if (doc.action == 0) {
-                    //disliked
-                    returner.userRatings.disliked = true;
-                  } else if (doc.action == 1) {
-                    returner.userRatings.liked = true;
-                  }
-                });
-
-                done();
-              }
-            );
-          } else {
-            log("FETCHING VIDEO | anonymous viewer", 0);
+              done();
+            }
+          );
+        } else {
+          log("FETCHING VIDEO | anonymous viewer", 0);
+          done();
+        }
+      },
+      function(done) {
+        db.ratings.count(
+          {
+            action: 1, //like
+            videoID: returner.video.videoID
+          },
+          function(err, count) {
+            returner.ratings.likes = count;
             done();
           }
-        },
-        function(done) {
-          db.ratings.count(
-            {
-              action: 1, //like
-              videoID: returner.video.videoID
-            },
-            function(err, count) {
-              returner.ratings.likes = count;
-              done();
-            }
-          );
-        },
-        function(done) {
-          db.ratings.count(
-            {
-              action: 0, //dislike
-              videoID: returner.video.videoID
-            },
-            function(err, count) {
-              returner.ratings.dislikes = count;
-              done();
-            }
-          );
-        }
-      ],
-      function(err) {
-        if (err) {
-          log(err, 1);
-        }
-        return res.json(returner);
+        );
+      },
+      function(done) {
+        db.ratings.count(
+          {
+            action: 0, //dislike
+            videoID: returner.video.videoID
+          },
+          function(err, count) {
+            returner.ratings.dislikes = count;
+            done();
+          }
+        );
       }
-    );
-  }
+    ],
+    function(err) {
+      if (err) {
+        log(err, 1);
+      }
+      return res.json(returner);
+    }
+  );
 });
 
 // token checking route
@@ -870,8 +871,11 @@ app.get("/api/dash", function(req, res) {
       },
       function(docs, done) {
         docs.forEach(function(i, index) {
-          docs[index].thumbnailSrc =
-            "/videos/thumbs/" + docs[index].videoID + ".jpg";
+          docs[index].thumbnailSrc = path.join(
+            config.storagePath,
+            "thumbs",
+            docs[index].videoID + ".jpg"
+          );
           async.waterfall(
             [
               function(finished) {
@@ -1194,20 +1198,28 @@ app.delete("/api/deleteAccount", function(req, res) {
                 docs.forEach(video => {
                   try {
                     fs.unlink(
-                      config.storagePath + video.videoID + selection.extension
+                      path.resolve(
+                        "static",
+                        config.storagePath,
+                        video.videoID + video.extension
+                      )
                     );
                   } catch (err) {
                     log("ACCOUNT DELETION | " + err, 1);
                   }
                   try {
                     fs.unlink(
-                      config.storagePath + "thumbs/" + video.videoID + ".jpg"
+                      path.resolve(
+                        "static",
+                        config.storagePath,
+                        "thumbs",
+                        video.videoID + ".jpg"
+                      )
                     );
                   } catch (err) {
                     log("ACCOUNT DELETION | " + err, 1);
                   }
                 });
-                // deletion cycles wont be finished yet but who cares
                 done();
               }
             }
@@ -1313,13 +1325,15 @@ app.patch("/api/newLink", function(req, res) {
             // video file renaming
             if (!returner.meta.error) {
               fs.rename(
+                "static",
                 config.storagePath + sel.videoID + sel.extension,
+                "static",
                 config.storagePath + newVideoID + sel.extension,
                 function(err) {
                   if (err) {
                     log("NEW LINKS | " + err, 1);
                   }
-                  done();
+                  return done();
                 }
               );
             }
@@ -1328,13 +1342,23 @@ app.patch("/api/newLink", function(req, res) {
             // thumbnail renaming
             if (!returner.meta.error) {
               fs.rename(
-                config.storagePath + "thumbs/" + sel.videoID + ".jpg",
-                config.storagePath + "thumbs/" + newVideoID + ".jpg",
+                path.resolve(
+                  "static",
+                  config.storagePath,
+                  thumb,
+                  sel.videoID + ".jpg"
+                ),
+                path.resolve(
+                  "static",
+                  config.storagePath,
+                  thumb,
+                  newVideoID + ".jpg"
+                ),
                 function(err) {
                   if (err) {
                     log("NEW LINKS | " + err, 1);
                   }
-                  done();
+                  return done();
                 }
               );
             }
@@ -1521,9 +1545,11 @@ app.put("/api/finalizeUpload", function(req, res) {
                     // removing video from storage
                     try {
                       fs.unlink(
-                        config.storagePath +
-                          selection.videoID +
-                          selection.extension
+                        path.resolve(
+                          "static",
+                          config.storagePath,
+                          selection.videoID + selection.extension
+                        )
                       );
                     } catch (e) {
                       log("UPLOAD FINALIZATION | " + e, 1);
@@ -1531,10 +1557,12 @@ app.put("/api/finalizeUpload", function(req, res) {
                     // removing thumbnail
                     try {
                       fs.unlink(
-                        config.storagePath +
-                          "thumbs/" +
-                          selection.videoID +
-                          ".jpg"
+                        path.resolve(
+                          "static",
+                          config.storagePath,
+                          "thumbs",
+                          selection.videoID + ".jpg"
+                        )
                       );
                     } catch (e) {
                       log("UPLOAD FINALIZATION | " + e, 1);
@@ -1580,7 +1608,10 @@ app.post("/api/changeTheme", function(req, res) {
 
   if (req.session.authUser && req.session.authUser.userStatus == 1) {
     settings.theme = req.body.newTheme;
-    fs.writeJSONSync(config.dbPath + "system/settings.json", settings);
+    fs.writeJSONSync(
+      path.resolve(config.dbPath, "system", "settings.json"),
+      settings
+    );
 
     // return updated settings
     returner.newSettings = {};
@@ -1733,6 +1764,7 @@ app.delete("/api/removeVideo", function(req, res) {
                       // rm cached vid
                       try {
                         fs.remove(
+                          "static",
                           config.storagePath +
                             selection.videoID +
                             selection.extension,
@@ -1751,10 +1783,12 @@ app.delete("/api/removeVideo", function(req, res) {
                       // rm thumbnail
                       try {
                         fs.remove(
-                          config.storagePath +
-                            "thumbs/" +
-                            selection.videoID +
-                            ".jpg",
+                          path.resolve(
+                            "static",
+                            config.storagePath,
+                            "thumbs",
+                            selection.videoID + ".jpg"
+                          ),
                           function(err) {
                             if (err) {
                               log("VIDEO DELETION | " + err, 1);
@@ -1773,7 +1807,6 @@ app.delete("/api/removeVideo", function(req, res) {
                       if (req.session.authUser.userStatus != 1) {
                         req.session.authUser = affectedDocument;
                       }
-
                       done();
                     }
                   );
@@ -1796,12 +1829,11 @@ app.delete("/api/removeVideo", function(req, res) {
                         returner.meta.error = 0;
                         returner.meta.msg = "Successfully deleted video(s)!";
                         res.json(returner);
-                        done();
-                      } else {
-                        opCount++;
-
-                        done();
+                        return done();
                       }
+
+                      opCount++;
+                      return done();
                       //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant
                       //return errors from foreach async operations.
                     }
@@ -1879,7 +1911,7 @@ app.post("/api/upload", function(req, res) {
     [
       function(done) {
         // checking space first
-        du(path.resolve(config.storagePath), function(err, size) {
+        du(path.resolve("static", config.storagePath), function(err, size) {
           if (size >= config.spaceLimit) {
             log("UPLOAD | Max space exceeded! Interrupting download...", 1);
             returner = genericErrorObject(
@@ -1978,16 +2010,22 @@ app.post("/api/upload", function(req, res) {
                         return log("UPLOAD | " + err, 1);
                       }
                       req.files[file].mv(
-                        path.resolve(config.storagePath, videoID + extension),
+                        path.resolve(
+                          "static",
+                          config.storagePath,
+                          videoID + extension
+                        ),
                         function(err) {
                           //generating thumbnail
 
                           extractFrames({
                             input: path.resolve(
+                              "static",
                               config.storagePath,
                               videoID + extension
                             ),
                             output: path.resolve(
+                              "static",
                               config.storagePath,
                               "thumbs",
                               videoID + ".jpg"

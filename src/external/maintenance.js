@@ -16,28 +16,28 @@ Array.prototype.diff = function(a) {
 
 function preLaunch(config) {
   // make sure the designated video directory is up
-  fs.ensureDir(config.storagePath, err => {
+  fs.ensureDir(path.resolve("static", config.storagePath), err => {
     if (err) {
       console.log(err);
     }
   });
 
   // thumbnail dir too
-  fs.ensureDir(config.storagePath + "thumbs/", err => {
+  fs.ensureDir(path.resolve("static", config.storagePath, "thumbs"), err => {
     if (err) {
       console.log(err);
     }
   });
 
   // empties or creates a tmp dir for uploads
-  fs.emptyDir("static/tmp/", err => {
+  fs.emptyDir(path.resolve("static", "tmp"), err => {
     if (err) {
       console.log(err);
     }
   });
 
-  du(config.storagePath, function(err, size) {
-    if (size >= config.storagePath) {
+  du(path.resolve("static", config.storagePath), function(err, size) {
+    if (size >= config.spaceLimit) {
       console.log("WARNING! Max space exceeded!");
     }
   });
@@ -88,7 +88,11 @@ function preLaunch(config) {
       thumbnailNames.push(video.videoID + ".jpg");
 
       fs.pathExists(
-        path.resolve(config.storagePath, video.videoID + video.extension)
+        path.resolve(
+          "static",
+          config.storagePath,
+          video.videoID + video.extension
+        )
       )
         .then(exists => {
           if (!exists) {
@@ -108,7 +112,12 @@ function preLaunch(config) {
           }
 
           return fs.pathExists(
-            path.resolve(config.storagePath, "thumbs", video.videoID + ".jpg")
+            path.resolve(
+              "static",
+              config.storagePath,
+              "thumbs",
+              video.videoID + ".jpg"
+            )
           );
         })
         .then(exists => {
@@ -118,10 +127,12 @@ function preLaunch(config) {
           // generating thumbnail if it does not exist
           extractFrames({
             input: path.resolve(
+              "static",
               config.storagePath,
               video.videoID + video.extension
             ),
             output: path.resolve(
+              "static",
               config.storagePath,
               "thumbs",
               video.videoID + ".jpg"
@@ -131,7 +142,8 @@ function preLaunch(config) {
             .then(r => {})
             .catch(e => {
               console.log(
-                chalk.bgYellow.black("WARN") + "failed to save thumbnail "
+                chalk.bgYellow.black("WARN") + "failed to save thumbnail ",
+                e
               );
             });
         })
@@ -140,7 +152,7 @@ function preLaunch(config) {
         });
     });
 
-    fs.readdir(config.storagePath, (err, files) => {
+    fs.readdir(path.resolve("static", config.storagePath), (err, files) => {
       if (docs.length < files.length - 1) {
         //console.log("WARN! Detected undeleted video files.");
 
@@ -152,33 +164,42 @@ function preLaunch(config) {
         if (difference.length != 0) {
           difference.forEach(item => {
             //removing unneeded
-            fs.unlink(config.storagePath + item, function(err) {
-              if (err) {
-                console.log(err);
+            fs.unlink(
+              path.resolve("static", config.storagePath, item),
+              function(err) {
+                if (err) {
+                  console.log(err);
+                }
               }
-            });
+            );
           });
         }
       }
     });
 
-    fs.readdir(config.storagePath + "thumbs/", (err, files) => {
-      if (docs.length < files.length) {
-        //console.log("WARN! Detected undeleted video thumbnails.");
+    fs.readdir(
+      path.resolve("static", config.storagePath, "thumbs"),
+      (err, files) => {
+        if (docs.length < files.length) {
+          //console.log("WARN! Detected undeleted video thumbnails.");
 
-        let difference = files.diff(thumbnailNames);
-        if (difference.length != 0) {
-          difference.forEach(item => {
-            //removing unneeded
-            fs.unlink(config.storagePath + "thumbs/" + item, function(err) {
-              if (err) {
-                console.log(err);
-              }
+          let difference = files.diff(thumbnailNames);
+          if (difference.length != 0) {
+            difference.forEach(item => {
+              //removing unneeded
+              fs.unlink(
+                path.resolve("static", config.storagePath, "thumbs", item),
+                function(err) {
+                  if (err) {
+                    console.log(err);
+                  }
+                }
+              );
             });
-          });
+          }
         }
       }
-    });
+    );
   });
 }
 
