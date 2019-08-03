@@ -1,10 +1,10 @@
-const jsonfile = require("jsonfile");
 const chalk = require("chalk");
 const prompt = require("prompt-sync")({ sigint: true });
-const configPath = "config.json";
 const figlet = require("figlet");
 const crypto = require("crypto");
 const fs = require("fs-extra");
+
+const configPath = "config.json";
 
 //base values (example config)
 let config = require("../../configExample.json");
@@ -45,19 +45,19 @@ config.mail.username = prompt(`Enter gmail username:`);
 config.mail.password = prompt(`Enter gmail password: `, null, { echo: "*" });
 
 config.productionLogging = prompt(
-  "Select production logging mode (all/error/none): ",
+  "Select production logging mode [all/error/none] (none): ",
   config.productionLogging
 );
 
 config.infiniteSessions =
   prompt(
     "Should infinite sessions be allowed when logging in? (Y/n): ",
-    config.infiniteSessions
+   "Y"
   ).toUpperCase() == "Y"
     ? true
     : false;
 
-config.host = prompt(`Enter host url (${config.host}):`);
+config.host = prompt(`Enter host url (${config.host}):`,config.host);
 
 config.selfHosted =
   prompt(
@@ -71,7 +71,7 @@ if (config.selfHosted) {
   console.log(chalk.yellow("Showing additional TLS options:"));
   config.tls.email = prompt("Enter Letsencrypt email (your email): ");
   config.tls.tos =
-    prompt("Do you agree with the Letsencrypt TOS? (y/N): ").toUpperCase() ==
+    prompt("Do you agree with the Letsencrypt TOS? (y/N): ","N").toUpperCase() ==
     "Y"
       ? true
       : false;
@@ -96,14 +96,15 @@ if (config.selfHosted) {
   config.port = prompt(`Enter port (${config.port}): `, config.port);
 }
 
+console.log("Finished!");
 console.log("Writing config...");
-jsonfile.writeFileSync(configPath, config);
+fs.writeJSONSync(configPath, config);
 
 // base system settings
 console.log("Writing base system settings...");
 fs.ensureDirSync(config.dbPath + "system/");
 console.log("Generating session secret...");
-jsonfile.writeFileSync(config.dbPath + "system/settings.json", {
+fs.writeJSONSync(config.dbPath + "system/settings.json", {
   theme: 0,
   ss: crypto.randomBytes(23).toString("hex")
 });
