@@ -80,7 +80,6 @@ const store = () => new Vuex.Store({
                 })
                 .then((authUser) => {
                     commit('SET_USER', authUser);
-
                 })
         },
         upload({
