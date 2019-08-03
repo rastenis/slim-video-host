@@ -26,7 +26,7 @@ mainLoop: while (true) {
           [
             function(done) {
               //removing all videos + thumbnails
-              fs.remove(config.file_path, err => {
+              fs.remove(config.storagePath, err => {
                 if (err) {
                   console.log(err);
                 } else {

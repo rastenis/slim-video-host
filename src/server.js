@@ -40,10 +40,10 @@ var defaultTokenExpiry = 1800000; // 30 mins
 maintenance.preLaunch(config);
 
 // post maintenance requires
-var settings = require('../' + config.db_path + 'system/settings.json');
+var settings = require('../' + config.dbPath + 'system/settings.json');
 
 // optional cert generation
-if (config.self_hosted == "1") {
+if (config.selfHosted) {
     // returns an instance of node-greenlock with additional helper methods
     var lex = require('greenlock-express').create({
         server: 'production',
@@ -60,7 +60,7 @@ if (config.self_hosted == "1") {
                 opts.domains = config.tls.domains;
             } else {
                 opts.email = config.tls.email,
-                    opts.agreeTos = config.tls.agree_tos == "1";
+                    opts.agreeTos = config.tls.tos;
             }
             cb(null, {
                 options: opts,
@@ -84,8 +84,8 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: (config.self_hosted == "1"),
-        maxAge: config.infinite_sessions == "1" ? null : 24 * 60 * 60 * 1000 //24 hours or infinite, depending on the config
+        secure: (config.selfHosted),
+        maxAge: config.infiniteSessions ? null : 24 * 60 * 60 * 1000 //24 hours or infinite, depending on the config
     },
     store: new NedbStore({
         filename: 'db/persistance'
@@ -173,7 +173,7 @@ app.get('/api/cv/:id', function(req, res) {
             let path;
 
             try {
-                path = config.file_path + req.params.id + returner.video.extension;
+                path = config.storagePath + req.params.id + returner.video.extension;
             } catch (e) {
                 path = "/doesnt/exist";
             }
@@ -530,7 +530,7 @@ app.post('/api/register', function(req, res) {
         }, function(err, docs) {
             du('static/videos', function(err, size) {
                 log('REGISTRATION | The size of the video folder is:' + size + 'bytes', 0);
-                if (size >= config.total_space) {
+                if (size >= config.spaceLimit) {
                     enoughSpace = false;
                 }
                 done(null, docs, enoughSpace);
@@ -545,7 +545,7 @@ app.post('/api/register', function(req, res) {
                 error: 'An account with that username already exists.',
             });
         } else if (!enoughSpace) {
-            log(chalk.bgRed("REGISTRATION | Failed account creation (TOTAL_SPACE exceeded)"), 1);
+            log(chalk.bgRed("REGISTRATION | Failed account creation (spaceLimit exceeded)"), 1);
             res.status(598).json({
                 error: 'The server cannot accept new registrations at this moment.'
             });
@@ -918,12 +918,12 @@ app.delete('/api/deleteAccount', function(req, res) {
                 } else {
                     docs.forEach(video => {
                         try {
-                            fs.unlink(config.file_path + video.videoID + selection.extension);
+                            fs.unlink(config.storagePath + video.videoID + selection.extension);
                         } catch (err) {
                             log("ACCOUNT DELETION | " + err, 1);
                         }
                         try {
-                            fs.unlink(config.file_path + "thumbs/" + video.videoID + ".jpg");
+                            fs.unlink(config.storagePath + "thumbs/" + video.videoID + ".jpg");
                         } catch (err) {
                             log("ACCOUNT DELETION | " + err, 1);
                         }
@@ -965,7 +965,7 @@ app.patch('/api/newLink', function(req, res) {
         returner.newData = req.body.selection;
         req.body.selection.forEach((sel, index) => {
             let newVideoID = shortid.generate();
-            let newVidLink = prefixProtocol() + config.host_prefix + "/v/" + newVideoID;
+            let newVidLink = config.host + "/v/" + newVideoID;
 
             async.waterfall([function(done) {
                 db.videos.update({
@@ -1011,7 +1011,7 @@ app.patch('/api/newLink', function(req, res) {
             }, function(done) {
                 // video file renaming
                 if (!returner.meta.error) {
-                    fs.rename(config.file_path + sel.videoID + sel.extension, config.file_path + newVideoID + sel.extension, function(err) {
+                    fs.rename(config.storagePath + sel.videoID + sel.extension, config.storagePath + newVideoID + sel.extension, function(err) {
                         if (err) {
                             log("NEW LINKS | " + err, 1);
                         }
@@ -1021,7 +1021,7 @@ app.patch('/api/newLink', function(req, res) {
             }, function(done) {
                 // thumbnail renaming
                 if (!returner.meta.error) {
-                    fs.rename(config.file_path + "thumbs/" + sel.videoID + ".jpg", config.file_path + "thumbs/" + newVideoID + ".jpg", function(err) {
+                    fs.rename(config.storagePath + "thumbs/" + sel.videoID + ".jpg", config.storagePath + "thumbs/" + newVideoID + ".jpg", function(err) {
                         if (err) {
                             log("NEW LINKS | " + err, 1);
                         }
@@ -1171,13 +1171,13 @@ app.put('/api/finalizeUpload', function(req, res) {
                     }, function(err, numAffected, affectedDocument) {
                         // removing video from storage
                         try {
-                            fs.unlink(config.file_path + selection.videoID + selection.extension);
+                            fs.unlink(config.storagePath + selection.videoID + selection.extension);
                         } catch (e) {
                             log("UPLOAD FINALIZATION | " + e, 1);
                         }
                         // removing thumbnail
                         try {
-                            fs.unlink(config.file_path + "thumbs/" + selection.videoID + ".jpg");
+                            fs.unlink(config.storagePath + "thumbs/" + selection.videoID + ".jpg");
                         } catch (e) {
                             log("UPLOAD FINALIZATION | " + e, 1);
                         }
@@ -1216,7 +1216,7 @@ app.post('/api/changeTheme', function(req, res) {
 
     if (req.session.authUser && req.session.authUser.userStatus == 1) {
         settings.theme = req.body.newTheme;
-        jsonfile.writeFileSync(config.db_path + 'system/settings.json', settings);
+        jsonfile.writeFileSync(config.dbPath + 'system/settings.json', settings);
 
         // return updated settings
         returner.newSettings = {};
@@ -1301,7 +1301,7 @@ app.get('/api/getAdminStats', function(req, res) {
                 });
 
                 returner.stats.totalViews = totalViews;
-                returner.stats.totalSpaceA = config.total_space;
+                returner.stats.totalSpaceA = config.spaceLimit;
                 returner.stats.usedSpaceA = usedSpace.toFixed(2);
                 returner.videos = docs;
                 done();
@@ -1354,7 +1354,7 @@ app.delete('/api/removeVideo', function(req, res) {
                                     }
                                     // rm cached vid
                                     try {
-                                        fs.remove(config.file_path + selection.videoID + selection.extension, function(err) {
+                                        fs.remove(config.storagePath + selection.videoID + selection.extension, function(err) {
                                             if (err) {
                                                 log(("VIDEO DELETION | " + err), 1);
                                             }
@@ -1364,7 +1364,7 @@ app.delete('/api/removeVideo', function(req, res) {
                                     }
                                     // rm thumbnail
                                     try {
-                                        fs.remove(config.file_path + "thumbs/" + selection.videoID + ".jpg", function(err) {
+                                        fs.remove(config.storagePath + "thumbs/" + selection.videoID + ".jpg", function(err) {
                                             if (err) {
                                                 log(("VIDEO DELETION | " + err), 1);
                                             }
@@ -1465,7 +1465,7 @@ app.post('/api/upload', function(req, res) {
         async.waterfall([function(done) {
             // checking space first
             du('static/videos', function(err, size) {
-                if (size >= config.total_space) {
+                if (size >= config.spaceLimit) {
                     log('UPLOAD | Max space exceeded! Interrupting download...', 1);
                     returner = genericErrorObject("The server cannot accept videos at the moment. Try again later!");
                     returner.meta.msgType = "info";
@@ -1525,7 +1525,7 @@ app.post('/api/upload', function(req, res) {
                             } else {
                                 // dedam video i storage
                                 var videoID = shortid.generate();
-                                var vidLink = prefixProtocol() + config.host_prefix + "/v/" + videoID;
+                                var vidLink =config.host + "/v/" + videoID;
                                 log(chalk.green("UPLOAD | storing video!"), 0);
 
                                 db.videos.insert({
@@ -1544,10 +1544,10 @@ app.post('/api/upload', function(req, res) {
                                     if (err) {
                                         log("UPLOAD | " + err, 1);
                                     } else {
-                                        req.files[file].mv(config.file_path + videoID + extension, function(err) {
+                                        req.files[file].mv(config.storagePath + videoID + extension, function(err) {
                                             //savinu thumbnail
                                             try {
-                                                exec("ffmpeg -i '../" + config.file_path + videoID + extension + "' -ss 0 -vframes 1 '../" + config.file_path + "thumbs/" + videoID + ".jpg'", {
+                                                exec("ffmpeg -i '../" + config.storagePath + videoID + extension + "' -ss 0 -vframes 1 '../" + config.storagePath + "thumbs/" + videoID + ".jpg'", {
                                                     cwd: __dirname
                                                 }, function(err, stdout, stderr) {
                                                     if (err) {
@@ -1624,7 +1624,7 @@ if (nuxt_config.dev) {
 
 app.use(nuxt.render);
 
-if (config.self_hosted == "1") {
+if (config.selfHosted) {
     // handles acme-challenge and redirects to https
     require('http').createServer(lex.middleware(require('redirect-https')())).listen(80, function() {
         console.log("Listening for ACME http-01 challenges on", this.address());
@@ -1667,9 +1667,9 @@ function hashUpPass(pass) {
 
 // logger
 function log(message, type) {
-    if (config.production_logging === "all" || process.env.NODE_ENV !== 'production') {
+    if (config.productionLogging === "all" || process.env.NODE_ENV !== 'production') {
         console.log(message);
-    } else if (config.production_logging === "error" && type === 1) {
+    } else if (config.productionLogging === "error" && type === 1) {
         console.log(message);
     }
 }
@@ -1693,8 +1693,4 @@ function genericErrorObject(message) {
             msg: message ? message : "An error has occured."
         }
     };
-}
-
-function prefixProtocol() {
-    return config.self_hosted == "1" ? "https://" : "http://";
 }

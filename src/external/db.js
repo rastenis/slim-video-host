@@ -3,19 +3,19 @@ var Datastore = require("nedb");
 
 module.exports = {
   users: new Datastore({
-    filename: config.db_path + "users",
+    filename: config.dbPath + "users",
     autoload: true
   }),
   codes: new Datastore({
-    filename: config.db_path + "codes",
+    filename: config.dbPath + "codes",
     corruptAlertThreshold: 1 // headway manually pridetiems kodams
   }),
   videos: new Datastore({
-    filename: config.db_path + "videos",
+    filename: config.dbPath + "videos",
     autoload: true
   }),
   ratings: new Datastore({
-    filename: config.db_path + "ratings",
+    filename: config.dbPath + "ratings",
     autoload: true
   })
 };

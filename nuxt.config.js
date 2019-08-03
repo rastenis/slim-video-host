@@ -27,8 +27,8 @@ module.exports = {
   axios: {
     // proxyHeaders: false
   },
-  env:{
-    baseUrl:config.host_prefix
+  env: {
+    baseUrl: config.host
   },
   loading: {
     color: themes[themes.current]

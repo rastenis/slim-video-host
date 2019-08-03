@@ -16,14 +16,14 @@ Array.prototype.diff = function(a) {
 
 function preLaunch(config) {
   // make sure the designated video directory is up
-  fs.ensureDir(config.file_path, err => {
+  fs.ensureDir(config.storagePath, err => {
     if (err) {
       console.log(err);
     }
   });
 
   // thumbnail dir too
-  fs.ensureDir(config.file_path + "thumbs/", err => {
+  fs.ensureDir(config.storagePath + "thumbs/", err => {
     if (err) {
       console.log(err);
     }
@@ -36,15 +36,15 @@ function preLaunch(config) {
     }
   });
 
-  du(config.file_path, function(err, size) {
-    if (size >= config.total_space) {
+  du(config.storagePath, function(err, size) {
+    if (size >= config.storagePath) {
       console.log("WARNING! Max space exceeded!");
     }
   });
 
   // checking if settings exist & creating them if not
   try {
-    let settings = require("../../" + config.db_path + "system/settings.json");
+    let settings = require("../../" + config.dbPath + "system/settings.json");
     if (
       settings !== undefined ||
       settings.theme !== undefined ||
@@ -61,9 +61,9 @@ function preLaunch(config) {
     };
 
     //make sure the directory exists first
-    fs.ensureDirSync(config.db_path + "system/");
+    fs.ensureDirSync(config.dbPath + "system/");
     //write the change
-    jsonfile.writeFileSync(config.db_path + "system/settings.json", defaults);
+    jsonfile.writeFileSync(config.dbPath + "system/settings.json", defaults);
   }
 
   let videoNames = [],
@@ -83,7 +83,7 @@ function preLaunch(config) {
           [
             function(done) {
               fs.pathExists(
-                config.file_path + video.videoID + video.extension,
+                config.storagePath + video.videoID + video.extension,
                 (err, exists) => {
                   if (err) {
                     console.log(err);
@@ -108,7 +108,7 @@ function preLaunch(config) {
             },
             function(done) {
               fs.pathExists(
-                config.file_path + "thumbs/" + video.videoID + ".jpg",
+                config.storagePath + "thumbs/" + video.videoID + ".jpg",
                 (err, exists) => {
                   if (err) {
                     console.log(err);
@@ -119,11 +119,11 @@ function preLaunch(config) {
                     try {
                       exec(
                         "ffmpeg -i '../../" +
-                          config.file_path +
+                          config.storagePath +
                           video.videoID +
                           video.extension +
                           "' -ss 0 -vframes 1 '../../" +
-                          config.file_path +
+                          config.storagePath +
                           "thumbs/" +
                           video.videoID +
                           ".jpg'",
@@ -156,7 +156,7 @@ function preLaunch(config) {
         );
       });
 
-      fs.readdir(config.file_path, (err, files) => {
+      fs.readdir(config.storagePath, (err, files) => {
         if (docs.length < files.length - 1) {
           //console.log("WARN! Detected undeleted video files.");
 
@@ -168,7 +168,7 @@ function preLaunch(config) {
           if (difference.length != 0) {
             difference.forEach(item => {
               //removing unneeded
-              fs.unlink(config.file_path + item, function(err) {
+              fs.unlink(config.storagePath + item, function(err) {
                 if (err) {
                   console.log(err);
                 }
@@ -177,7 +177,7 @@ function preLaunch(config) {
           }
         }
       });
-      fs.readdir(config.file_path + "thumbs/", (err, files) => {
+      fs.readdir(config.storagePath + "thumbs/", (err, files) => {
         if (docs.length < files.length) {
           //console.log("WARN! Detected undeleted video thumbnails.");
 
@@ -185,7 +185,7 @@ function preLaunch(config) {
           if (difference.length != 0) {
             difference.forEach(item => {
               //removing unneeded
-              fs.unlink(config.file_path + "thumbs/" + item, function(err) {
+              fs.unlink(config.storagePath + "thumbs/" + item, function(err) {
                 if (err) {
                   console.log(err);
                 }

@@ -1,18 +1,19 @@
 {
-  "file_path": "static/videos/",
-  "host_prefix": "yourHostname.domain",
-  "total_space": 100000000000,
-  "production_logging": "none",
-  "port": 10700,
-  "self_hosted": "0",
+  "storagePath": "static/videos/",
+  "host": "http://example.com",
+  "spaceLimit": 100000000000,
+  "productionLogging": "none",
+  "port": 3000,
+  "selfHosted": false,
   "tls": {
     "email": "email@example.com",
-    "domains": ["domain1.com", "domain2.com"]
+    "domains": ["domain1.com", "domain2.com"],
+    "tos": false
   },
   "mail": {
     "username": "something@gmail.com",
     "password": "password"
   },
-  "db_path": "db/",
-  "infinite_sessions": "1"
+  "dbPath": "db/",
+  "infiniteSessions": true
 }

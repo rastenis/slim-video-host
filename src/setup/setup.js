@@ -31,45 +31,52 @@ console.log(
   chalk.bgYellow.black("                                                    ")
 );
 
-config.file_path = prompt(
-  "Enter video storage path (ENTER for default): ",
-  config.file_path
+config.storagePath = prompt(
+  `Enter video storage path (${config.storagePath}): `,
+  config.storagePath
 );
 
-config.total_space = prompt(
-  "Enter total space in bytes (ENTER for 100GB as default): ",
-  config.total_space
+config.spaceLimit = prompt(
+  "Enter total space in bytes (100GB): ",
+  config.spaceLimit
 );
 
-config.mail.username = prompt("Enter gmail username: ");
+config.mail.username = prompt(`Enter gmail username:`);
+config.mail.password = prompt(`Enter gmail password: `, null, { echo: "*" });
 
-config.mail.password = prompt("Enter gmail password: ", null, { echo: "*" });
-
-config.production_logging = prompt(
+config.productionLogging = prompt(
   "Select production logging mode (all/error/none): ",
-  config.production_logging
+  config.productionLogging
 );
 
-config.infinite_sessions = prompt(
-  "Should infinite sessions be allowed when logging in? (1:yes, 0:no): ",
-  config.infinite_sessions
-);
+config.infiniteSessions =
+  prompt(
+    "Should infinite sessions be allowed when logging in? (Y/n): ",
+    config.infiniteSessions
+  ).toUpperCase() == "Y"
+    ? true
+    : false;
 
-console.log("Enter video link generation prefix,");
-config.host_prefix = prompt("(Example: " + config.host_prefix + "): ");
+config.host = prompt(`Enter host url (${config.host}):`);
 
-config.self_hosted = prompt(
-  "Independant TLS? (will require ports 80 and 443) (1:yes, 0:no): "
-);
+config.selfHosted =
+  prompt(
+    "Enable TLS certificate generation? (will require ports 80 and 443) (y/N): ",
+    "N"
+  ).toUpperCase() == "Y"
+    ? true
+    : false;
 
-if (config.self_hosted == "1") {
+if (config.selfHosted) {
   console.log(chalk.yellow("Showing additional TLS options:"));
   config.tls.email = prompt("Enter Letsencrypt email (your email): ");
-  config.tls.agree_tos = prompt(
-    "Do you agree with the Letsencrypt TOS? (1:yes, 0:no): "
-  );
-  if (config.tls.agree_tos == "0") {
-    config.self_hosted = false;
+  config.tls.tos =
+    prompt("Do you agree with the Letsencrypt TOS? (y/N): ").toUpperCase() ==
+    "Y"
+      ? true
+      : false;
+  if (!config.tls.tos) {
+    config.selfHosted = false;
     console.log(chalk.yellow("Reverting..."));
   } else {
     let current = 0;
@@ -86,8 +93,20 @@ if (config.self_hosted == "1") {
     }
   }
 } else {
-  config.port = prompt("Enter port (ENTER for default 10700): ", config.port);
+  config.port = prompt(`Enter port (${config.port}): `, config.port);
 }
+
+console.log("Writing config...");
+jsonfile.writeFileSync(configPath, config);
+
+// base system settings
+console.log("Writing base system settings...");
+fs.ensureDirSync(config.dbPath + "system/");
+console.log("Generating session secret...");
+jsonfile.writeFileSync(config.dbPath + "system/settings.json", {
+  theme: 0,
+  ss: crypto.randomBytes(23).toString("hex")
+});
 
 console.log(
   chalk.bgYellow.black("                                                    ")
@@ -100,12 +119,3 @@ console.log(
 console.log(
   chalk.bgYellow.black("                                                    ")
 );
-
-jsonfile.writeFileSync(configPath, config);
-
-// base system settings
-fs.ensureDirSync(config.db_path + "system/");
-jsonfile.writeFileSync(config.db_path + "system/settings.json", {
-  theme: 0,
-  ss: crypto.randomBytes(23).toString("hex")
-});
