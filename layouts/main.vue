@@ -1,105 +1,144 @@
 <template>
   <div :style="theme.main">
-    <el-menu v-if="!$store.state.authUser" class="nav" mode="horizontal" :background-color="theme.nav['backgroundColor']" :text-color="theme.nav['textColor']" :active-text-color="theme.nav['activeTextColor']" :default-active="$store.state.activeTab" @select="handleSelect">
+    <el-menu
+      v-if="!$store.state.authUser"
+      class="nav"
+      mode="horizontal"
+      :background-color="theme.nav['backgroundColor']"
+      :text-color="theme.nav['textColor']"
+      :active-text-color="theme.nav['activeTextColor']"
+      :default-active="$store.state.activeTab"
+      @select="handleSelect"
+    >
       <el-menu-item index="1">Intro</el-menu-item>
       <el-menu-item index="2" class="pRight">Register</el-menu-item>
     </el-menu>
 
-    <el-menu v-else-if="$store.state.authUser.userStatus==1" class="nav" mode="horizontal" :background-color="theme.nav['backgroundColor']" :text-color="theme.nav['textColor']" :active-text-color="theme.nav['activeTextColor']" :default-active="$store.state.activeTab" @select="handleSelect">
+    <el-menu
+      v-else-if="$store.state.authUser.userStatus==1"
+      class="nav"
+      mode="horizontal"
+      :background-color="theme.nav['backgroundColor']"
+      :text-color="theme.nav['textColor']"
+      :active-text-color="theme.nav['activeTextColor']"
+      :default-active="$store.state.activeTab"
+      @select="handleSelect"
+    >
       <el-menu-item index="1">
-         <nuxt-link to="/" >Intro</nuxt-link>
+        <nuxt-link to="/">Intro</nuxt-link>
       </el-menu-item>
       <el-menu-item index="2">Admin Panel</el-menu-item>
       <el-menu-item index="4" class="pRight">Logout</el-menu-item>
       <el-menu-item index="5" class="pRight">Settings</el-menu-item>
     </el-menu>
 
-    <el-menu v-else class="nav" mode="horizontal" :background-color="theme.nav['backgroundColor']" :text-color="theme.nav['textColor']" :active-text-color="theme.nav['activeTextColor']" :default-active="$store.state.activeTab" @select="handleSelect">
+    <el-menu
+      v-else
+      class="nav"
+      mode="horizontal"
+      :background-color="theme.nav['backgroundColor']"
+      :text-color="theme.nav['textColor']"
+      :active-text-color="theme.nav['activeTextColor']"
+      :default-active="$store.state.activeTab"
+      @select="handleSelect"
+    >
       <el-menu-item index="1">
-         <nuxt-link to="/" >Intro</nuxt-link>
+        <nuxt-link to="/">Intro</nuxt-link>
       </el-menu-item>
       <el-menu-item index="2">
         <span>Dashboard</span>
-        <el-badge style="margin-top:-2h; margin-left:0.5vw;" :value="$store.state.newUploadNotif">
-        </el-badge>
+        <el-badge style="margin-top:-2h; margin-left:0.5vw;" :value="$store.state.newUploadNotif"></el-badge>
       </el-menu-item>
       <el-menu-item index="3">Upload</el-menu-item>
       <el-menu-item index="4" class="pRight">Logout</el-menu-item>
       <el-menu-item index="5" class="pRight">Profile</el-menu-item>
     </el-menu>
     <div :style="theme.containerTheme" class="container">
-      <nuxt/>
+      <nuxt />
     </div>
   </div>
 </template>
 
 <script>
-  export default {
-    data() {
-      return {
-      };
-    },
-    computed:{
-      theme(){
-        if (this.$store.state.settings.loaded) {
-          return this.$store.state.settings.theme.data;
-        }else{
-          return {main: {"position": "absolute","top": 0,"left": 0,"width": "100%","min-height": "100%","background": "#f0f1e7"},nav: {"backgroundColor": "#545c64","textColor": "#fff","activeTextColor": "#ffd04b"},containerTheme:{"background": "#e6e7e8"}};
-        }
+export default {
+  data() {
+    return {};
+  },
+  computed: {
+    theme() {
+      if (this.$store.state.settings.loaded) {
+        return this.$store.state.settings.theme.data;
+      } else {
+        return {
+          main: {
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            "min-height": "100%",
+            background: "#f0f1e7"
+          },
+          nav: {
+            backgroundColor: "#545c64",
+            textColor: "#fff",
+            activeTextColor: "#ffd04b"
+          },
+          containerTheme: { background: "#e6e7e8" }
+        };
       }
-    },
-    methods: {
-      handleSelect(key, keyPath) {
-        switch (key) {
-          case "1":
-            this.$nuxt._router.push("/")
-            break;
-          case "2":
-            if (this.$store.state.authUser) {
-              this.$nuxt._router.push("/dash")
-              this.$store.state.activeTab = '2';
-            } else {
-              this.$nuxt._router.push("/regg")
-              this.$store.state.activeTab = '2';
-            }
-            break;
-          case "3":
-            this.$nuxt._router.push("/upload")
-            this.$store.state.activeTab = '3';
-            break;
-          case "4":
-            this.logout();
-            break;
-          case "5":
-            if (this.$store.state.authUser.userStatus==1) {
-              this.$nuxt._router.push("/settings");
-            }else{
-              this.$nuxt._router.push("/profile")
-            }
-            this.$store.state.activeTab = '5';
-            break;
-          default:
-            console.log("invalid nav choice");
-            break;
-        }
-      },
-      async logout() {
-        try {
-          await this.$store.dispatch('logout');
-          this.$nuxt._router.push("/")
-        } catch (e) {
-          this.formError = e.message
-        }
-      }
-    },
-    created: function () {
-    },
-    head:{
-      meta:[
-        { property: "viewport",  content:"width=device-width, initial-scale=1.0"}
-      ]
     }
+  },
+  methods: {
+    handleSelect(key, keyPath) {
+      switch (key) {
+        case "1":
+          this.$nuxt._router.push("/");
+          break;
+        case "2":
+          if (this.$store.state.authUser) {
+            this.$nuxt._router.push("/dash");
+            this.$store.state.activeTab = "2";
+          } else {
+            this.$nuxt._router.push("/regg");
+            this.$store.state.activeTab = "2";
+          }
+          break;
+        case "3":
+          this.$nuxt._router.push("/upload");
+          this.$store.state.activeTab = "3";
+          break;
+        case "4":
+          this.logout();
+          break;
+        case "5":
+          if (this.$store.state.authUser.userStatus == 1) {
+            this.$nuxt._router.push("/settings");
+          } else {
+            this.$nuxt._router.push("/profile");
+          }
+          this.$store.state.activeTab = "5";
+          break;
+        default:
+          console.log("invalid nav choice");
+          break;
+      }
+    },
+    async logout() {
+      try {
+        await this.$store.dispatch("logout");
+        this.$nuxt._router.push("/");
+      } catch (e) {
+        this.formError = e.message;
+      }
+    }
+  },
+  created: function() {},
+  head: {
+    meta: [
+      { property: "viewport", content: "width=device-width, initial-scale=1.0" }
+    ]
   }
+};
 </script>
 
 

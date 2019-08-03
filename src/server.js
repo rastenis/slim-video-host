@@ -28,7 +28,6 @@ const path = require('path');
 const themes = require('../static/style/themes');
 const jsonfile = require('jsonfile');
 
-
 // removed _ and - from the generator because of issues with nuxt dynamic routing
 shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
 
@@ -93,7 +92,6 @@ app.use(session({
     })
 }));
 
-
 // post for the login procedure
 app.post('/api/login', function(req, res) {
     log("LOGIN | requester: " + req.body.username, 0);
@@ -131,7 +129,6 @@ app.post('/api/login', function(req, res) {
         }
     });
 });
-
 
 // video fetch route
 app.get('/api/cv/:id', function(req, res) {
@@ -600,7 +597,6 @@ app.post('/api/register', function(req, res) {
                         });
                     });
 
-
                 },
                 function(code, done) {
                     // adding code benefits
@@ -749,7 +745,6 @@ app.get('/api/settings', function(req, res) {
     return res.json(returner);
 });
 
-
 // route for storage upgrades
 app.post('/api/upgrade', function(req, res) {
 
@@ -835,7 +830,6 @@ app.post('/api/upgrade', function(req, res) {
                     });
                 }
 
-
                 // disable code
                 db.codes.update({
                     code: req.body.code
@@ -853,7 +847,6 @@ app.post('/api/upgrade', function(req, res) {
             }
         });
     });
-
 
 });
 
@@ -1607,7 +1600,6 @@ app.post('/api/upload', function(req, res) {
     }
 });
 
-
 // removing usre from req.session on logout
 app.post('/api/logout', function(req, res) {
     delete req.session.authUser;
@@ -1647,7 +1639,6 @@ if (config.self_hosted == "1") {
     app.listen(config.port);
     console.log('Server is listening on http://localhost:' + config.port);
 }
-
 
 // used once at login as a precaution 
 function performSecurityChecks(docs) {

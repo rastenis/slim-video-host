@@ -1,7 +1,6 @@
 <template>
   <div class="hiddenOverflow" @keyup.enter="activateLogin(true)">
-    <div :style="background" ref="introBCG">
-    </div>
+    <div :style="background" ref="introBCG"></div>
     <!-- both the "welcome back" and "login" buttons -->
     <transition name="fadeUp" :duration="{ enter: 1000, leave: 20 }" appear>
       <a class="introMainButton" @click="activateLogin(true)" v-show="!showLogin">
@@ -15,14 +14,36 @@
         <el-form v-on:submit.prevent="login" class="formField" size="small" autocomplete="on">
           <p class="error" v-if="formError">{{ formError }}</p>
           <el-form-item prop="username">
-            <input class="substituteInput topField" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Username" autocomplete="username" type="text" v-model="form.username" name="username"/>
+            <input
+              class="substituteInput topField"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              placeholder="Username"
+              autocomplete="username"
+              type="text"
+              v-model="form.username"
+              name="username"
+            />
           </el-form-item>
           <el-form-item prop="password">
-            <input class="substituteInput bottomField" @keydown.enter="login" placeholder="Password" type="password" v-model="form.password" autocomplete="current-password" name="password" />
+            <input
+              class="substituteInput bottomField"
+              @keydown.enter="login"
+              placeholder="Password"
+              type="password"
+              v-model="form.password"
+              autocomplete="current-password"
+              name="password"
+            />
           </el-form-item>
           <el-form-item>
             <el-button class="loginButton" type="submit" @click="login">Login</el-button>
-            <a type="text" @click="$store.app.router.push('/reset')" class="forgotPasswordLink">Forgot your password?</a>                      
+            <a
+              type="text"
+              @click="$store.app.router.push('/reset')"
+              class="forgotPasswordLink"
+            >Forgot your password?</a>
           </el-form-item>
         </el-form>
       </div>
@@ -37,84 +58,85 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from "axios";
 
 export default {
   data() {
     return {
       intro: {
-        backgroundImage: '',
+        backgroundImage: ""
       },
       form: {
-        username: '',
-        password: ''
+        username: "",
+        password: ""
       },
       formError: null,
       showLogin: false,
-      gifTags:['psychedelic','trippy','abstract','3d']
-    }
+      gifTags: ["psychedelic", "trippy", "abstract", "3d"]
+    };
   },
-  computed:{
+  computed: {
     // used to make both blur and the gif dynamic
-    background(){
+    background() {
       return {
-        position: 'absolute',
-        top: '0',
-        left: '0',
-        width: '100%',
-        height: '100%',
+        position: "absolute",
+        top: "0",
+        left: "0",
+        width: "100%",
+        height: "100%",
         backgroundImage: this.intro.backgroundImage,
-        backgroundSize: 'cover',
-        '-webkit-background-size': 'cover',
-        '-moz-background-size': 'cover',
-        '-o-background-size': 'cover',
-        'background-size': 'cover',
-        'z-index': -1,
-        filter: this.showLogin?'blur(10px)':'',
-        transform: 'scale(1.05)'
-      }
+        backgroundSize: "cover",
+        "-webkit-background-size": "cover",
+        "-moz-background-size": "cover",
+        "-o-background-size": "cover",
+        "background-size": "cover",
+        "z-index": -1,
+        filter: this.showLogin ? "blur(10px)" : "",
+        transform: "scale(1.05)"
+      };
     }
   },
   methods: {
     activateLogin(bool) {
       if (!this.$store.state.authUser) {
         this.showLogin = bool;
-      } else { //user pressed "welcome back". Redirect to dashboard
-        this.$nuxt._router.push("/dash")
-        this.$store.state.activeTab = '2';
+      } else {
+        //user pressed "welcome back". Redirect to dashboard
+        this.$nuxt._router.push("/dash");
+        this.$store.state.activeTab = "2";
       }
     },
-    handleListener(event){
-      if (event.keyCode==13) {
+    handleListener(event) {
+      if (event.keyCode == 13) {
         this.activateLogin(true);
       }
       // registration hotkey
-      if (event.altKey&&event.keyCode==82) {
+      if (event.altKey && event.keyCode == 82) {
         this.redirectToRegister();
       }
     },
     redirectToRegister() {
-      this.$nuxt._router.push("/regg")
-      this.$store.state.activeTab = '2';
+      this.$nuxt._router.push("/regg");
+      this.$store.state.activeTab = "2";
     },
     async login() {
       try {
-        await this.$store.dispatch('login', {
+        await this.$store.dispatch("login", {
           username: this.form.username,
           password: this.form.password
-        })
-        this.form.username = ''
-        this.form.password = ''
-        this.formError = null
-        this.$nuxt._router.push("/dash")
-        this.$store.state.activeTab = '2';
+        });
+        this.form.username = "";
+        this.form.password = "";
+        this.formError = null;
+        this.$nuxt._router.push("/dash");
+        this.$store.state.activeTab = "2";
       } catch (e) {
         this.$message.error(e.message);
       }
     },
     async logout() {
       try {
-        await this.$store.dispatch('logout')
+        await this.$store.dispatch("logout");
       } catch (e) {
         this.$message.error(e.message);
       }
@@ -122,27 +144,37 @@ export default {
   },
   created() {
     /// choosing a random tag and retrieving a gif
-    let randomTag = this.gifTags[Math.floor(Math.random()*this.gifTags.length)];
-    axios.get('https://api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag='+randomTag)
-      .then((res) => {
-        this.intro.backgroundImage = 'url(' + res.data.data.image_original_url + ')';
+    let randomTag = this.gifTags[
+      Math.floor(Math.random() * this.gifTags.length)
+    ];
+    axios
+      .get(
+        "https://api.giphy.com/v1/gifs/random?api_key=jx9U8gsKgM80au8DRAUhYlaWYqibA4AO&tag=" +
+          randomTag
+      )
+      .then(res => {
+        this.intro.backgroundImage =
+          "url(" + res.data.data.image_original_url + ")";
       })
-      .catch(e=>{});
+      .catch(e => {});
     // listener for various key combos
     if (process.browser) {
-      window.addEventListener('keyup', event=>{this.handleListener(event)});
+      window.addEventListener("keyup", event => {
+        this.handleListener(event);
+      });
     }
   },
-  destroyed(){
+  destroyed() {
     if (process.browser) {
-      window.removeEventListener('keyup', event=>{this.handleListener(event)});
+      window.removeEventListener("keyup", event => {
+        this.handleListener(event);
+      });
     }
   },
-  head:{
-    title:"Welcome"
+  head: {
+    title: "Welcome"
   }
-}
-
+};
 </script>
 
 <style scoped>
@@ -344,7 +376,6 @@ a:hover {
   font-size: 10vmin !important;
   transform: translate(0, 3vmin) !important;
 }
-
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,

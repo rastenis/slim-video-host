@@ -1,24 +1,20 @@
 <template>
   <div class="main">
-    <nuxt/>
+    <nuxt />
   </div>
 </template>
 
 <script>
-  export default {
-    data() {
-      return {
-      };
-    },
-    methods: {
-    },
-    created:function(){
-    }
-  }
+export default {
+  data() {
+    return {};
+  },
+  methods: {},
+  created: function() {}
+};
 </script>
 
 <style scoped>
-
 .main {
   position: absolute;
   top: 0;
@@ -27,13 +23,12 @@
   min-height: 100%;
   background: #191919;
 }
-
 </style>
 
 
 <style>
-  body{
-    font-family: Lato, sans-serif;
-  }
+body {
+  font-family: Lato, sans-serif;
+}
 </style>
 

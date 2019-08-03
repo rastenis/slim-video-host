@@ -3,43 +3,95 @@
   <div v-if="$store.state.authUser">
     <h1 class="title breaker">Upload</h1>
     <!-- upload ban notice -->
-    <el-card class="uploadCard uploadForm clickableCard" v-if="$store.state.authUser.accountStanding==2">
-      <i class="fa fa-times"><p style="font-family:LatoLight;display:inline; margin-left:1vh;">You are prohibited from uploading videos. Ask an admin to provide you with a reset code for your account status.</p>  </i>
+    <el-card
+      class="uploadCard uploadForm clickableCard"
+      v-if="$store.state.authUser.accountStanding==2"
+    >
+      <i class="fa fa-times">
+        <p
+          style="font-family:LatoLight;display:inline; margin-left:1vh;"
+        >You are prohibited from uploading videos. Ask an admin to provide you with a reset code for your account status.</p>
+      </i>
     </el-card>
     <!-- initial upload drag-box -->
-    <el-card class="uploadCard uploadForm clickableCard" v-if="!uploading && !upload.declined && $store.state.authUser.accountStanding!=2">
-        <el-upload ref="uploader" :multiple="true" :on-success="onUploadSuccess" element-loading-text="Uploading..." class="vid-uploader" drag action="/api/upload" :before-upload="beforeVideoUpload" :on-progress="uploadProgress" :with-credentials="true"	>
-          <i class="el-icon-upload"></i>
-          <div class="el-upload__text">Drop file here or
-            <em>click to upload</em>
-          </div>
-          <div class="el-upload__tip" slot="tip">.mp4, .ogg, .webm files with a size less than 5GB</div>
-        </el-upload>
+    <el-card
+      class="uploadCard uploadForm clickableCard"
+      v-if="!uploading && !upload.declined && $store.state.authUser.accountStanding!=2"
+    >
+      <el-upload
+        ref="uploader"
+        :multiple="true"
+        :on-success="onUploadSuccess"
+        element-loading-text="Uploading..."
+        class="vid-uploader"
+        drag
+        action="/api/upload"
+        :before-upload="beforeVideoUpload"
+        :on-progress="uploadProgress"
+        :with-credentials="true"
+      >
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">
+          Drop file here or
+          <em>click to upload</em>
+        </div>
+        <div class="el-upload__tip" slot="tip">.mp4, .ogg, .webm files with a size less than 5GB</div>
+      </el-upload>
     </el-card>
     <!-- modal-style panel for monitoring upload progress & naming -->
-    <el-card class="uploadForm fileList" v-if="uploading && !upload.declined" v-loading="irreversibleUploadCommenced">
+    <el-card
+      class="uploadForm fileList"
+      v-if="uploading && !upload.declined"
+      v-loading="irreversibleUploadCommenced"
+    >
       <div slot="header" class="clearfix">
         <span>Uploading videos</span>
       </div>
-        <!-- naming fields -->
-        <el-form @submit.native.prevent>
-          <div v-for="(video, index) in uploadedFileList" :item="video" :index="index" :key="video.videoID">
-            <el-progress v-if="uploading" :text-inside="true" :stroke-width="30" :percentage="parseFloat(video.percentage.toFixed(2))" :status="video.status"></el-progress>
-            <el-form-item :label="video.name">
-              <el-input v-model="newNames[video.name]" :disabled="dialog.input.disabled" placeholder="Video name" @keyup.13.native="finishUpload(0)"></el-input>
-            </el-form-item>
-          </div>
-          <!-- action buttons at the bottom of the iterated list -->
-          <el-button type="success" :loading="dialog.buttonConfirm.loading" :disabled="dialog.buttonConfirm.disabled" @click="finishUpload(0)">Finish upload</el-button>
-          <el-button type="warning" :loading="dialog.buttonCancel.loading" :disabled="dialog.buttonCancel.disabled" @click="finishUpload(1)">Cancel</el-button>
-        </el-form>
+      <!-- naming fields -->
+      <el-form @submit.native.prevent>
+        <div
+          v-for="(video, index) in uploadedFileList"
+          :item="video"
+          :index="index"
+          :key="video.videoID"
+        >
+          <el-progress
+            v-if="uploading"
+            :text-inside="true"
+            :stroke-width="30"
+            :percentage="parseFloat(video.percentage.toFixed(2))"
+            :status="video.status"
+          ></el-progress>
+          <el-form-item :label="video.name">
+            <el-input
+              v-model="newNames[video.name]"
+              :disabled="dialog.input.disabled"
+              placeholder="Video name"
+              @keyup.13.native="finishUpload(0)"
+            ></el-input>
+          </el-form-item>
+        </div>
+        <!-- action buttons at the bottom of the iterated list -->
+        <el-button
+          type="success"
+          :loading="dialog.buttonConfirm.loading"
+          :disabled="dialog.buttonConfirm.disabled"
+          @click="finishUpload(0)"
+        >Finish upload</el-button>
+        <el-button
+          type="warning"
+          :loading="dialog.buttonCancel.loading"
+          :disabled="dialog.buttonCancel.disabled"
+          @click="finishUpload(1)"
+        >Cancel</el-button>
+      </el-form>
     </el-card>
     <!-- upload-blocking notice, if the server didn't accept an upload. Forces a refresh, at the very least. -->
     <el-card class="uploadForm" v-if="upload.declined">
-      <h2 style="color:red;">Upload declined!</h2> 
-      <h3> Try again later.</h3>
+      <h2 style="color:red;">Upload declined!</h2>
+      <h3>Try again later.</h3>
     </el-card>
-    </div>
+  </div>
 </template>
 <script>
 import axios from "axios";
@@ -48,9 +100,9 @@ export default {
   layout: "main",
   data() {
     return {
-      irreversibleUploadCommenced:false,
+      irreversibleUploadCommenced: false,
       uploading: false,
-      completeCount:0,
+      completeCount: 0,
       progressBar: {
         status: "",
         percentage: 0
@@ -74,7 +126,7 @@ export default {
         ready: false,
         name: null,
         action: 0,
-        declined:false
+        declined: false
       },
       newVideos: [],
       uploadedFileList: [],
@@ -82,26 +134,29 @@ export default {
     };
   },
   methods: {
-      onUploadSuccess(res, file, fileList) {
-        if (res.error) {
-          // force the user to do a refresh. The backend may be down.
-          this.upload.declined=true;
-          this.$message({
-            message:res.msg,
-            type:res.msgType
-          });
-        } else {
-          // displaying naming fields
-          this.uploadedFileList = fileList;
-          this.newVideos = res.newVideos;
-          this.completeCount++;
-          if (this.upload.ready && this.completeCount >= this.uploadedFileList.length) {
-            // minor delay
-            setTimeout(() => {
-              this.finishUpload(this.upload.name, this.upload.action, true);
-            }, 200);
-          }
+    onUploadSuccess(res, file, fileList) {
+      if (res.error) {
+        // force the user to do a refresh. The backend may be down.
+        this.upload.declined = true;
+        this.$message({
+          message: res.msg,
+          type: res.msgType
+        });
+      } else {
+        // displaying naming fields
+        this.uploadedFileList = fileList;
+        this.newVideos = res.newVideos;
+        this.completeCount++;
+        if (
+          this.upload.ready &&
+          this.completeCount >= this.uploadedFileList.length
+        ) {
+          // minor delay
+          setTimeout(() => {
+            this.finishUpload(this.upload.name, this.upload.action, true);
+          }, 200);
         }
+      }
     },
     beforeVideoUpload(file) {
       this.uploading = true;
@@ -110,7 +165,7 @@ export default {
         this.$nuxt._router.push("/");
         return false;
       }
-      
+
       let mbFilesize = file.size / 1024 / 1024;
 
       // checking if user has sufficient space available
@@ -128,11 +183,11 @@ export default {
       // checking if the filetype is allowed, TODO: switch not needed
       switch (file.type) {
         case "video/webm":
-            break;
+          break;
         case "video/ogg":
-            break;
+          break;
         case "video/mp4":
-            break;
+          break;
         default:
           this.$message.error("Invalid video format!");
           this.uploading = false;
@@ -159,12 +214,12 @@ export default {
         return false;
       }
       // check if all videos have finished uploading
-      if (this.completeCount>=this.uploadedFileList.length) {
+      if (this.completeCount >= this.uploadedFileList.length) {
         // if (!name && status == 0) {
         //   //validate form of all new video names
         //   this.$message.error("Please enter a valid name!");
         // }
-        this.irreversibleUploadCommenced=true;
+        this.irreversibleUploadCommenced = true;
         axios({
           url: "https://cigari.ga/api/finalizeUpload",
           method: "put",
@@ -177,10 +232,10 @@ export default {
         })
           .then(res => {
             this.uploading = false;
-            this.irreversibleUploadCommenced=false;
-            this.$store.commit("INC_UPLOAD_NOTIFS",this.completeCount);
-            this.completeCount=0;
-            
+            this.irreversibleUploadCommenced = false;
+            this.$store.commit("INC_UPLOAD_NOTIFS", this.completeCount);
+            this.completeCount = 0;
+
             if (status == 0) {
               this.dialog.buttonConfirm.loading = false;
               this.dialog.buttonCancel.disabled = false;
@@ -194,7 +249,10 @@ export default {
             this.dialog.input.disabled = false;
 
             if (res.data.meta.error == 0) {
-              this.uploadedNotification(res.data.meta.msg, res.data.meta.msgType);
+              this.uploadedNotification(
+                res.data.meta.msg,
+                res.data.meta.msgType
+              );
               this.progressBar.status = "";
               this.progressBar.percentage = 0;
             } else if (res.data.meta.error == 2) {
@@ -244,8 +302,8 @@ export default {
     this.uploader = this.$refs.uploader;
   },
   transition: "mainTransition",
-  head:{
-    title:"Upload"
+  head: {
+    title: "Upload"
   }
 };
 </script>

@@ -1,10 +1,16 @@
 <template>
   <div>
     <h1 class="title">Password reset</h1>
-    <el-card class='ResetForm' v-if="token.valid">
-      <el-form :model="resetForm" label-position="top" label-width="100px" ref="resetForm" :rules="formRulesReset">
+    <el-card class="ResetForm" v-if="token.valid">
+      <el-form
+        :model="resetForm"
+        label-position="top"
+        label-width="100px"
+        ref="resetForm"
+        :rules="formRulesReset"
+      >
         <el-form-item prop="pass" label="New password:">
-          <el-input type="password" v-model="resetForm.pass" ></el-input>
+          <el-input type="password" v-model="resetForm.pass"></el-input>
         </el-form-item>
         <el-form-item prop="passconf" label="Confirm new password:">
           <el-input type="password" v-model="resetForm.passconf"></el-input>
@@ -12,7 +18,7 @@
         <el-form-item>
           <el-button @click="reset">Reset password</el-button>
         </el-form-item>
-      </el-form> 
+      </el-form>
     </el-card>
     <el-card v-else>
       <h3>No such token or the token has expired.</h3>
@@ -21,43 +27,46 @@
 </template>
 
 <script>
-
-import axios from 'axios'
+import axios from "axios";
 
 export default {
   data() {
     return {
       resetForm: {
-        pass: '',
-        passconf: ''
+        pass: "",
+        passconf: ""
       },
       token: {
         valid: false,
         token: null
       },
       formRulesReset: {
-        pass: [{
+        pass: [
+          {
             required: true,
-            message: 'Please enter a password.',
-            trigger: 'blur'
+            message: "Please enter a password.",
+            trigger: "blur"
           },
           {
             min: 8,
             max: 100,
-            message: 'Length should be 8 to 100',
-            trigger: 'blur'
+            message: "Length should be 8 to 100",
+            trigger: "blur"
           }
         ],
-        passconf: [{
-          validator: this.validatePassConfirmation,
-          trigger: 'blur'
-        }, {
-          required: true,
-          message: 'Please confirm the new password.',
-          trigger: 'blur'
-        }]
+        passconf: [
+          {
+            validator: this.validatePassConfirmation,
+            trigger: "blur"
+          },
+          {
+            required: true,
+            message: "Please confirm the new password.",
+            trigger: "blur"
+          }
+        ]
       }
-    }
+    };
   },
   asyncData(context) {
     if (context.params.token != "") {
@@ -66,14 +75,14 @@ export default {
         token: null
       };
       return axios({
-          url: `https://cigari.ga/api/checkToken/${context.params.token}`,
-          method: 'get',
-          credentials: 'same-origin',
-          data: {
-            token: context.params.token
-          }
-        })
-        .then((res) => {
+        url: `https://cigari.ga/api/checkToken/${context.params.token}`,
+        method: "get",
+        credentials: "same-origin",
+        data: {
+          token: context.params.token
+        }
+      })
+        .then(res => {
           if (res.data.valid) {
             token.valid = true;
             token.token = context.params.token;
@@ -82,7 +91,7 @@ export default {
             token: token
           };
         })
-        .catch((err) => {
+        .catch(err => {
           console.log(err);
         });
     } else {
@@ -91,35 +100,37 @@ export default {
   },
   methods: {
     async reset() {
-      this.$refs["resetForm"].validate((valid) => {
+      this.$refs["resetForm"].validate(valid => {
         if (valid) {
           axios({
-            url: 'https://cigari.ga/api/changePassword',
-            method: 'patch',
-            credentials: 'same-origin',
+            url: "https://cigari.ga/api/changePassword",
+            method: "patch",
+            credentials: "same-origin",
             data: {
-              resetType:1,
+              resetType: 1,
               newPass: this.resetForm.pass,
               token: this.token.token
             }
-          }).then(res => {
-            this.$message({
-              type: res.data.meta.msgType,
-              message: res.data.meta.msg
+          })
+            .then(res => {
+              this.$message({
+                type: res.data.meta.msgType,
+                message: res.data.meta.msg
+              });
+              this.$refs["resetForm"].resetFields();
+            })
+            .catch(e => {
+              console.log(e);
             });
-            this.$refs["resetForm"].resetFields();
-          }).catch(e => {
-            console.log(e);
-          });
         } else {
-          console.log('validation error');
+          console.log("validation error");
           return false;
         }
       });
     },
     validatePassConfirmation(rule, value, callback) {
-      if (value === '') {
-        callback(new Error('Please confirm the password.'));
+      if (value === "") {
+        callback(new Error("Please confirm the password."));
       } else if (value !== this.resetForm.pass) {
         callback(new Error("Password confirmation doesn't match!"));
       } else {
@@ -129,17 +140,18 @@ export default {
   },
   mounted() {
     if (!this.$store.state.authUser) {
-      this.$store.state.activeTab = '9';
-    } else { //if user has an account, push him to dashboard
-      this.$nuxt._router.push("/dash")
+      this.$store.state.activeTab = "9";
+    } else {
+      //if user has an account, push him to dashboard
+      this.$nuxt._router.push("/dash");
     }
   },
-  layout: 'main',
-  transition: 'mainTransition',
-  head:{
-    title:"Password Reset"
+  layout: "main",
+  transition: "mainTransition",
+  head: {
+    title: "Password Reset"
   }
-}
+};
 </script>
 
 

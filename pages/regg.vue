@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1 class="title">Registration</h1>
-    <el-card class='RegForm' v-if="!$store.state.authUser">
+    <el-card class="RegForm" v-if="!$store.state.authUser">
       <el-form :model="regForm" label-width="100px" ref="regForm" :rules="formRules">
         <el-form-item label="Username" prop="username">
           <el-input v-model="regForm.username"></el-input>
@@ -26,7 +26,7 @@
         <el-form-item>
           <el-button type="success" plain @click="submitForm('regForm')">Register</el-button>
         </el-form-item>
-      </el-form> 
+      </el-form>
     </el-card>
     <el-card v-else>
       <h1>You already have an account!</h1>
@@ -39,98 +39,104 @@ export default {
   data() {
     return {
       regForm: {
-        username: '',
-        email: '',
-        pass: '',
-        passconf: '',
-        code: ''
+        username: "",
+        email: "",
+        pass: "",
+        passconf: "",
+        code: ""
       },
       hasCode: false,
       activeIndex: "2",
       activeIndexUnreg: "2",
       formRules: {
-        username: [{
+        username: [
+          {
             required: true,
-            message: 'Please input a valid username',
-            trigger: 'blur'
+            message: "Please input a valid username",
+            trigger: "blur"
           },
           {
             min: 5,
             max: 100,
-            message: 'Length should be 5 to 100',
-            trigger: 'blur'
+            message: "Length should be 5 to 100",
+            trigger: "blur"
           },
-          { validator: this.validateUsername, trigger: 'blur' }
+          { validator: this.validateUsername, trigger: "blur" }
         ],
-        email: [{
+        email: [
+          {
             required: true,
-            message: 'Please enter an email address',
-            trigger: 'change'
+            message: "Please enter an email address",
+            trigger: "change"
           },
           {
-            type: 'email',
-            message: 'Please enter a valid email address',
-            trigger: 'blur'
+            type: "email",
+            message: "Please enter a valid email address",
+            trigger: "blur"
           }
         ],
-        pass: [{
+        pass: [
+          {
             required: true,
-            message: 'Please enter a password.',
-            trigger: 'blur'
+            message: "Please enter a password.",
+            trigger: "blur"
           },
           {
             min: 8,
             max: 100,
-            message: 'Length should be 8 to 100',
-            trigger: 'blur'
+            message: "Length should be 8 to 100",
+            trigger: "blur"
           }
         ],
-        passconf: [{
-          validator: this.validatePassConfirmation,
-          trigger: 'blur'
-        },{
-          required: true,
-          message: 'Please confirm the new password.',
-          trigger: 'blur'
-        }]
+        passconf: [
+          {
+            validator: this.validatePassConfirmation,
+            trigger: "blur"
+          },
+          {
+            required: true,
+            message: "Please confirm the new password.",
+            trigger: "blur"
+          }
+        ]
       }
-    }
+    };
   },
   methods: {
     async register() {
       try {
-        await this.$store.dispatch('register', {
+        await this.$store.dispatch("register", {
           username: this.regForm.username,
           password: this.regForm.pass,
           passconf: this.regForm.passconf,
           email: this.regForm.email,
           code: this.regForm.code
-        })
-        this.formUsername = ''
-        this.formPassword = ''
-        this.formError = null
+        });
+        this.formUsername = "";
+        this.formPassword = "";
+        this.formError = null;
         this.$message.success("You have successfully created an account!");
-        this.$nuxt._router.push('/');
+        this.$nuxt._router.push("/");
       } catch (err) {
         this.$message({
-          type: 'error',
+          type: "error",
           message: err.msg
         });
       }
     },
     submitForm(formName) {
-      this.$refs[formName].validate((valid) => {
+      this.$refs[formName].validate(valid => {
         if (valid) {
           this.register();
         } else {
-          console.log('validation error');
+          console.log("validation error");
           return false;
         }
       });
     },
     validateUsername(rule, value, callback) {
-      if ((/\s/g.test(value))) {
-        callback(new Error('Username cannot contain spaces!'));
+      if (/\s/g.test(value)) {
+        callback(new Error("Username cannot contain spaces!"));
       } else {
         callback();
       }
@@ -139,8 +145,8 @@ export default {
       this.$refs[formName].resetFields();
     },
     validatePassConfirmation(rule, value, callback) {
-      if (value === '') {
-        callback(new Error('Please confirm the password.'));
+      if (value === "") {
+        callback(new Error("Please confirm the password."));
       } else if (value !== this.regForm.pass) {
         callback(new Error("Password confirmation doesn't match!"));
       } else {
@@ -150,17 +156,18 @@ export default {
   },
   mounted() {
     if (!this.$store.state.authUser) {
-      this.$store.state.activeTab = '2';
-    } else { //if user has an account, push him to dashboard
+      this.$store.state.activeTab = "2";
+    } else {
+      //if user has an account, push him to dashboard
       this.$nuxt._router.push("/dash");
     }
   },
-  layout: 'main',
-  transition:'mainTransition',
-  head:{
-    title:"Registration"
+  layout: "main",
+  transition: "mainTransition",
+  head: {
+    title: "Registration"
   }
-}
+};
 </script>
 
 
