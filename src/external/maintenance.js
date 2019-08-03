@@ -5,6 +5,7 @@ const chalk = require("chalk");
 const async = require("async");
 const exec = require("child_process").exec;
 const crypto = require("crypto");
+const path = require("path");
 
 // custom array diff prototype
 Array.prototype.diff = function(a) {
@@ -43,7 +44,11 @@ function preLaunch(config) {
 
   // checking if settings exist & creating them if not
   try {
-    let settings = require("../../" + config.dbPath + "system/settings.json");
+    let settings = require(path.resolve(
+      config.dbPath,
+      "system",
+      "settings.json"
+    ));
     if (
       settings !== undefined ||
       settings.theme !== undefined ||
@@ -60,9 +65,12 @@ function preLaunch(config) {
     };
 
     //make sure the directory exists first
-    fs.ensureDirSync(config.dbPath + "system/");
+    fs.ensureDirSync(path.resolve(config.dbPath, "system"));
     //write the change
-    fs.writeJSONSync(config.dbPath + "system/settings.json", defaults);
+    fs.writeJSONSync(
+      path.resolve(config.dbPath, "system", "settings.json"),
+      defaults
+    );
   }
 
   let videoNames = [],
@@ -71,129 +79,131 @@ function preLaunch(config) {
   // checking through all thumbnails & the videos themselves
   db.videos.find({}, function(err, docs) {
     if (err) {
-      console.log(err);
-    } else {
-      docs.forEach(video => {
-        // adding for further cleaning
-        videoNames.push(video.videoID + video.extension);
-        thumbnailNames.push(video.videoID + ".jpg");
+      return console.log(err);
+    }
 
-        async.waterfall(
-          [
-            function(done) {
-              fs.pathExists(
-                config.storagePath + video.videoID + video.extension,
-                (err, exists) => {
-                  if (err) {
-                    console.log(err);
-                  }
-                  if (!exists) {
-                    //console.log(chalk.bgRed.black("ERROR! Video " + video.videoID + " has no file! Deleting..."));
-                    db.videos.remove(
+    docs.forEach(video => {
+      // adding for further cleaning
+      videoNames.push(video.videoID + video.extension);
+      thumbnailNames.push(video.videoID + ".jpg");
+
+      async.waterfall(
+        [
+          function(done) {
+            fs.pathExists(
+              config.storagePath + video.videoID + video.extension,
+              (err, exists) => {
+                if (err) {
+                  console.log(err);
+                }
+                if (!exists) {
+                  //console.log(chalk.bgRed.black("ERROR! Video " + video.videoID + " has no file! Deleting..."));
+                  db.videos.remove(
+                    {
+                      videoID: video.videoID
+                    },
+                    {},
+                    function(err) {
+                      if (err) {
+                        console.log(err);
+                      }
+                    }
+                  );
+                }
+                done();
+              }
+            );
+          },
+          function(done) {
+            fs.pathExists(
+              path.resolve(
+                config.storagePath,
+                "thumbs",
+                video.videoID + ".jpg"
+              ),
+              (err, exists) => {
+                if (err) {
+                  console.log(err);
+                }
+                if (!exists) {
+                  //console.log(chalk.bgYellow.black("WARN! Video " + video.videoID + " has no thumbnail! Creating..."));
+                  //savinu thumbnail
+                  try {
+                    exec(
+                      `ffmpeg -i '${path.resolve(
+                        config.storagePath,
+                        video.videoID + video.extension
+                      )}' -ss 0 -vframes 1 '${path.resolve(
+                        config.storagePath,
+                        "thumbs",
+                        video.videoID + ".jpg"
+                      )}`,
                       {
-                        videoID: video.videoID
+                        cwd: __dirname
                       },
-                      {},
-                      function(err) {
-                        if (err) {
-                          console.log(err);
+                      function(error, stdout, stderr) {
+                        if (error) {
+                          console.log(error);
                         }
                       }
                     );
+                  } catch (e) {
+                    console.log(
+                      chalk.bgYellow.black("WARN") + "failed to save thumbnail "
+                    );
                   }
-                  done();
                 }
-              );
-            },
-            function(done) {
-              fs.pathExists(
-                config.storagePath + "thumbs/" + video.videoID + ".jpg",
-                (err, exists) => {
-                  if (err) {
-                    console.log(err);
-                  }
-                  if (!exists) {
-                    //console.log(chalk.bgYellow.black("WARN! Video " + video.videoID + " has no thumbnail! Creating..."));
-                    //savinu thumbnail
-                    try {
-                      exec(
-                        "ffmpeg -i '../../" +
-                          config.storagePath +
-                          video.videoID +
-                          video.extension +
-                          "' -ss 0 -vframes 1 '../../" +
-                          config.storagePath +
-                          "thumbs/" +
-                          video.videoID +
-                          ".jpg'",
-                        {
-                          cwd: __dirname
-                        },
-                        function(error, stdout, stderr) {
-                          if (error) {
-                            console.log(error);
-                          }
-                        }
-                      );
-                    } catch (e) {
-                      console.log(
-                        chalk.bgYellow.black("WARN") +
-                          "failed to save thumbnail "
-                      );
-                    }
-                  }
-                  done();
-                }
-              );
-            }
-          ],
-          function(err) {
-            if (err) {
-              console.log(err);
-            }
+                done();
+              }
+            );
           }
-        );
-      });
-
-      fs.readdir(config.storagePath, (err, files) => {
-        if (docs.length < files.length - 1) {
-          //console.log("WARN! Detected undeleted video files.");
-
-          // leaving the thumbs dir alone
-          let index = files.indexOf("thumbs");
-          files.splice(index, 1);
-
-          let difference = files.diff(videoNames);
-          if (difference.length != 0) {
-            difference.forEach(item => {
-              //removing unneeded
-              fs.unlink(config.storagePath + item, function(err) {
-                if (err) {
-                  console.log(err);
-                }
-              });
-            });
+        ],
+        function(err) {
+          if (err) {
+            console.log(err);
           }
         }
-      });
-      fs.readdir(config.storagePath + "thumbs/", (err, files) => {
-        if (docs.length < files.length) {
-          //console.log("WARN! Detected undeleted video thumbnails.");
+      );
+    });
 
-          let difference = files.diff(thumbnailNames);
-          if (difference.length != 0) {
-            difference.forEach(item => {
-              //removing unneeded
-              fs.unlink(config.storagePath + "thumbs/" + item, function(err) {
-                if (err) {
-                  console.log(err);
-                }
-              });
+    fs.readdir(config.storagePath, (err, files) => {
+      if (docs.length < files.length - 1) {
+        //console.log("WARN! Detected undeleted video files.");
+
+        // leaving the thumbs dir alone
+        let index = files.indexOf("thumbs");
+        files.splice(index, 1);
+
+        let difference = files.diff(videoNames);
+        if (difference.length != 0) {
+          difference.forEach(item => {
+            //removing unneeded
+            fs.unlink(config.storagePath + item, function(err) {
+              if (err) {
+                console.log(err);
+              }
             });
-          }
+          });
         }
-      });
-    }
+      }
+    });
+    fs.readdir(config.storagePath + "thumbs/", (err, files) => {
+      if (docs.length < files.length) {
+        //console.log("WARN! Detected undeleted video thumbnails.");
+
+        let difference = files.diff(thumbnailNames);
+        if (difference.length != 0) {
+          difference.forEach(item => {
+            //removing unneeded
+            fs.unlink(config.storagePath + "thumbs/" + item, function(err) {
+              if (err) {
+                console.log(err);
+              }
+            });
+          });
+        }
+      }
+    });
   });
 }
 

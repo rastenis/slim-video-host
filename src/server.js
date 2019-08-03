@@ -37,7 +37,7 @@ var defaultTokenExpiry = 1800000; // 30 mins
 maintenance.preLaunch(config);
 
 // post maintenance requires
-var settings = require("../" + config.dbPath + "system/settings.json");
+var settings = require(path.resolve(config.dbPath, "system", "settings.json"));
 
 // optional cert generation
 if (config.selfHosted) {
@@ -66,7 +66,7 @@ if (config.selfHosted) {
   });
 }
 
-app.use(favicon(__dirname + "/../static/fav/favicon.ico"));
+app.use(favicon(path.resolve("static", "fav", "favicon.ico")));
 app.use(helmet());
 app.use(
   fileUpload({
@@ -1984,15 +1984,14 @@ app.post("/api/upload", function(req, res) {
                                 //savinu thumbnail
                                 try {
                                   exec(
-                                    "ffmpeg -i '../" +
-                                      config.storagePath +
-                                      videoID +
-                                      extension +
-                                      "' -ss 0 -vframes 1 '../" +
-                                      config.storagePath +
-                                      "thumbs/" +
-                                      videoID +
-                                      ".jpg'",
+                                    `ffmpeg -i '${path.resolve(
+                                      config.storagePath,
+                                      videoID + extension
+                                    )}' -ss 0 -vframes 1 '${path.resolve(
+                                      config.storagePath,
+                                      "thumbs",
+                                      videoID + ".jpg"
+                                    )}`,
                                     {
                                       cwd: __dirname
                                     },
@@ -2082,7 +2081,7 @@ app.post("/api/logout", function(req, res) {
 //TODO: recalculate user remaining space each start?
 
 //nuxt config
-let nuxt_config = require("../nuxt.config.js");
+let nuxt_config = require(path.resolve("nuxt.config.js"));
 nuxt_config.dev = process.env.NODE_ENV !== "production";
 const nuxt = new Nuxt(nuxt_config);
 
