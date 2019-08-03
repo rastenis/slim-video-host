@@ -79,7 +79,7 @@ export default {
     var nonExistent = false;
     var video, ratings, userRatings;
     return axios({
-      url: `/api/cv/${context.params.vid}`,
+      url: `${context.env.baseUrl}/api/cv/${context.params.vid}`,
       method: "get",
       credentials: "same-origin",
       data: {

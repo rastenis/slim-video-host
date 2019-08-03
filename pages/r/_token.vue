@@ -75,7 +75,7 @@ export default {
         token: null
       };
       return axios({
-        url: `/api/checkToken/${context.params.token}`,
+        url: `${context.env.baseUrl}/api/checkToken/${context.params.token}`,
         method: "get",
         credentials: "same-origin",
         data: {

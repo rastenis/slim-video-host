@@ -1,5 +1,6 @@
 const webpack = require("webpack");
 const themes = require("./static/style/themes");
+const config = require("./config.json");
 
 module.exports = {
   build: {
@@ -25,6 +26,9 @@ module.exports = {
   ],
   axios: {
     // proxyHeaders: false
+  },
+  env:{
+    baseUrl:config.host_prefix
   },
   loading: {
     color: themes[themes.current]

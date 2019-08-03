@@ -301,7 +301,7 @@ export default {
       return;
     } else {
       return axios({
-        url: "/api/settings",
+        url: `${context.env.baseUrl}/api/settings`,
         method: "get",
         credentials: "same-origin",
         data: {}
