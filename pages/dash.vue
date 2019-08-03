@@ -301,7 +301,7 @@ export default {
       return;
     } else {
       return axios({
-        url: "https://cigari.ga/api/settings",
+        url: "/api/settings",
         method: "get",
         credentials: "same-origin",
         data: {}
@@ -351,7 +351,7 @@ export default {
     if (this.$store.state.authUser.userStatus == 1) {
       //fetchinam additional stats
       return axios({
-        url: "https://cigari.ga/api/getAdminStats",
+        url: "/api/getAdminStats",
         method: "get",
         credentials: "same-origin",
         data: {
@@ -376,7 +376,7 @@ export default {
         });
     } else {
       return axios({
-        url: "https://cigari.ga/api/dash",
+        url: "/api/dash",
         method: "get",
         credentials: "same-origin",
         data: {
@@ -432,7 +432,7 @@ export default {
           }
 
           axios({
-            url: "https://cigari.ga/api/removeVideo",
+            url: "/api/removeVideo",
             method: "delete",
             credentials: "same-origin",
             data: {
@@ -486,7 +486,7 @@ export default {
       )
         .then(() => {
           axios({
-            url: "https://cigari.ga/api/newLink",
+            url: "/api/newLink",
             method: "patch",
             credentials: "same-origin",
             data: {
@@ -559,7 +559,7 @@ export default {
         .then(value => {
           var videoID = this.videos[index].videoID;
           axios({
-            url: "https://cigari.ga/api/rename",
+            url: "/api/rename",
             method: "patch",
             credentials: "same-origin",
             data: {
@@ -612,7 +612,7 @@ export default {
       }).then(value => {
         //activating the code
         axios({
-          url: "https://cigari.ga/api/upgrade",
+          url: "/api/upgrade",
           method: "post",
           credentials: "same-origin",
           data: {

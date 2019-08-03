@@ -75,7 +75,7 @@ export default {
         token: null
       };
       return axios({
-        url: `https://cigari.ga/api/checkToken/${context.params.token}`,
+        url: `/api/checkToken/${context.params.token}`,
         method: "get",
         credentials: "same-origin",
         data: {
@@ -103,7 +103,7 @@ export default {
       this.$refs["resetForm"].validate(valid => {
         if (valid) {
           axios({
-            url: "https://cigari.ga/api/changePassword",
+            url: "/api/changePassword",
             method: "patch",
             credentials: "same-origin",
             data: {

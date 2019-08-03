@@ -53,7 +53,7 @@ export default {
       this.$refs["tokenReqForm"].validate(valid => {
         if (valid) {
           axios({
-            url: "https://cigari.ga/api/requestReset",
+            url: "/api/requestReset",
             method: "post",
             credentials: "same-origin",
             data: {

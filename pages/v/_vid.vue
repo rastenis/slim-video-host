@@ -79,7 +79,7 @@ export default {
     var nonExistent = false;
     var video, ratings, userRatings;
     return axios({
-      url: `https://cigari.ga/api/cv/${context.params.vid}`,
+      url: `/api/cv/${context.params.vid}`,
       method: "get",
       credentials: "same-origin",
       data: {
@@ -130,7 +130,7 @@ export default {
         }
       }
       axios({
-        url: "https://cigari.ga/api/act",
+        url: "/api/act",
         method: "put",
         credentials: "same-origin",
         data: {
@@ -173,8 +173,8 @@ export default {
   computed: {
     og_url() {
       return this.video
-        ? "https://cigari.ga/v/" + this.video.videoID
-        : "https://cigari.ga/404";
+        ? "/v/" + this.video.videoID
+        : "/404";
     },
     og_title() {
       return this.video ? this.video.name : "404";

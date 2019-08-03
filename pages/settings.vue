@@ -52,7 +52,7 @@ export default {
     },
     runMaintenance() {
       return axios({
-        url: "https://cigari.ga/api/runMaintenance",
+        url: "/api/runMaintenance",
         method: "post",
         credentials: "same-origin",
         data: {}
@@ -69,7 +69,7 @@ export default {
     },
     changeTheme(selection) {
       return axios({
-        url: "https://cigari.ga/api/changeTheme",
+        url: "/api/changeTheme",
         method: "post",
         credentials: "same-origin",
         data: {

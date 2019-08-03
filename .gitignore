@@ -68,3 +68,5 @@ videos/
 tmp/
 
 config.json
+
+.nuxt

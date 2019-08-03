@@ -127,7 +127,7 @@ export default {
         if (valid) {
           this.passReset.loading = true;
           axios({
-            url: "https://cigari.ga/api/changePassword",
+            url: "/api/changePassword",
             method: "patch",
             credentials: "same-origin",
             data: {
@@ -160,7 +160,7 @@ export default {
     async deleteAccount() {
       this.accountDeletion.dialogOpen = false;
       axios({
-        url: "https://cigari.ga/api/deleteAccount",
+        url: "/api/deleteAccount",
         method: "delete",
         credentials: "same-origin",
         data: {

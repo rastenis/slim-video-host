@@ -221,7 +221,7 @@ export default {
         // }
         this.irreversibleUploadCommenced = true;
         axios({
-          url: "https://cigari.ga/api/finalizeUpload",
+          url: "/api/finalizeUpload",
           method: "put",
           credentials: "same-origin",
           data: {
