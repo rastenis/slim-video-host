@@ -15,7 +15,7 @@ let router = Router();
 // reject if the user is not signed in
 const check = (req, res, next) => {
   if (!req.session.authUser) {
-    return res.status(403).send("Please log in.");
+    return res.status(403).json(genericErrorObject("Unauthorized."));
   }
   return next();
 };
@@ -191,133 +191,91 @@ router.post("/api/upgrade", function(req, res) {
     0
   );
 
-  db.codes.loadDatabase(function(err) {
-    db.codes.find(
-      {
-        code: req.body.code,
-        active: true
-      },
-      function(err, docs) {
-        if (err) {
-          log(chalk.bgRed.white("UPGRADE | " + err), 1);
-          res.json(genericErrorObject("Server error :("));
-        }
-        if (docs.length == 0) {
-          log("UPGRADE | unsuccessful: no such code", 0);
-          res.json(genericErrorObject("No such code exists."));
-        } else {
-          // adding granted benefit:
-          // space
-          if (docs[0].benefit == 0) {
-            db.users.update(
-              {
-                username: req.session.authUser.username.toLowerCase()
-              },
-              {
-                $inc: {
-                  totalSpace: docs[0].space,
-                  remainingSpace: docs[0].space
-                }
-              },
-              {
-                returnUpdatedDocs: true,
-                multi: false
-              },
-              function(err, numAffected, affectedDocument) {
-                if (err) {
-                  log("UPGRADE | " + err, 1);
-                }
-                // refreshing session
-                req.session.authUser = affectedDocument;
-
-                // res
-                res.json(
-                  genericResponseObject(
-                    "You have successfully expanded your space limit!"
-                  )
-                );
-              }
-            );
-            // admin status
-          } else if (docs[0].benefit == 1) {
-            db.users.update(
-              {
-                username: req.session.authUser.username.toLowerCase()
-              },
-              {
-                $set: {
-                  userStatus: 1
-                }
-              },
-              {
-                returnUpdatedDocs: true,
-                multi: false
-              },
-              function(err, numAffected, affectedDocument) {
-                if (err) {
-                  log("UPGRADE | " + err, 1);
-                }
-                // refreshing session
-                req.session.authUser = affectedDocument;
-
-                // res
-                res.json(genericResponseObject("You are now an admin!"));
-              }
-            );
-          } else if (docs[0].benefit == 2) {
-            db.users.update(
-              {
-                username: req.session.authUser.username.toLowerCase()
-              },
-              {
-                $set: {
-                  accountStanding: 0
-                }
-              },
-              {
-                returnUpdatedDocs: true,
-                multi: false
-              },
-              function(err, numAffected, affectedDocument) {
-                if (err) {
-                  log("UPGRADE | " + err, 1);
-                }
-                // refreshing session
-                req.session.authUser = affectedDocument;
-
-                // res
-                res.json(
-                  genericResponseObject(
-                    "Your account standing has been cleared!"
-                  )
-                );
-              }
-            );
-          }
-
-          // disable code
-          db.codes.update(
-            {
-              code: req.body.code
-            },
-            {
-              $set: {
-                active: false
-              }
-            },
-            {},
-            function(err, doc) {
-              if (err) {
-                log("UPGRADE | " + err, 1);
-              }
-            }
-          );
-
-          log("UPGRADE | successful upgrade", 0);
-        }
+  db.codes
+    .fineOne({
+      code: req.body.code,
+      active: true
+    })
+    .then(code => {
+      if (!code) {
+        log("UPGRADE | unsuccessful: no such code", 0);
+        return res.json(genericErrorObject("No such code exists."));
       }
-    );
-  });
+      // adding granted benefit:
+      let userUpgrade = {},
+        userUpgradeMessage = "Success!";
+
+      switch (code.benefit) {
+        case 0: // space upgrade
+          userUpgrade = {
+            $inc: {
+              totalSpace: code.space,
+              remainingSpace: code.space
+            }
+          };
+          userUpgradeMessage =
+            "You have successfully expanded your space limit!";
+          break;
+        case 1: //admin status
+          userUpgrade = {
+            $set: {
+              userStatus: 1
+            }
+          };
+          userUpgradeMessage = "You are now an admin!";
+          break;
+        case 2: // account standing clear
+          userUpgrade = {
+            $set: {
+              accountStanding: 0
+            }
+          };
+          userUpgradeMessage = "Your account standing has been cleared!";
+          break;
+        default:
+          break;
+      }
+
+      db.users
+        .update(
+          {
+            username: req.session.authUser.username.toLowerCase()
+          },
+          userUpgrade,
+          {
+            returnUpdatedDocs: true,
+            multi: false
+          }
+        )
+        .then((numAffected, affectedDocument) => {
+          // updating user session
+          req.session.authUser = affectedDocument;
+
+          // res
+          res.json(genericResponseObject(userUpgradeMessage));
+        });
+
+      // disable code
+      db.codes.update(
+        {
+          code: req.body.code
+        },
+        {
+          $set: {
+            active: false
+          }
+        },
+        {}
+      );
+
+      log("UPGRADE | successful upgrade", 0);
+    })
+    .catch(e => {
+      log(chalk.bgRed.white("UPGRADE | " + err), 1);
+      return res.json(
+        genericErrorObject("Server error. Couldn't handle code.")
+      );
+    });
 });
 
 // route for account deletion
@@ -327,156 +285,68 @@ router.delete("/api/deleteAccount", function(req, res) {
   let returner = genericResponseObject(),
     opCount = 0;
 
-  if (!req.session.authUser) {
-    res.json(genericErrorObject("No authentication. Please sign in."));
-  } else {
-    async.waterfall(
-      [
-        function(done) {
-          db.users.find(
-            {
-              email: req.session.authUser.email
-            },
-            function(err, docs) {
-              if (err) {
-                log("ACCOUNT DELETION | " + err, 1);
-              } else {
-                if (docs.length == 0) {
-                  log(
-                    chalk.bgRed.white("CRITICAL!") +
-                      "ACCOUNT DELETION | delete reqests for non-existent accounts!",
-                    1
-                  );
-                  returner.meta.error = 1;
-                } else if (docs.length > 1) {
-                  log(
-                    chalk.bgRed.white("CRITICAL!") +
-                      "ACCOUNT DELETION | delete reqest matches multiple accounts!",
-                    1
-                  );
-                  returner.meta.error = 1;
-                } else {
-                  //all fine, re-fetching to make sure there are no duplicates and that this exact account gets deleted.
-                  done(null, docs[0]);
-                }
-              }
-            }
-          );
-        },
-        function(fetchedUser, done) {
-          bcrypt.compare(
-            req.body.passwordConfirmation,
-            fetchedUser.password,
-            function(err, valid) {
-              if (err) {
-                log("ACCOUNT DELETION | " + err, 1);
-              } else {
-                returner.meta.error = !valid;
-                done(null, valid);
-              }
-            }
-          );
-        },
-        function(valid, done) {
-          if (!valid) {
-            //wrong confirmation password
-            returner = genericErrorObject(
-              "The confirmation password is incorrect! Try again."
-            );
-            done();
-          } else if (returner.meta.error) {
-            returner = genericErrorObject(
-              "An error occured when deleting your account. Please try again later."
-            );
-            done();
-          } else {
-            db.users.remove(
-              {
-                email: req.session.authUser.email
-              },
-              {
-                multi: false
-              },
-              function(err) {
-                if (err) {
-                  log("ACCOUNT DELETION | " + err, 1);
-                  returner = genericErrorObject(
-                    "An internal error occured. Please try again later."
-                  );
-                } else {
-                  returner = genericResponseObject(
-                    "You have successfully deleted your account!"
-                  );
-                }
-                done();
-              }
-            );
-          }
-        },
-        function(done) {
-          db.users.find(
-            {
-              username: req.session.authUser.username
-            },
-            function(err, docs) {
-              if (err) {
-                log("ACCOUNT DELETION | " + err, 1);
-              } else {
-                docs.forEach(video => {
-                  try {
-                    fs.unlink(
-                      path.resolve(
-                        "static",
-                        config.storagePath,
-                        video.videoID + video.extension
-                      )
-                    );
-                  } catch (err) {
-                    log("ACCOUNT DELETION | " + err, 1);
-                  }
-                  try {
-                    fs.unlink(
-                      path.resolve(
-                        "static",
-                        config.storagePath,
-                        "thumbs",
-                        video.videoID + ".jpg"
-                      )
-                    );
-                  } catch (err) {
-                    log("ACCOUNT DELETION | " + err, 1);
-                  }
-                });
-                done();
-              }
-            }
-          );
-        },
-        function(done) {
-          db.ratings.remove(
-            {
-              username: req.session.authUser.username
-            },
-            {
-              multi: true
-            },
-            function(err, docs) {
-              if (err) {
-                log("ACCOUNT DELETION | " + err, 1);
-              }
-              done();
-            }
-          );
-        }
-      ],
-      function(err) {
-        if (err) {
-          log("ACCOUNT DELETION | " + err, 1);
-        }
-        res.json(returner);
+  // account deletion chain
+  db.users
+    .findOne({
+      email: req.session.authUser.email
+    })
+    .then(user => {
+      if (!user) {
+        log(
+          chalk.bgRed.white("CRITICAL!") +
+            "ACCOUNT DELETION | delete reqests for non-existent accounts!",
+          1
+        );
+        throw "Server error.";
       }
-    );
-  }
+
+      return bcrypt.compare(
+        req.body.passwordConfirmation,
+        fetchedUser.password
+      );
+    })
+    .then(match => {
+      if (!match) {
+        //wrong confirmation password
+        throw "The confirmation password is incorrect! Try again.";
+      } else if (returner.meta.error) {
+        throw "An error occured when deleting your account. Please try again later.";
+      }
+      // removing user
+      return db.users.remove(
+        {
+          email: req.session.authUser.email
+        },
+        {
+          multi: false
+        }
+      );
+    })
+    .then(() => {
+      return db.videos.find({ username: req.session.authUser.username });
+    })
+    .then(videos => {
+      // removing user's videos
+      videos.forEach(video => {
+        removeVideo(video);
+      });
+
+      //removing video ratings
+      return db.ratings.remove(
+        {
+          username: req.session.authUser.username
+        },
+        {
+          multi: true
+        }
+      );
+    })
+    .then(() => {
+      return res.json(genericResponseObject);
+    })
+    .catch(e => {
+      return res.json(genericErrorObject(e));
+    });
 });
 
 // new link generation
@@ -1082,6 +952,30 @@ function genericErrorObject(message) {
       msg: message ? message : "An error has occured."
     }
   };
+}
+
+function removeVideo(video) {
+  try {
+    // remove video
+    fs.unlink(
+      path.resolve(
+        "static",
+        config.storagePath,
+        video.videoID + video.extension
+      )
+    );
+    // remove thumbnail
+    fs.unlink(
+      path.resolve(
+        "static",
+        config.storagePath,
+        "thumbs",
+        video.videoID + ".jpg"
+      )
+    );
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 function removeUnconfirmed(user) {
