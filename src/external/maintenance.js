@@ -16,31 +16,24 @@ Array.prototype.diff = function(a) {
 
 function preLaunch(config) {
   // make sure the designated video directory is up
-  fs.ensureDir(path.resolve("static", config.storagePath), err => {
-    if (err) {
-      console.log(err);
-    }
-  });
-
-  // thumbnail dir too
-  fs.ensureDir(path.resolve("static", config.storagePath, "thumbs"), err => {
-    if (err) {
-      console.log(err);
-    }
-  });
-
-  // empties or creates a tmp dir for uploads
-  fs.emptyDir(path.resolve("static", "tmp"), err => {
-    if (err) {
-      console.log(err);
-    }
-  });
-
-  du(path.resolve("static", config.storagePath), function(err, size) {
-    if (size >= config.spaceLimit) {
-      console.log("WARNING! Max space exceeded!");
-    }
-  });
+  fs.ensureDir(path.resolve("static", config.storagePath))
+    .then(() => {
+      return fs.ensureDir(path.resolve("static", config.storagePath, "thumbs"));
+    })
+    .then(() => {
+      return fs.emptyDir(path.resolve("static", "tmp"));
+    })
+    .then(() => {
+      return du(path.resolve("static", config.storagePath));
+    })
+    .then(size => {
+      if (size >= config.spaceLimit) {
+        console.log("WARNING! Space limit exceeded!");
+      }
+    })
+    .catch(e => {
+      console.error("Errored during directory maintenance:", e);
+    });
 
   // checking if settings exist & creating them if not
   try {
@@ -77,130 +70,114 @@ function preLaunch(config) {
     thumbnailNames = [];
 
   // checking through all thumbnails & the videos themselves
-  db.videos.find({}, function(err, docs) {
-    if (err) {
-      return console.log(err);
-    }
+  db.videos
+    .find({})
+    .then(docs => {
+      docs.forEach(video => {
+        // adding for further cleaning
+        videoNames.push(video.videoID + video.extension);
+        thumbnailNames.push(video.videoID + ".jpg");
 
-    docs.forEach(video => {
-      // adding for further cleaning
-      videoNames.push(video.videoID + video.extension);
-      thumbnailNames.push(video.videoID + ".jpg");
-
-      fs.pathExists(
-        path.resolve(
-          "static",
-          config.storagePath,
-          video.videoID + video.extension
+        fs.pathExists(
+          path.resolve(
+            "static",
+            config.storagePath,
+            video.videoID + video.extension
+          )
         )
-      )
-        .then(exists => {
-          if (!exists) {
-            // removing ghost video and returning
-            db.videos.remove(
-              {
-                videoID: video.videoID
-              },
-              {},
-              function(err) {
-                if (err) {
-                  console.log(err);
-                }
-              }
-            );
-            return;
-          }
-
-          return fs.pathExists(
-            path.resolve(
-              "static",
-              config.storagePath,
-              "thumbs",
-              video.videoID + ".jpg"
-            )
-          );
-        })
-        .then(exists => {
-          if (exists) {
-            return;
-          }
-          // generating thumbnail if it does not exist
-          extractFrames({
-            input: path.resolve(
-              "static",
-              config.storagePath,
-              video.videoID + video.extension
-            ),
-            output: path.resolve(
-              "static",
-              config.storagePath,
-              "thumbs",
-              video.videoID + ".jpg"
-            ),
-            offsets: [0]
-          })
-            .then(r => {})
-            .catch(e => {
-              console.log(
-                chalk.bgYellow.black("WARN") + "failed to save thumbnail ",
-                e
+          .then(exists => {
+            if (!exists) {
+              // removing ghost video and returning
+              db.videos.remove(
+                {
+                  videoID: video.videoID
+                },
+                {}
               );
-            });
-        })
-        .catch(e => {
-          console.error("Could not generate thumbnails:", e);
-        });
-    });
+              return;
+            }
 
-    fs.readdir(path.resolve("static", config.storagePath), (err, files) => {
-      if (docs.length < files.length - 1) {
-        //console.log("WARN! Detected undeleted video files.");
-
-        // leaving the thumbs dir alone
-        let index = files.indexOf("thumbs");
-        files.splice(index, 1);
-
-        let difference = files.diff(videoNames);
-        if (difference.length != 0) {
-          difference.forEach(item => {
-            //removing unneeded
-            fs.unlink(
-              path.resolve("static", config.storagePath, item),
-              function(err) {
-                if (err) {
-                  console.log(err);
-                }
-              }
+            return fs.pathExists(
+              path.resolve(
+                "static",
+                config.storagePath,
+                "thumbs",
+                video.videoID + ".jpg"
+              )
             );
+          })
+          .then(exists => {
+            if (exists) {
+              return;
+            }
+            // generating thumbnail if it does not exist
+            extractFrames({
+              input: path.resolve(
+                "static",
+                config.storagePath,
+                video.videoID + video.extension
+              ),
+              output: path.resolve(
+                "static",
+                config.storagePath,
+                "thumbs",
+                video.videoID + ".jpg"
+              ),
+              offsets: [0]
+            })
+              .then(r => {})
+              .catch(e => {
+                console.log(
+                  chalk.bgYellow.black("WARN") + "failed to save thumbnail ",
+                  e
+                );
+              });
+          })
+          .catch(e => {
+            console.error("Could not generate thumbnails:", e);
           });
-        }
-      }
-    });
+      });
 
-    fs.readdir(
-      path.resolve("static", config.storagePath, "thumbs"),
-      (err, files) => {
-        if (docs.length < files.length) {
-          //console.log("WARN! Detected undeleted video thumbnails.");
+      fs.readdir(path.resolve("static", config.storagePath), (err, files) => {
+        if (docs.length < files.length - 1) {
+          //console.log("WARN! Detected undeleted video files.");
 
-          let difference = files.diff(thumbnailNames);
+          // leaving the thumbs dir alone
+          let index = files.indexOf("thumbs");
+          files.splice(index, 1);
+
+          let difference = files.diff(videoNames);
           if (difference.length != 0) {
             difference.forEach(item => {
               //removing unneeded
-              fs.unlink(
-                path.resolve("static", config.storagePath, "thumbs", item),
-                function(err) {
-                  if (err) {
-                    console.log(err);
-                  }
-                }
-              );
+              fs.unlink(path.resolve("static", config.storagePath, item));
             });
           }
         }
-      }
-    );
-  });
+      });
+
+      fs.readdir(
+        path.resolve("static", config.storagePath, "thumbs"),
+        (err, files) => {
+          if (docs.length < files.length) {
+            //console.log("WARN! Detected undeleted video thumbnails.");
+
+            let difference = files.diff(thumbnailNames);
+            if (difference.length != 0) {
+              difference.forEach(item => {
+                //removing unneeded
+                fs.unlink(
+                  path.resolve("static", config.storagePath, "thumbs", item)
+                );
+              });
+            }
+          }
+        }
+      );
+    })
+    .catch(e => {
+      console.error(e);
+    });
 }
 
 module.exports = {

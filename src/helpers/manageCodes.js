@@ -1,9 +1,9 @@
-const Datastore = require("nedb");
+const Datastore = require("nedb-promises");
 const chalk = require("chalk");
 const prompt = require("prompt-sync")({});
 
 var db = {};
-db.codes = new Datastore({
+db.codes = Datastore.create({
   filename: "db/codes",
   autoload: true,
   corruptAlertThreshold: 1

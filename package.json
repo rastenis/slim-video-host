@@ -38,6 +38,7 @@
     "le-store-certbot": "^2.0.5",
     "lodash": "^4.17.5",
     "nedb": "^1.8.0",
+    "nedb-promises": "^4.0.0",
     "nedb-session-store": "^1.1.2",
     "nodemailer": "^6.3.0",
     "nuxt": "^2.8.1",
