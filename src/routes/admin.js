@@ -63,67 +63,37 @@ router.get("/api/getAdminStats", function(req, res) {
   let returner = genericResponseObject();
   returner.stats = {};
 
-  async.waterfall(
-    [
-      function(done) {
-        db.users.count({}, function(err, count) {
-          if (err) {
-            log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
-            returner.meta.error = 1;
-          }
-          returner.stats.userCount = count;
-          done();
-        });
-      },
-      function(done) {
-        db.videos.count({}, function(err, count) {
-          if (err) {
-            log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
-            returner.meta.error = 1;
-          }
-          returner.stats.videoCount = count;
-          done();
-        });
-      },
-      function(done) {
-        db.videos.find({}, function(err, docs) {
-          if (err) {
-            log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
-            returner.meta.error = 1;
-          }
+  db.users
+    .count({})
+    .then(count => {
+      returner.stats.userCount = count;
+      return db.videos.find({});
+    })
+    .then(videos => {
+      returner.stats.videoCount = videos.length;
 
-          let totalViews = 0,
-            usedSpace = 0;
+      let totalViews = 0,
+        usedSpace = 0;
 
-          // counting video views and total space used
-          docs.forEach(video => {
-            totalViews += video.views;
-            usedSpace += Math.abs(video.size);
-          });
+      // counting video views and total space used
+      videos.forEach(video => {
+        totalViews += video.views;
+        usedSpace += Math.abs(video.size);
+      });
 
-          returner.stats.totalViews = totalViews;
-          returner.stats.totalSpaceA = config.spaceLimit;
-          returner.stats.usedSpaceA = usedSpace.toFixed(2);
-          returner.videos = docs;
-          done();
-        });
-      }
-    ],
-    function(err) {
-      if (err) {
-        log(chalk.bgRed.white("FETCHING ADMIN STATS | " + err), 1);
-        returner.meta.error = 1;
-      }
+      returner.stats.totalViews = totalViews;
+      returner.stats.totalSpaceA = config.spaceLimit;
+      returner.stats.usedSpaceA = usedSpace.toFixed(2);
+      returner.videos = videos;
+
       return res.json(returner);
-    }
-  );
+    })
+    .catch(e => {
+      log(chalk.bgRed.white("FETCHING ADMIN STATS | " + e), 1);
+      returner.meta.error = 1;
+      return res.json(returner);
+    });
 });
-
-// password hashing function
-function hashUpPass(pass) {
-  var hash = bcrypt.hashSync(pass, 12);
-  return hash;
-}
 
 // a base object for most api responses
 function genericResponseObject(message) {

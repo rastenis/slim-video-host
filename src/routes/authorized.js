@@ -20,43 +20,6 @@ const check = (req, res, next) => {
   return next();
 };
 
-// post for the login procedure
-router.post("/api/login", check, function(req, res) {
-  log("LOGIN | requester: " + req.body.username, 0);
-
-  db.users.find(
-    {
-      username: req.body.username.toLowerCase()
-    },
-    function(err, docs) {
-      try {
-        // checks for duplicate usernames
-        performSecurityChecks(docs);
-        // user exists, no duplicates. Proceeding to the password check
-        if (bcrypt.compareSync(req.body.password, docs[0].password)) {
-          //password matches
-          log(chalk.green("LOGIN | passwords match!"), 0);
-          req.session.authUser = docs[0];
-          return res.json(docs[0]);
-        } else {
-          log(chalk.red("LOGIN | passwords don't match!"));
-          res.status(556).json({
-            error: "Bad credentials"
-          });
-        }
-      } catch (e) {
-        if (e.status) {
-          res.status(e.status).json({
-            error: e.message
-          });
-        } else {
-          // stay silent
-        }
-      }
-    }
-  );
-});
-
 // route for video actions (like/dislike)
 router.put("/api/act", function(req, res) {
   //ignore unauthorized acts

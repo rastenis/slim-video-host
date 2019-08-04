@@ -25,6 +25,50 @@ const check = (req, res, next) => {
   return next();
 };
 
+// post for the login procedure
+router.post("/api/login", check, function(req, res) {
+  log("LOGIN | requester: " + req.body.username, 0);
+  let found;
+
+  db.users
+    .find({
+      username: req.body.username.toLowerCase()
+    })
+    .then(docs => {
+      found = docs;
+      if (found.length == 0) {
+        // no user with that username
+        log(chalk.bgRed("No matching account."), 0);
+
+        return res
+          .status(500)
+          .json({ error: true, msg: "No account with that username found." });
+      }
+
+      return bcrypt.compare(req.body.password, docs[0].password);
+    })
+    .then(match => {
+      // user exists, no duplicates. Proceeding to the password check
+      if (match) {
+        //password matches
+        log(chalk.green("LOGIN | passwords match!"), 0);
+        req.session.authUser = found[0];
+        return res.json(found[0]);
+      }
+
+      log(chalk.red("LOGIN | passwords don't match!"));
+      return res.status(403).json({
+        error: "Bad credentials"
+      });
+    })
+    .catch(e => {
+      console.error(e);
+      return res.status(500).json({
+        error: "Could not log you in. Try again later."
+      });
+    });
+});
+
 // post to request a password reset
 router.post("/api/requestReset", function(req, res) {
   console.log("PASSWORD RESET | reset request", 0);

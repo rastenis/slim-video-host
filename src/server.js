@@ -84,27 +84,6 @@ if (nuxt_config.dev) {
 
 app.use(nuxt.render);
 
-// used once at login as a precaution
-function performSecurityChecks(docs) {
-  if (docs.length == 0) {
-    // no user with that username
-    log(chalk.bgRed("No matching account."), 0);
-    throw {
-      status: 555,
-      message: "No account with that username found."
-    };
-  }
-
-  if (docs.length > 1) {
-    // duplicate username users
-    log(chalk.bgRed("==DUPLICATE ACCOUNTS FOUND=="), 1);
-    throw {
-      status: 556,
-      message: "Server error."
-    };
-  }
-}
-
 // password hashing function
 function hashUpPass(pass) {
   var hash = bcrypt.hashSync(pass, 12);
