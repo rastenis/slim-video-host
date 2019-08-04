@@ -129,9 +129,14 @@ router.get("/api/dash", function(req, res) {
 
   log("DASH | requester : " + req.session.authUser.username, 0);
 
-  db.videos
-    .find({
-      username: req.session.authUser.username.toLowerCase()
+  // refreshing user data and getting videos
+  db.users
+    .findOne({ _id: req.session.authUser._id })
+    .then(user => {
+      req.ression.authUser = user;
+      return db.videos.find({
+        username: req.session.authUser.username.toLowerCase()
+      });
     })
     .then(docs => {
       if (docs.length === 0) {
@@ -171,7 +176,7 @@ router.get("/api/dash", function(req, res) {
     .catch(e => {
       return res
         .status(500)
-        .json({ error: true, msg: "Could not fetch dashboard." });
+        .json(genericErrorObject("Could not fetch dashboard."));
     });
 });
 
