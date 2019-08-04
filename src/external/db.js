@@ -1,5 +1,5 @@
 const config = require("../../config.json");
-const Datastore = require("nedb-promise");
+const Datastore = require("nedb-promises");
 const path = require("path");
 
 module.exports = {

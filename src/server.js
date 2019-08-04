@@ -40,33 +40,6 @@ maintenance.preLaunch(config);
 // post maintenance requires
 var settings = require(path.resolve(config.dbPath, "system", "settings.json"));
 
-// optional cert generation
-if (config.selfHosted) {
-  // returns an instance of node-greenlock with additional helper methods
-  var lex = require("greenlock-express").create({
-    server: "production",
-    challenges: {
-      "http-01": require("le-challenge-fs").create({
-        webrootPath: "tmp/acme-challenges"
-      })
-    },
-    store: require("le-store-certbot").create({
-      webrootPath: "tmp/acme-challenges"
-    }),
-    approveDomains: function(opts, certs, cb) {
-      if (certs) {
-        opts.domains = config.tls.domains;
-      } else {
-        (opts.email = config.tls.email), (opts.agreeTos = config.tls.tos);
-      }
-      cb(null, {
-        options: opts,
-        certs: certs
-      });
-    }
-  });
-}
-
 app.use(favicon(path.resolve("static", "fav", "favicon.ico")));
 app.use(helmet());
 app.use(
@@ -2123,30 +2096,6 @@ if (nuxt_config.dev) {
 
 app.use(nuxt.render);
 
-if (config.selfHosted) {
-  // handles acme-challenge and redirects to https
-  require("http")
-    .createServer(lex.middleware(require("redirect-https")()))
-    .listen(80, function() {
-      console.log("Listening for ACME http-01 challenges on", this.address());
-    });
-
-  // https handler
-  var server = require("https").createServer(
-    lex.httpsOptions,
-    lex.middleware(app)
-  );
-  server.listen(443, function() {
-    console.log(
-      "Listening for ACME tls-sni-01 challenges and serve app on",
-      this.address()
-    );
-  });
-} else {
-  app.listen(config.port);
-  console.log("Server is listening on http://localhost:" + config.port);
-}
-
 // used once at login as a precaution
 function performSecurityChecks(docs) {
   if (docs.length == 0) {
@@ -2206,3 +2155,5 @@ function genericErrorObject(message) {
     }
   };
 }
+
+module.exports = app;
