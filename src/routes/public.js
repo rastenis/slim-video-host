@@ -24,130 +24,104 @@ router.get("/api/cv/:id", function(req, res) {
     return res.json(genericErrorObject());
   }
 
-  async.waterfall(
-    [
-      function(done) {
-        //immedately calling an update, won't add a view if the video doesn't exist.
-        db.videos.update(
-          {
-            videoID: req.params.id
-          },
-          {
-            $inc: {
-              views: 1
-            }
-          },
-          {
-            returnUpdatedDocs: true,
-            multi: false
-          },
-          function(err, numAffected, affectedDocument, upsert) {
-            if (!affectedDocument) {
-              log("FETCHING VIDEO | no such video!", 0);
-              returner.meta.error = 1;
-              return res.json(returner);
-            }
-            log(
-              "FETCHING VIDEO | added a view to video " +
-                affectedDocument.videoID,
-              0
-            );
-            affectedDocument.src =
-              "/" +
-              config.storagePath +
-              "/" +
-              req.params.id +
-              affectedDocument.extension;
-            //removing traces of the user that uploaded
-            delete affectedDocument.username;
-
-            returner.video = affectedDocument;
-            return done();
-          }
-        );
+  db.videos
+    .update(
+      {
+        videoID: req.params.id
       },
-      function(done) {
-        //check if requested video exists
-        let vidPath = path.resolve(
-          "static",
-          config.storagePath,
-          req.params.id + returner.video.extension
-        );
-
-        if (returner.video && fs.existsSync(vidPath)) {
-          return done();
+      {
+        $inc: {
+          views: 1
         }
-        //else just return it; no point in going forward
-        return res.json(returner);
       },
-      function(done) {
-        if (req.body.user) {
-          db.ratings.find(
+      {
+        returnUpdatedDocs: true,
+        multi: false
+      }
+    )
+    .then((numAffected, affectedDocument, upsert) => {
+      if (!affectedDocument) {
+        log("FETCHING VIDEO | no such video!", 0);
+        returner.meta.error = 1;
+        return res.json(returner);
+      }
+      log(
+        "FETCHING VIDEO | added a view to video " + affectedDocument.videoID,
+        0
+      );
+      affectedDocument.src =
+        "/" +
+        config.storagePath +
+        "/" +
+        req.params.id +
+        affectedDocument.extension;
+      //removing traces of the user that uploaded
+      delete affectedDocument.username;
+
+      returner.video = affectedDocument;
+
+      let vidPath = path.resolve(
+        "static",
+        config.storagePath,
+        req.params.id + returner.video.extension
+      );
+
+      // video does not exist.
+      if (!returner.video || !fs.existsSync(vidPath)) {
+        return res.json(returner);
+      }
+
+      // logged in viewer.
+      if (req.body.user) {
+        return db.ratings
+          .find(
             {
               username: req.body.user.username,
               videoID: req.params.id
             },
-            {},
-            function(err, docs) {
-              if (docs.length > 2 || docs.length < 0) {
-                log(
-                  chalk.yellow("FETCHING VIDEO | RATING ERROR==========="),
-                  1
-                );
-              }
-              returner.userRatings.liked = false;
-              returner.userRatings.disliked = false;
-
-              //assigning likes/dislikes
-              docs.forEach(doc => {
-                if (doc.action == 0) {
-                  //disliked
-                  returner.userRatings.disliked = true;
-                } else if (doc.action == 1) {
-                  returner.userRatings.liked = true;
-                }
-              });
-
-              done();
+            {}
+          )
+          .then(docs => {
+            if (docs.length > 2 || docs.length < 0) {
+              log(chalk.yellow("FETCHING VIDEO | RATING ERROR==========="), 1);
             }
-          );
-        } else {
-          log("FETCHING VIDEO | anonymous viewer", 0);
-          done();
-        }
-      },
-      function(done) {
-        db.ratings.count(
-          {
-            action: 1, //like
-            videoID: returner.video.videoID
-          },
-          function(err, count) {
-            returner.ratings.likes = count;
-            done();
-          }
-        );
-      },
-      function(done) {
-        db.ratings.count(
-          {
-            action: 0, //dislike
-            videoID: returner.video.videoID
-          },
-          function(err, count) {
-            returner.ratings.dislikes = count;
-            done();
-          }
-        );
+            returner.userRatings.liked = false;
+            returner.userRatings.disliked = false;
+
+            //assigning likes/dislikes
+            docs.forEach(doc => {
+              if (doc.action == 0) {
+                //disliked
+                returner.userRatings.disliked = true;
+              } else if (doc.action == 1) {
+                returner.userRatings.liked = true;
+              }
+            });
+
+            return null;
+          });
       }
-    ],
-    function(err) {
-      if (err) {
-        log(err, 1);
-      }
+      // anonymous viewer.
+      log("FETCHING VIDEO | anonymous viewer", 0);
+      return;
+    })
+    .then(() => {
+      return db.ratings.count({
+        action: 1, //like
+        videoID: returner.video.videoID
+      });
+    })
+    .then(() => {
+      returner.ratings.likes = count;
+      return db.ratings.count({
+        action: 0, //dislike
+        videoID: returner.video.videoID
+      });
+    })
+    .then(() => {
+      returner.ratings.dislikes = count;
       return res.json(returner);
-    }
-  );
+    });
 });
 
 // post to actually change the password (both in-profile and token-based password reset)

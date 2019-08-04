@@ -129,94 +129,50 @@ router.get("/api/dash", function(req, res) {
 
   log("DASH | requester : " + req.session.authUser.username, 0);
 
-  async.waterfall(
-    [
-      function(done) {
-        db.videos.find(
-          {
-            username: req.session.authUser.username.toLowerCase()
-          },
-          function(err, docs) {
-            if (err) {
-              log(chalk.bgRed.white("DASH | " + err), 1);
-              returner.meta.error = 1;
-              return res.json(null);
-            }
-            if (docs.length > 0) {
-              done(null, docs);
-            } else {
-              return res.json(null);
-            }
-          }
-        );
-      },
-      function(docs, done) {
-        docs.forEach(function(i, index) {
+  db.videos
+    .find({
+      username: req.session.authUser.username.toLowerCase()
+    })
+    .then(docs => {
+      if (docs.length === 0) {
+        return res.json(null);
+      }
+      async.eachOf(
+        docs,
+        (doc, index, cb) => {
           docs[index].thumbnailSrc = path.join(
             config.storagePath,
             "thumbs",
             docs[index].videoID + ".jpg"
           );
-          async.waterfall(
-            [
-              function(finished) {
-                db.ratings.count(
-                  {
-                    videoID: docs[index].videoID,
-                    action: 1
-                  },
-                  function(err, count) {
-                    docs[index].likes = count;
-                    finished();
-                  }
-                );
-              },
-              function(finished) {
-                db.ratings.count(
-                  {
-                    videoID: docs[index].videoID,
-                    action: 0
-                  },
-                  function(err, count) {
-                    docs[index].dislikes = count;
-                    finished();
-                  }
-                );
-              },
-              function(finished) {
-                // user instance refreshment
-                db.users.find(
-                  {
-                    username: req.session.authUser.username.toLowerCase()
-                  },
-                  function(err, docs) {
-                    req.session.authUser = docs[0];
-                    returner.user = docs[0];
-                    finished();
-                  }
-                );
-              }
-            ],
-            function(err) {
-              if (err) {
-                log("DASH | " + err, 1);
-              }
-              if (index == docs.length - 1) {
-                returner.meta.error = 0;
-                returner.videos = docs;
-                return res.json(returner);
-              }
-            }
-          );
-        });
-      }
-    ],
-    function(err) {
-      if (err) {
-        log("DASH | " + err, 1);
-      }
-    }
-  );
+          db.ratings
+            .count({
+              videoID: docs[index].videoID,
+              action: 1
+            })
+            .then(count => {
+              docs[index].likes = count;
+              return db.ratings.count({
+                videoID: docs[index].videoID,
+                action: 0
+              });
+            })
+            .then(count => {
+              docs[index].dislikes = count;
+
+              return cb();
+            });
+        },
+        () => {
+          return res.json(returner);
+        }
+      );
+    })
+    .catch(e => {
+      return res
+        .status(500)
+        .json({ error: true, msg: "Could not fetch dashboard." });
+    });
 });
 
 // route for storage upgrades
@@ -522,134 +478,99 @@ router.delete("/api/deleteAccount", function(req, res) {
 router.patch("/api/newLink", function(req, res) {
   log("NEW LINKS | requester: " + req.session.authUser.username, 0);
 
-  let returner = genericResponseObject(),
-    opCount = 0;
+  let returner = genericResponseObject();
 
-  if (!req.session.authUser) {
-    res.json(genericErrorObject("No authentication. Please sign in."));
-  } else {
-    returner.newData = req.body.selection;
-    req.body.selection.forEach((sel, index) => {
+  returner.newData = req.body.selection;
+
+  async.eachOf(
+    req.body.selection,
+    (sel, index, cb) => {
       let newVideoID = shortid.generate();
       let newVidLink = config.host + "/v/" + newVideoID;
 
-      async.waterfall(
-        [
-          function(done) {
-            db.videos.update(
-              {
-                username: req.session.authUser.username,
-                videoID: sel.videoID
-              },
-              {
-                $set: {
-                  videoID: newVideoID,
-                  link: newVidLink
-                }
-              },
-              {
-                upsert: false,
-                returnUpdatedDocs: true
-              },
-              function(err, numAffected, affectedDocs) {
-                done(null, numAffected);
-              }
-            );
+      db.videos
+        .update(
+          {
+            username: req.session.authUser.username,
+            videoID: sel.videoID
           },
-          function(numAffected, done) {
-            if (numAffected < 1) {
-              returner = genericErrorObject("Link regeneration failed.");
+          {
+            $set: {
+              videoID: newVideoID,
+              link: newVidLink
             }
-
-            returner.newData[index].newVideoID = newVideoID;
-            returner.newData[index].newLink = newVidLink;
-            done();
           },
-          function(done) {
-            // updating likes/dislikes
-            db.ratings.update(
-              {
-                videoID: sel.videoID
-              },
-              {
-                $set: {
-                  videoID: newVideoID
-                }
-              },
-              {
-                multi: true
-              },
-              function(err) {
-                if (err) {
-                  log("NEW LINKS | " + err, 1);
-                }
-                done();
+          {
+            upsert: false,
+            returnUpdatedDocs: true
+          }
+        )
+        .then((err, numAffected, affectedDocs) => {
+          if (numAffected < 1) {
+            return cb("Link regeneration failed.");
+          }
+
+          returner.newData[index].newVideoID = newVideoID;
+          returner.newData[index].newLink = newVidLink;
+
+          return db.ratings.update(
+            {
+              videoID: sel.videoID
+            },
+            {
+              $set: {
+                videoID: newVideoID
               }
-            );
-          },
-          function(done) {
-            // video file renaming
-            // TODO: ensure ownership
-            fs.rename(
-              path.resolve(
-                "static",
-                config.storagePath,
-                sel.videoID + sel.extension
-              ),
-              path.resolve(
-                "static",
-                config.storagePath,
-                newVideoID + sel.extension
-              )
-            )
-              .then(r => {
-                return done();
-              })
-              .catch(e => {
-                log("NEW LINKS | " + e, 1);
-              });
-          },
-          function(done) {
-            // thumbnail renaming
-
-            fs.rename(
-              path.resolve(
-                "static",
-                config.storagePath,
-                "thumbs",
-                sel.videoID + ".jpg"
-              ),
-              path.resolve(
-                "static",
-                config.storagePath,
-                "thumbs",
-                newVideoID + ".jpg"
-              )
-            )
-              .then(r => {
-                return done();
-              })
-              .catch(e => {
-                log("NEW LINKS | " + e, 1);
-              });
-          }
-        ],
-        function(err) {
-          if (err) {
-            log("NEW LINKS | " + err, 1);
-          }
-          if (opCount == req.body.selection.length - 1) {
-            if (!returner.meta.error) {
-              returner.meta.msg = "Links successfully updated!";
+            },
+            {
+              multi: true
             }
-            return res.json(returner);
-          } else {
-            opCount++;
-          }
-        }
-      );
-    });
-  }
+          );
+        })
+        .then(() => {
+          // video file renaming
+          return fs.rename(
+            path.resolve(
+              "static",
+              config.storagePath,
+              sel.videoID + sel.extension
+            ),
+            path.resolve(
+              "static",
+              config.storagePath,
+              newVideoID + sel.extension
+            )
+          );
+        })
+        .then(() => {
+          // thumbnail renaming
+          return fs.rename(
+            path.resolve(
+              "static",
+              config.storagePath,
+              "thumbs",
+              sel.videoID + ".jpg"
+            ),
+            path.resolve(
+              "static",
+              config.storagePath,
+              "thumbs",
+              newVideoID + ".jpg"
+            )
+          );
+        })
+        .then(() => {
+          return cb();
+        });
+    },
+    err => {
+      if (err) {
+        return res.json(genericResponseObject(err));
+      }
+      returner.meta.msg = "Links successfully updated!";
+      return res.json(returner);
+    }
+  );
 });
 
 // route for video name changes
@@ -658,13 +579,9 @@ router.patch("/api/rename", function(req, res) {
 
   let returner = genericResponseObject();
 
-  if (!req.session.authUser) {
-    res.json(
-      res.json(genericErrorObject("No authentication. Please sign in."))
-    );
-  } else {
-    //updating the requested video's name
-    db.videos.update(
+  //updating the requested video's name
+  db.videos
+    .update(
       {
         username: req.session.authUser.username,
         videoID: req.body.videoID
@@ -676,197 +593,77 @@ router.patch("/api/rename", function(req, res) {
       },
       {
         upsert: false
-      },
-      function(err, numAffected, affectedDocs) {
-        if (err) {
-          log("RENAME | " + err, 1);
-        }
-        if (numAffected < 1) {
-          returner = genericErrorObject("Renaming failed; No such video.");
-        } else {
-          returner = genericResponseObject("Video successfully renamed!");
-        }
-        returner.newName = req.body.newName;
-
-        return res.json(returner);
       }
-    );
-  }
+    )
+    .then((err, numAffected, affectedDocs) => {
+      if (err) {
+        log("RENAME | " + err, 1);
+      }
+      if (numAffected < 1) {
+        returner = genericErrorObject("Renaming failed; No such video.");
+      } else {
+        returner = genericResponseObject("Video successfully renamed!");
+      }
+      returner.newName = req.body.newName;
+
+      return res.json(returner);
+    });
 });
 
 // route for video upload finalization (cancel or confirm)
 router.put("/api/finalizeUpload", function(req, res) {
   log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username, 0);
 
-  let returner = genericResponseObject(),
-    opCount = 0;
-
-  if (!req.session.authUser) {
-    return res.json(genericErrorObject("No authentication. Please sign in."));
-  }
+  let returner = genericResponseObject();
 
   if (req.body.cancelled) {
     log(chalk.red("UPLOAD FINALIZATION | upload(s) cancelled"), 0);
-    res.json(genericErrorObject("You have cancelled the upload."));
+    return res.json(genericErrorObject("You have cancelled the upload."));
   }
 
-  // proceeding to name assignment, if the upload wasn't cancelled
-  async.waterfall(
-    [
-      function(done) {
-        if (req.body.cancelled) {
-          done();
-        }
-        for (const oldName in req.body.newNames) {
-          if (req.body.newNames.hasOwnProperty(oldName)) {
-            log(
-              "UPLOAD FINALIZATION | got new name " +
-                req.body.newNames[oldName] +
-                " for " +
-                oldName,
-              0
-            );
-
-            let newName = req.body.newNames[oldName].replace(
-              /[^a-z0-9\s]/gi,
-              ""
-            ); // should already be clean coming from the client, redundancy
-            let cleanedName = oldName.replace(/[^a-z0-9]/gi, "");
-
-            db.videos.update(
-              {
-                confirmed: false,
-                username: req.session.authUser.username,
-                name: cleanedName
-              },
-              {
-                $set: {
-                  name: newName,
-                  confirmed: true,
-                  uploadDate: new Date()
-                }
-              },
-              {
-                returnUpdatedDocs: true,
-                multi: false
-              },
-              function(err, numAffected, affectedDocuments) {
-                if (err) {
-                  log(chalk.bgRed.white("UPLOAD FINALIZATION | " + err), 1);
-                  returner.meta.error = 1;
-                }
-
-                if (opCount === Object.keys(req.body.newNames).length - 1) {
-                  res.json(
-                    genericResponseObject(
-                      "You successfully uploaded the video."
-                    )
-                  );
-                  done();
-                } else {
-                  opCount++;
-                }
-              }
-            );
-          }
-        }
-      },
-      function(done) {
-        // unnamed (old unconfirmed) video removal
-        db.videos.find(
-          {
-            username: req.session.authUser.username,
-            confirmed: false
-          },
-          function(err, docs) {
-            if (err) {
-              log("UPLOAD FINALIZATION | " + err, 1);
-            }
-            done(null, docs);
-          }
-        );
-      },
-      function(unconfirmedvideos, done) {
-        unconfirmedvideos.forEach(selection => {
-          log(chalk.red("UPLOAD FINALIZATION | removing unconfirmed"), 0);
-          db.videos.find(
-            {
-              videoID: selection.videoID
-            },
-            function(err, docs) {
-              if (err) {
-                log(chalk.bgRed.white("UPLOAD FINALIZATION | " + err), 1);
-              } else {
-                db.users.update(
-                  {
-                    username: req.session.authUser.username
-                  },
-                  {
-                    $inc: {
-                      // restoring user's storage space for each deleted
-                      remainingSpace: Math.abs(docs[0].size)
-                    }
-                  },
-                  {
-                    returnUpdatedDocs: true,
-                    multi: false
-                  },
-                  function(err, numAffected, affectedDocument) {
-                    // removing video from storage
-                    try {
-                      fs.unlink(
-                        path.resolve(
-                          "static",
-                          config.storagePath,
-                          selection.videoID + selection.extension
-                        )
-                      );
-                    } catch (e) {
-                      log("UPLOAD FINALIZATION | " + e, 1);
-                    }
-                    // removing thumbnail
-                    try {
-                      fs.unlink(
-                        path.resolve(
-                          "static",
-                          config.storagePath,
-                          "thumbs",
-                          selection.videoID + ".jpg"
-                        )
-                      );
-                    } catch (e) {
-                      log("UPLOAD FINALIZATION | " + e, 1);
-                    }
-
-                    // updating active user
-                    req.session.authUser = affectedDocument;
-                  }
-                );
-
-                db.videos.remove(
-                  {
-                    videoID: selection.videoID
-                  },
-                  function(err, docs) {
-                    if (err) {
-                      log(chalk.bgRed.white("UPLOAD FINALIZATION | " + err, 1));
-                    }
-                    //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant
-                    //return errors from foreach async operations.
-                  }
-                );
-              }
-            }
-          );
-        });
-        //FIXME ?
-        done(); //foreach will be +- synced up
+  async.eachOf(
+    Object.keys(req.body.newNames),
+    (oldName, index, cb) => {
+      if (!req.body.newNames.hasOwnProperty(oldName)) {
+        return cb();
       }
-    ],
-    function(err) {
-      if (err) {
-        log("UPLOAD FINALIZATION | " + err, 1);
-      }
+
+      log(
+        "UPLOAD FINALIZATION | got new name " +
+          req.body.newNames[oldName] +
+          " for " +
+          oldName,
+        0
+      );
+
+      let newName = req.body.newNames[oldName].replace(/[^a-z0-9\s]/gi, "");
+      let cleanedName = oldName.replace(/[^a-z0-9]/gi, "");
+
+      db.videos.update(
+        {
+          confirmed: false,
+          username: req.session.authUser.username,
+          name: cleanedName
+        },
+        {
+          $set: {
+            name: newName,
+            confirmed: true,
+            uploadDate: new Date()
+          }
+        },
+        {
+          returnUpdatedDocs: true,
+          multi: false
+        }
+      );
+    },
+    () => {
+      // removing all unconfirmed
+      removeUnconfirmed(req.session.authUser.username);
+      return res.json(
+        genericResponseObject("You successfully uploaded the video.")
+      );
     }
   );
 });
@@ -1280,6 +1077,77 @@ function genericErrorObject(message) {
       msg: message ? message : "An error has occured."
     }
   };
+}
+
+function removeUnconfirmed(user) {
+  db.videos
+    .find({
+      username: user,
+      confirmed: false
+    })
+    .then(unconfirmedvideos => {
+      // no need to be in order, we're not returning anything to the client.
+      unconfirmedvideos.forEach(unconfirmedVideo => {
+        log(chalk.red("UPLOAD FINALIZATION | removing unconfirmed"), 0);
+
+        // deleting video and thumbnail
+        try {
+          fs.unlink(
+            path.resolve(
+              "static",
+              config.storagePath,
+              unconfirmedVideo.videoID + unconfirmedVideo.extension
+            )
+          );
+        } catch (e) {
+          log("UPLOAD FINALIZATION | " + e, 1);
+        }
+        // removing thumbnail
+        try {
+          fs.unlink(
+            path.resolve(
+              "static",
+              config.storagePath,
+              "thumbs",
+              unconfirmedVideo.videoID + ".jpg"
+            )
+          );
+        } catch (e) {
+          log("UPLOAD FINALIZATION | " + e, 1);
+        }
+
+        // restoring user space
+        db.users.update(
+          {
+            username: req.session.authUser.username
+          },
+          {
+            $inc: {
+              // restoring user's storage space for each deleted
+              remainingSpace: Math.abs(unconfirmedVideo.size)
+            }
+          },
+          {
+            returnUpdatedDocs: true,
+            multi: false
+          }
+        );
+
+        // removing video
+        db.videos.remove(
+          {
+            videoID: selection.videoID
+          },
+          function(err, docs) {
+            if (err) {
+              log(chalk.bgRed.white("UPLOAD FINALIZATION | " + err, 1));
+            }
+            //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant
+            //return errors from foreach async operations.
+          }
+        );
+      });
+    });
 }
 
 // logger
