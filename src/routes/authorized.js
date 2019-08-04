@@ -618,40 +618,33 @@ router.delete("/api/removeVideo", function(req, res) {
 
 // route for video uploads
 router.post("/api/upload", function(req, res) {
-  if (!req.session.authUser) {
-    return res.status(557).json({
-      error: "User not signed in."
-    });
-  }
   let returner = genericResponseObject(),
-    opCount = 0;
+    totalSizeInMegabytes = 0;
   returner.newVideos = [];
 
-  async.waterfall(
-    [
-      function(done) {
-        // checking space first
-        du(path.resolve("static", config.storagePath), function(err, size) {
-          if (size >= config.spaceLimit) {
-            log("UPLOAD | Max space exceeded! Interrupting download...", 1);
-            returner = genericErrorObject(
-              "The server cannot accept videos at the moment. Try again later!"
-            );
-            returner.meta.msgType = "info";
-            return res.json(returner);
-          }
-          return done();
-        });
+  du(path.resolve("static", config.storagePath))
+    .then(size => {
+      if (size >= config.spaceLimit) {
+        log("UPLOAD | Max space exceeded! Interrupting download...", 1);
+        returner = genericErrorObject(
+          "The server cannot accept videos at the moment. Try again later!"
+        );
+        returner.meta.msgType = "info";
+        return res.json(returner);
       }
-    ],
-    function(err) {
-      // PER-FILE handling
+    })
+    .then(() => {
+      async.each(
+        Object.keys(req.files),
+        (file, cb) => {
+          if (!req.files.hasOwnProperty(file)) {
+            return cb();
+          }
 
-      for (const file in req.files) {
-        if (req.files.hasOwnProperty(file)) {
           // filesize handling
           let fileSizeInBytes = req.files[file].dataSize;
           let fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
+          totalSizeInMegabytes += fileSizeInMegabytes;
           log(
             "UPLOAD | uploaded video size is " + fileSizeInMegabytes + "mb",
             0
@@ -659,160 +652,121 @@ router.post("/api/upload", function(req, res) {
 
           if (fileSizeInMegabytes > 10000) {
             //hard limitas to avoid files over 10gb
-            res.status(557).json({
-              error: "File is too big. Must be <10 gigabytes."
-            });
-          } else {
-            let extension;
-
-            switch (req.files[file].mimetype) {
-              case "video/webm":
-                extension = ".webm";
-                break;
-              case "video/ogg":
-                extension = ".ogv";
-                break;
-              case "video/mp4":
-                extension = ".mp4";
-                break;
-              default:
-                log("UPLOAD | unsupported video format!", 0);
-                return res.status(557).json({
-                  error: "That video format cannot be uploaded."
-                });
-            }
-
-            async.waterfall(
-              [
-                function(done) {
-                  db.users.find(
-                    {
-                      username: req.session.authUser.username.toLowerCase()
-                    },
-                    function(err, docs) {
-                      return done(null, docs);
-                    }
-                  );
-                },
-                function(docs, done) {
-                  var cleanedName = req.files[file].name.replace(
-                    /[^a-z0-9\s]/gi,
-                    ""
-                  );
-                  // checking if user's storage space is sufficient
-                  if (docs[0].remainingSpace < fileSizeInMegabytes) {
-                    return res.status(557).json({
-                      error:
-                        "You do not have enough space remaining to upload this file."
-                    });
-                  }
-                  // dedam video i storage
-                  var videoID = shortid.generate();
-                  var vidLink = config.host + "/v/" + videoID;
-                  log(chalk.green("UPLOAD | storing video!"), 0);
-
-                  db.videos.insert(
-                    {
-                      username: req.session.authUser.username.toLowerCase(),
-                      link: vidLink,
-                      name: cleanedName,
-                      videoID: videoID,
-                      views: 0,
-                      likes: 0,
-                      dislikes: 0,
-                      size: fileSizeInMegabytes,
-                      mimetype: req.files[file].mimetype,
-                      extension: extension,
-                      confirmed: false
-                    },
-                    function(err, newDoc) {
-                      if (err) {
-                        return log("UPLOAD | " + err, 1);
-                      }
-                      req.files[file].mv(
-                        path.resolve(
-                          "static",
-                          config.storagePath,
-                          videoID + extension
-                        ),
-                        function(err) {
-                          //generating thumbnail
-
-                          extractFrames({
-                            input: path.resolve(
-                              "static",
-                              config.storagePath,
-                              videoID + extension
-                            ),
-                            output: path.resolve(
-                              "static",
-                              config.storagePath,
-                              "thumbs",
-                              videoID + ".jpg"
-                            ),
-                            offsets: [0]
-                          }).catch(e => {
-                            console.log(
-                              chalk.bgYellow.black("WARN") +
-                                "Failed to save thumbnail:",
-                              e
-                            );
-                          });
-
-                          returner.newVideos.push(newDoc);
-
-                          if (opCount >= Object.keys(req.files).length - 1) {
-                            log(
-                              "UPLOAD | RETURNING UPLOAD CALLBACK w/ " +
-                                opCount +
-                                " items",
-                              0
-                            );
-                            return res.json(returner);
-                          }
-
-                          // incrementing uploaded video counter
-                          opCount++;
-                        }
-                      );
-                    }
-                  );
-                  var decrement = (fileSizeInMegabytes *= -1);
-                  done(null, decrement);
-                },
-                function(decrement, done) {
-                  // reducing user's storage space
-                  db.users.update(
-                    {
-                      username: req.session.authUser.username.toLowerCase()
-                    },
-                    {
-                      $inc: {
-                        remainingSpace: decrement
-                      }
-                    },
-                    {
-                      returnUpdatedDocs: true,
-                      multi: false
-                    },
-                    function(err, numAffected, affectedDocument) {
-                      // updating session
-                      req.session.authUser = affectedDocument;
-                    }
-                  );
-                }
-              ],
-              function(err) {
-                if (err) {
-                  log("UPLOAD | " + err, 1);
-                }
-              }
-            );
+            return res
+              .status(500)
+              .json(
+                genericErrorObject("File is too big. Must be <10 gigabytes.")
+              );
           }
+          let extension;
+
+          switch (req.files[file].mimetype) {
+            case "video/webm":
+              extension = ".webm";
+              break;
+            case "video/ogg":
+              extension = ".ogv";
+              break;
+            case "video/mp4":
+              extension = ".mp4";
+              break;
+            default:
+              log("UPLOAD | unsupported video format!", 0);
+              return res
+                .status(500)
+                .json(
+                  genericErrorObject("That video format cannot be uploaded.")
+                );
+          }
+
+          var cleanedName = req.files[file].name.replace(/[^a-z0-9\s]/gi, "");
+          // checking if user's storage space is sufficient
+          if (docs[0].remainingSpace < fileSizeInMegabytes) {
+            return res
+              .status(500)
+              .json(
+                genericErrorObject(
+                  "You do not have enough space remaining to upload this file."
+                )
+              );
+          }
+          // dedam video i storage
+          var videoID = shortid.generate();
+          var vidLink = config.host + "/v/" + videoID;
+          log(chalk.green("UPLOAD | storing video!"), 0);
+
+          db.videos
+            .insert({
+              username: req.session.authUser.username.toLowerCase(),
+              link: vidLink,
+              name: cleanedName,
+              videoID: videoID,
+              views: 0,
+              likes: 0,
+              dislikes: 0,
+              size: fileSizeInMegabytes,
+              mimetype: req.files[file].mimetype,
+              extension: extension,
+              confirmed: false
+            })
+            .then(newDoc => {
+              req.files[file].mv(
+                path.resolve("static", config.storagePath, videoID + extension),
+                function(err) {
+                  //generating thumbnail
+
+                  extractFrames({
+                    input: path.resolve(
+                      "static",
+                      config.storagePath,
+                      videoID + extension
+                    ),
+                    output: path.resolve(
+                      "static",
+                      config.storagePath,
+                      "thumbs",
+                      videoID + ".jpg"
+                    ),
+                    offsets: [0]
+                  }).catch(e => {
+                    console.log(
+                      chalk.bgYellow.black("WARN") +
+                        "Failed to save thumbnail:",
+                      e
+                    );
+                  });
+
+                  returner.newVideos.push(newDoc);
+
+                  return cb();
+                }
+              );
+            });
+        },
+        () => {
+          // reducing user's storage space
+          db.users
+            .update(
+              {
+                username: req.session.authUser.username.toLowerCase()
+              },
+              {
+                $inc: {
+                  remainingSpace: totalSizeInMegabytes * -1
+                }
+              },
+              {
+                returnUpdatedDocs: true,
+                multi: false
+              }
+            )
+            .then((err, numAffected, affectedDocument) => {
+              // updating session
+              req.session.authUser = affectedDocument;
+            });
         }
-      }
-    }
-  );
+      );
+    });
 });
 
 // removing usre from req.session on logout
