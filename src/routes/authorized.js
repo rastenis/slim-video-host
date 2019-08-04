@@ -182,7 +182,6 @@ router.get("/api/dash", function(req, res) {
 
 // route for storage upgrades
 router.post("/api/upgrade", function(req, res) {
-  let returner = genericResponseObject();
   log(
     "UPGRADE | requester : " +
       req.session.authUser.username +
@@ -282,9 +281,6 @@ router.post("/api/upgrade", function(req, res) {
 router.delete("/api/deleteAccount", function(req, res) {
   log("ACCOUNT DELETION | requester: " + req.session.authUser.username, 0);
 
-  let returner = genericResponseObject(),
-    opCount = 0;
-
   // account deletion chain
   db.users
     .findOne({
@@ -309,9 +305,8 @@ router.delete("/api/deleteAccount", function(req, res) {
       if (!match) {
         //wrong confirmation password
         throw "The confirmation password is incorrect! Try again.";
-      } else if (returner.meta.error) {
-        throw "An error occured when deleting your account. Please try again later.";
       }
+
       // removing user
       return db.users.remove(
         {
@@ -330,16 +325,6 @@ router.delete("/api/deleteAccount", function(req, res) {
       videos.forEach(video => {
         removeVideo(video);
       });
-
-      //removing video ratings
-      return db.ratings.remove(
-        {
-          username: req.session.authUser.username
-        },
-        {
-          multi: true
-        }
-      );
     })
     .then(() => {
       return res.json(genericResponseObject);
@@ -545,179 +530,90 @@ router.put("/api/finalizeUpload", function(req, res) {
 
 // post to remove video
 router.delete("/api/removeVideo", function(req, res) {
-  if (!req.session.authUser) {
-    res.json(genericErrorObject("You are not auhorized to do that action!"));
-  } else {
-    log("VIDEO DELETION | " + "requester: " + req.session.authUser.username, 0);
-    let returner = genericResponseObject();
-    returner.selection = req.body.selection;
-    let opCount = 0;
+  log("VIDEO DELETION | " + "requester: " + req.session.authUser.username, 0);
+  let returner = genericResponseObject();
+  returner.selection = req.body.selection;
 
-    req.body.selection.forEach(selection => {
-      db.videos.find(
-        {
-          videoID: selection.videoID
-        },
-        function(err, docs) {
-          if (err) {
-            log(chalk.bgRed.white("VIDEO DELETION | " + err), 1);
-            returner.meta.error = 1;
-            returner.meta.msg = "Internal error. Try again.";
-          } else {
-            async.waterfall(
-              [
-                function(done) {
-                  db.users.update(
-                    {
-                      username: selection.username
-                    },
-                    {
-                      $inc: {
-                        // restoring user's storage space
-                        remainingSpace: Math.abs(docs[0].size)
-                      }
-                    },
-                    {
-                      returnUpdatedDocs: true,
-                      multi: false
-                    },
-                    function(err, numAffected, affectedDocument) {
-                      if (err) {
-                        log("VIDEO DELETION | " + err, 1);
-                      }
-                      // rm cached vid
-                      try {
-                        fs.remove(
-                          "static",
-                          config.storagePath +
-                            selection.videoID +
-                            selection.extension,
-                          function(err) {
-                            if (err) {
-                              log("VIDEO DELETION | " + err, 1);
-                            }
-                          }
-                        );
-                      } catch (error) {
-                        log(
-                          "VIDEO DELETION | " + "couldn't remove video file.",
-                          1
-                        );
-                      }
-                      // rm thumbnail
-                      try {
-                        fs.remove(
-                          path.resolve(
-                            "static",
-                            config.storagePath,
-                            "thumbs",
-                            selection.videoID + ".jpg"
-                          ),
-                          function(err) {
-                            if (err) {
-                              log("VIDEO DELETION | " + err, 1);
-                            }
-                          }
-                        );
-                      } catch (error) {
-                        log(
-                          "VIDEO DELETION | " +
-                            "couldn't remove video thumbnail.",
-                          1
-                        );
-                      }
+  async.each(
+    req.body.selection,
+    (videoToDelete, cb) => {
+      db.videos
+        .findOne({
+          videoID: videoToDelete.videoID,
+          username: req.session.authUser.userStatus
+            ? videoToDelete.username
+            : req.session.authUser.username // only videos from the signed in user, unless admin is deleting.
+        })
+        .then(foundVideoToDelete => {
+          if (!foundVideoToDelete) {
+            throw "Could not delete video.";
+          }
 
-                      // renewing session user, but not if the user is an admin
-                      if (req.session.authUser.userStatus != 1) {
-                        req.session.authUser = affectedDocument;
-                      }
-                      done();
-                    }
-                  );
-                },
-                function(done) {
-                  db.videos.remove(
-                    {
-                      videoID: selection.videoID
-                    },
-                    function(err, docs) {
-                      if (err) {
-                        log(chalk.bgRed.white("VIDEO DELETION | " + err), 1);
-                        returner.meta.error = 1;
-                        returner.meta.msg = "Internal error. Try again.";
-                        res.json(returner);
-                      }
+          removeVideo(foundVideoToDelete);
 
-                      if (opCount == req.body.selection.length - 1) {
-                        returner.meta.msgType = "info";
-                        returner.meta.error = 0;
-                        returner.meta.msg = "Successfully deleted video(s)!";
-                        res.json(returner);
-                        return done();
-                      }
+          return db.users.update(
+            {
+              username: videoToDelete.username
+            },
+            {
+              $inc: {
+                // restoring user's storage space
+                remainingSpace: Math.abs(foundVideoToDelete.size)
+              }
+            },
+            {
+              returnUpdatedDocs: true,
+              multi: false
+            }
+          );
+        })
+        .then((numAffected, affectedDocument) => {
+          // removing video
+          // renewing session user, but not if the user is an admin
+          if (req.session.authUser.userStatus != 1) {
+            req.session.authUser = affectedDocument;
+          }
 
-                      opCount++;
-                      return done();
-                      //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant
-                      //return errors from foreach async operations.
-                    }
-                  );
-                },
-                function(done) {
-                  db.ratings.remove(
-                    {
-                      videoID: selection.videoID
-                    },
-                    {
-                      multi: true
-                    },
-                    function(err, docs) {
-                      if (err) {
-                        log("AVIDEO DELETION | " + err, 1);
-                      }
-                      done();
-                    }
-                  );
-                },
-                function(done) {
-                  if (
-                    req.session.authUser.userStatus == 1 &&
-                    selection.warning != 0
-                  ) {
-                    // admin has chosen to warn/block user
-                    db.users.update(
-                      {
-                        username: selection.username
-                      },
-                      {
-                        $set: {
-                          accountStanding: selection.warning
-                        }
-                      },
-                      {
-                        multi: false
-                      },
-                      err => {
-                        if (err) {
-                          log(chalk.bgRed.white("VIDEO DELETION | " + err), 1);
-                        }
-                      }
-                    );
-                  }
-                  done(); //doesn't really matter if operation doesn't finish before returning
+          return db.videos.remove({
+            videoID: videoToDelete.videoID
+          });
+        })
+        .then(() => {
+          if (
+            req.session.authUser.userStatus == 1 &&
+            videoToDelete.warning != 0
+          ) {
+            // admin has chosen to warn/block user
+            db.users.update(
+              {
+                username: videoToDelete.username
+              },
+              {
+                $set: {
+                  accountStanding: videoToDelete.warning
                 }
-              ],
-              function(err) {
-                if (err) {
-                  log("VIDEO DELETION | " + err, 1);
-                }
+              },
+              {
+                multi: false
               }
             );
           }
-        }
-      );
-    });
-  }
+          return cb();
+        })
+        .catch(e => {
+          return cb(e);
+        });
+    },
+    err => {
+      if (err) {
+        return res.json(genericErrorObject(err));
+      }
+      returner.meta.msgType = "info";
+      returner.meta.error = 0;
+      returner.meta.msg = "Successfully deleted video(s)!";
+      res.json(returner);
+    }
+  );
 });
 
 // route for video uploads
@@ -922,16 +818,10 @@ router.post("/api/upload", function(req, res) {
 // removing usre from req.session on logout
 router.post("/api/logout", function(req, res) {
   delete req.session.authUser;
-  res.json({
+  return res.json({
     ok: true
   });
 });
-
-// password hashing function
-function hashUpPass(pass) {
-  var hash = bcrypt.hashSync(pass, 12);
-  return hash;
-}
 
 // a base object for most api responses
 function genericResponseObject(message) {
@@ -955,8 +845,9 @@ function genericErrorObject(message) {
 }
 
 function removeVideo(video) {
+  // removing files
   try {
-    // remove video
+    // removing video
     fs.unlink(
       path.resolve(
         "static",
@@ -964,7 +855,7 @@ function removeVideo(video) {
         video.videoID + video.extension
       )
     );
-    // remove thumbnail
+    // removing thumbnail
     fs.unlink(
       path.resolve(
         "static",
@@ -976,6 +867,16 @@ function removeVideo(video) {
   } catch (e) {
     console.error(e);
   }
+
+  // removing ratings
+  db.ratings.remove(
+    {
+      videoID: selection.videoID
+    },
+    {
+      multi: true
+    }
+  );
 }
 
 function removeUnconfirmed(user) {
