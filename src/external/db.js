@@ -9,7 +9,8 @@ module.exports = {
   }),
   codes: Datastore.create({
     filename: path.resolve(config.dbPath, "codes"),
-    corruptAlertThreshold: 1 // headway manually pridetiems kodams
+    corruptAlertThreshold: 1, // headway for manually added codes
+    autoload: true
   }),
   videos: Datastore.create({
     filename: path.resolve(config.dbPath, "videos"),

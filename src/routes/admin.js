@@ -1,14 +1,17 @@
-const app = require("express")();
 const fs = require("fs-extra");
-const config = require("../config");
-const maintenance = require("./external/maintenance.js");
-const db = require("./external/db.js");
 const path = require("path");
-const themes = require("../static/style/themes");
+const config = require(path.resolve("config.json"));
+const maintenance = require("../external/maintenance.js");
+const db = require(path.resolve("src", "external", "db.js"));
+const themes = require(path.resolve("static", "style", "themes"));
+const async = require("async");
+const chalk = require("chalk");
 
 const { Router } = require("express");
 
 let router = Router();
+
+let settings = require(path.resolve(config.dbPath, "system", "settings.json"));
 
 // reject if the user is not signed in
 const check = (req, res, next) => {
@@ -19,7 +22,7 @@ const check = (req, res, next) => {
   return next();
 };
 
-app.post("/api/changeTheme", check, function(req, res) {
+router.post("/api/changeTheme", check, function(req, res) {
   log("THEME CHANGE | requester: " + req.session.authUser.username, 0);
   // only signed in admins
   let returner = genericResponseObject();
@@ -40,7 +43,7 @@ app.post("/api/changeTheme", check, function(req, res) {
   return res.json(returner);
 });
 
-app.post("/api/runMaintenance", function(req, res) {
+router.post("/api/runMaintenance", function(req, res) {
   let returner = genericResponseObject();
   log("RUN MAINTENANCE | requester: " + req.session.authUser.username, 0);
 
@@ -55,7 +58,7 @@ app.post("/api/runMaintenance", function(req, res) {
 });
 
 // postas adminu statistikom
-app.get("/api/getAdminStats", function(req, res) {
+router.get("/api/getAdminStats", function(req, res) {
   log("FETCHING ADMIN STATS | requester: " + req.session.authUser.username, 0);
   let returner = genericResponseObject();
   returner.stats = {};
@@ -115,5 +118,44 @@ app.get("/api/getAdminStats", function(req, res) {
     }
   );
 });
+
+// password hashing function
+function hashUpPass(pass) {
+  var hash = bcrypt.hashSync(pass, 12);
+  return hash;
+}
+
+// a base object for most api responses
+function genericResponseObject(message) {
+  return {
+    meta: {
+      error: false,
+      msgType: "success",
+      msg: message ? message : null
+    }
+  };
+}
+
+function genericErrorObject(message) {
+  return {
+    meta: {
+      error: true,
+      msgType: "error",
+      msg: message ? message : "An error has occured."
+    }
+  };
+}
+
+// logger
+function log(message, type) {
+  if (
+    config.productionLogging === "all" ||
+    process.env.NODE_ENV !== "production"
+  ) {
+    console.log(message);
+  } else if (config.productionLogging === "error" && type === 1) {
+    console.log(message);
+  }
+}
 
 module.exports = router;

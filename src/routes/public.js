@@ -1,16 +1,19 @@
-const app = require("express")();
 const fs = require("fs-extra");
-const config = require("../config");
-const db = require("./external/db.js");
 const path = require("path");
-const themes = require("../static/style/themes");
+const config = require(path.resolve("config.json"));
+const db = require(path.resolve("src", "external", "db.js"));
+const themes = require(path.resolve("static", "style", "themes"));
+const async = require("async");
+const chalk = require("chalk");
 
 const { Router } = require("express");
 
 let router = Router();
 
+let settings = require(path.resolve(config.dbPath, "system", "settings.json"));
+
 // video fetch route
-app.get("/api/cv/:id", function(req, res) {
+router.get("/api/cv/:id", function(req, res) {
   log("FETCHING VIDEO | id: " + req.params.id, 0);
 
   let returner = genericResponseObject();
@@ -148,7 +151,7 @@ app.get("/api/cv/:id", function(req, res) {
 });
 
 // post to actually change the password (both in-profile and token-based password reset)
-app.patch("/api/changePassword", function(req, res) {
+router.patch("/api/changePassword", function(req, res) {
   log(
     "PASSWORD CHANGE || " + (req.body.resetType == 0 ? "normal" : "token"),
     0
@@ -185,7 +188,7 @@ app.patch("/api/changePassword", function(req, res) {
             "Password reset token is invalid or has expired."
           );
         } else if (numAffected > 1) {
-          //shouldnt ever happen, severe edge
+          //shouldnt ever hrouteren, severe edge
           log(
             chalk.bgRed.white("CRITICAL!") +
               "PASSWORD CHANGE || multiple passwords updated somehow",
@@ -283,7 +286,7 @@ app.patch("/api/changePassword", function(req, res) {
   }
 });
 
-app.get("/api/settings", function(req, res) {
+router.get("/api/settings", function(req, res) {
   let returner = genericResponseObject();
 
   // settings fetch
@@ -297,5 +300,44 @@ app.get("/api/settings", function(req, res) {
 
   return res.json(returner);
 });
+
+// password hashing function
+function hashUpPass(pass) {
+  var hash = bcrypt.hashSync(pass, 12);
+  return hash;
+}
+
+// a base object for most api responses
+function genericResponseObject(message) {
+  return {
+    meta: {
+      error: false,
+      msgType: "success",
+      msg: message ? message : null
+    }
+  };
+}
+
+function genericErrorObject(message) {
+  return {
+    meta: {
+      error: true,
+      msgType: "error",
+      msg: message ? message : "An error has occured."
+    }
+  };
+}
+
+// logger
+function log(message, type) {
+  if (
+    config.productionLogging === "all" ||
+    process.env.NODE_ENV !== "production"
+  ) {
+    console.log(message);
+  } else if (config.productionLogging === "error" && type === 1) {
+    console.log(message);
+  }
+}
 
 module.exports = router;

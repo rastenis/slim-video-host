@@ -132,4 +132,16 @@ function genericErrorObject(message) {
   };
 }
 
+// logger
+function log(message, type) {
+  if (
+    config.productionLogging === "all" ||
+    process.env.NODE_ENV !== "production"
+  ) {
+    console.log(message);
+  } else if (config.productionLogging === "error" && type === 1) {
+    console.log(message);
+  }
+}
+
 module.exports = app;

@@ -1,10 +1,12 @@
-const app = require("express")();
 const fs = require("fs-extra");
 const du = require("du");
-const config = require("../config");
-const db = require("./external/db.js");
 const path = require("path");
+const config = require(path.resolve("config.json"));
+const db = require(path.resolve("src", "external", "db.js"));
 const extractFrames = require("ffmpeg-extract-frames");
+const async = require("async");
+const chalk = require("chalk");
+const bcrypt = require("bcrypt");
 
 const { Router } = require("express");
 
@@ -56,7 +58,7 @@ router.post("/api/login", check, function(req, res) {
 });
 
 // route for video actions (like/dislike)
-app.put("/api/act", function(req, res) {
+router.put("/api/act", function(req, res) {
   //ignore unauthorized acts
   if (!req.session.authUser) {
     return;
@@ -159,7 +161,7 @@ app.put("/api/act", function(req, res) {
 });
 
 // route for getting user's videos
-app.get("/api/dash", function(req, res) {
+router.get("/api/dash", function(req, res) {
   let returner = genericResponseObject();
 
   log("DASH | requester : " + req.session.authUser.username, 0);
@@ -255,7 +257,7 @@ app.get("/api/dash", function(req, res) {
 });
 
 // route for storage upgrades
-app.post("/api/upgrade", function(req, res) {
+router.post("/api/upgrade", function(req, res) {
   let returner = genericResponseObject();
   log(
     "UPGRADE | requester : " +
@@ -395,7 +397,7 @@ app.post("/api/upgrade", function(req, res) {
 });
 
 // route for account deletion
-app.delete("/api/deleteAccount", function(req, res) {
+router.delete("/api/deleteAccount", function(req, res) {
   log("ACCOUNT DELETION | requester: " + req.session.authUser.username, 0);
 
   let returner = genericResponseObject(),
@@ -554,7 +556,7 @@ app.delete("/api/deleteAccount", function(req, res) {
 });
 
 // new link generation
-app.patch("/api/newLink", function(req, res) {
+router.patch("/api/newLink", function(req, res) {
   log("NEW LINKS | requester: " + req.session.authUser.username, 0);
 
   let returner = genericResponseObject(),
@@ -688,7 +690,7 @@ app.patch("/api/newLink", function(req, res) {
 });
 
 // route for video name changes
-app.patch("/api/rename", function(req, res) {
+router.patch("/api/rename", function(req, res) {
   log("RENAME | requester: " + req.session.authUser.username, 0);
 
   let returner = genericResponseObject();
@@ -730,7 +732,7 @@ app.patch("/api/rename", function(req, res) {
 });
 
 // route for video upload finalization (cancel or confirm)
-app.put("/api/finalizeUpload", function(req, res) {
+router.put("/api/finalizeUpload", function(req, res) {
   log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username, 0);
 
   let returner = genericResponseObject(),
@@ -907,7 +909,7 @@ app.put("/api/finalizeUpload", function(req, res) {
 });
 
 // post to remove video
-app.delete("/api/removeVideo", function(req, res) {
+router.delete("/api/removeVideo", function(req, res) {
   if (!req.session.authUser) {
     res.json(genericErrorObject("You are not auhorized to do that action!"));
   } else {
@@ -1084,7 +1086,7 @@ app.delete("/api/removeVideo", function(req, res) {
 });
 
 // route for video uploads
-app.post("/api/upload", function(req, res) {
+router.post("/api/upload", function(req, res) {
   if (!req.session.authUser) {
     return res.status(557).json({
       error: "User not signed in."
@@ -1283,11 +1285,50 @@ app.post("/api/upload", function(req, res) {
 });
 
 // removing usre from req.session on logout
-app.post("/api/logout", function(req, res) {
+router.post("/api/logout", function(req, res) {
   delete req.session.authUser;
   res.json({
     ok: true
   });
 });
+
+// password hashing function
+function hashUpPass(pass) {
+  var hash = bcrypt.hashSync(pass, 12);
+  return hash;
+}
+
+// a base object for most api responses
+function genericResponseObject(message) {
+  return {
+    meta: {
+      error: false,
+      msgType: "success",
+      msg: message ? message : null
+    }
+  };
+}
+
+function genericErrorObject(message) {
+  return {
+    meta: {
+      error: true,
+      msgType: "error",
+      msg: message ? message : "An error has occured."
+    }
+  };
+}
+
+// logger
+function log(message, type) {
+  if (
+    config.productionLogging === "all" ||
+    process.env.NODE_ENV !== "production"
+  ) {
+    console.log(message);
+  } else if (config.productionLogging === "error" && type === 1) {
+    console.log(message);
+  }
+}
 
 module.exports = router;
