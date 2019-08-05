@@ -302,10 +302,7 @@ router.delete("/api/deleteAccount", function(req, res) {
         throw "Server error.";
       }
 
-      return bcrypt.compare(
-        req.body.passwordConfirmation,
-        fetchedUser.password
-      );
+      return bcrypt.compare(req.body.passwordConfirmation, user.password);
     })
     .then(match => {
       if (!match) {
@@ -626,7 +623,7 @@ router.delete("/api/removeVideo", function(req, res) {
       returner.meta.msgType = "info";
       returner.meta.error = 0;
       returner.meta.msg = "Successfully deleted video(s)!";
-      res.json(returner);
+      return res.json(returner);
     }
   );
 });
