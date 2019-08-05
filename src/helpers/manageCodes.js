@@ -28,25 +28,24 @@ mainLoop: while (true) {
         "enter type (0 for registration code, 1 for upgrade code):"
       );
       type = typeBool ? "upgrade" : "reg";
-      db.codes.insert(
-        {
+      db.codes
+        .insert({
           code: code,
           space: parseFloat(space) * 1000,
           type: type,
           benefit: 0,
           active: true
-        },
-        function(err) {
-          if (err) {
-            console.log(err);
-          }
-        }
-      );
-      console.log(
-        chalk.green("DONE! Code ") +
-          chalk.yellow(code) +
-          chalk.green(" inserted!")
-      );
+        })
+        .then(() => {
+          console.log(
+            chalk.green("DONE! Code ") +
+              chalk.yellow(code) +
+              chalk.green(" inserted!")
+          );
+        })
+        .catch(e => {
+          console.error(e);
+        });
       break;
     case "2":
       var code = prompt("enter code:");
@@ -54,19 +53,25 @@ mainLoop: while (true) {
         "enter type (0 for registration code, 1 for upgrade code):"
       );
       type = typeBool ? "upgrade" : "reg";
-      db.codes.insert(
-        { code: code, space: null, type: type, benefit: 1, active: true },
-        function(err) {
-          if (err) {
-            console.log(err);
-          }
-        }
-      );
-      console.log(
-        chalk.green("DONE! Code ") +
-          chalk.yellow(code) +
-          chalk.green(" inserted!")
-      );
+      db.codes
+        .insert({
+          code: code,
+          space: null,
+          type: type,
+          benefit: 1,
+          active: true
+        })
+        .then(() => {
+          console.log(
+            chalk.green("DONE! Code ") +
+              chalk.yellow(code) +
+              chalk.green(" inserted!")
+          );
+        })
+        .catch(e => {
+          console.error(e);
+        });
+
       break;
     case "3":
       var code = prompt("enter code:");
@@ -85,20 +90,18 @@ mainLoop: while (true) {
       break;
     case "5":
       var code = prompt("enter code:");
-      db.codes.insert(
-        { code: code, space: null, type: "upgrade", benefit: 2, active: true },
-        function(err) {
-          if (err) {
-            console.log(err);
-          }
-        }
-      );
+      db.codes.insert({
+        code: code,
+        space: null,
+        type: "upgrade",
+        benefit: 2,
+        active: true
+      });
       console.log(chalk.green("DONE!"));
       break;
     case "":
       console.log("finishing up....");
       break mainLoop;
-      break;
     default:
       break;
   }

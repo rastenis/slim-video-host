@@ -50,7 +50,7 @@ router.post("/api/changeTheme", check, function(req, res) {
   return res.json(returner);
 });
 
-router.post("/api/runMaintenance", function(req, res) {
+router.post("/api/runMaintenance", check, function(req, res) {
   let returner = genericResponseObject();
   logger.l("RUN MAINTENANCE | requester: " + req.session.authUser.username);
 
@@ -65,7 +65,7 @@ router.post("/api/runMaintenance", function(req, res) {
 });
 
 // postas adminu statistikom
-router.get("/api/getAdminStats", function(req, res) {
+router.get("/api/getAdminStats", check, function(req, res) {
   logger.l(
     "FETCHING ADMIN STATS | requester: " + req.session.authUser.username
   );

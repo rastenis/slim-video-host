@@ -27,110 +27,79 @@ const check = (req, res, next) => {
 };
 
 // route for video actions (like/dislike)
-router.put("/api/act", function(req, res) {
-  //ignore unauthorized acts
-  if (!req.session.authUser) {
-    return;
-  }
-
+router.put("/api/act", check, function(req, res) {
   logger.l("ACT | requester: " + req.session.authUser.username);
-  async.waterfall(
-    [
-      function(done) {
-        db.ratings.find(
+
+  let userRatings = {};
+  userRatings.liked = false;
+  userRatings.disliked = false;
+
+  db.ratings
+    .find({
+      username: req.session.authUser.username,
+      videoID: req.body.videoID
+    })
+    .then(docs => {
+      if (docs.length > 2 || docs.length < 0) {
+        logger.l("ACT | rating error.");
+      }
+
+      // assigning likes/dislikes
+      docs.forEach(doc => {
+        if (doc.action == 0) {
+          // disliked
+          userRatings.disliked = true;
+        } else if (doc.action == 1) {
+          userRatings.liked = true;
+        }
+      });
+
+      let prep = {};
+      prep.action = req.body.action;
+      prep.revert = false;
+      if (prep.action) {
+        // like
+        if (userRatings.liked) {
+          // revert
+          prep.revert = true;
+          prep.increment = -1;
+        } else {
+          // just like
+          prep.increment = 1;
+        }
+      } else {
+        // dislike
+        if (userRatings.disliked) {
+          // revert
+          prep.revert = true;
+          prep.increment = -1;
+        } else {
+          // just dislike
+          prep.increment = 1;
+        }
+      }
+
+      if (prep.revert) {
+        return db.ratings.remove(
           {
             username: req.session.authUser.username,
-            videoID: req.body.videoID
+            videoID: req.body.videoID,
+            action: prep.action
           },
-          function(err, docs) {
-            if (docs.length > 2 || docs.length < 0) {
-              logger.l("ACT | rating error.");
-            }
-            let userRatings = {};
-            userRatings.liked = false;
-            userRatings.disliked = false;
-
-            // assigning likes/dislikes
-            docs.forEach(doc => {
-              if (doc.action == 0) {
-                // disliked
-                userRatings.disliked = true;
-              } else if (doc.action == 1) {
-                userRatings.liked = true;
-              }
-            });
-            done(null, userRatings);
-          }
+          {}
         );
-      },
-      function(userRatings, done) {
-        let prep = {};
-        prep.action = req.body.action;
-        prep.revert = false;
-        if (prep.action) {
-          // like
-          if (userRatings.liked) {
-            // revert
-            prep.revert = true;
-            prep.increment = -1;
-          } else {
-            // just like
-            prep.increment = 1;
-          }
-        } else {
-          // dislike
-          if (userRatings.disliked) {
-            // revert
-            prep.revert = true;
-            prep.increment = -1;
-          } else {
-            // just dislike
-            prep.increment = 1;
-          }
-        }
-        // updating rating DB
-        if (prep.revert) {
-          db.ratings.remove(
-            {
-              username: req.session.authUser.username,
-              videoID: req.body.videoID,
-              action: prep.action
-            },
-            {},
-            function(err) {
-              if (err) {
-                log("ACT | " + err);
-              }
-              done();
-            }
-          );
-        } else {
-          db.ratings.insert(
-            {
-              username: req.session.authUser.username,
-              videoID: req.body.videoID,
-              action: prep.action
-            },
-            function(err) {
-              if (err) {
-                log("ACT | " + err);
-              }
-              done();
-            }
-          );
-        }
+      } else {
+        return db.ratings.insert({
+          username: req.session.authUser.username,
+          videoID: req.body.videoID,
+          action: prep.action
+        });
       }
-    ],
-    function(err) {
-      if (err) {
-        log("ACT | " + err);
-      }
-    }
-  );
+    });
 });
 
 // route for getting user's videos
-router.get("/api/dash", function(req, res) {
+router.get("/api/dash", check, function(req, res) {
   let returner = genericResponseObject();
 
   logger.l("DASH | requester : " + req.session.authUser.username);
@@ -187,7 +156,7 @@ router.get("/api/dash", function(req, res) {
 });
 
 // route for storage upgrades
-router.post("/api/upgrade", function(req, res) {
+router.post("/api/upgrade", check, function(req, res) {
   logger.l(
     "UPGRADE | requester : " +
       req.session.authUser.username +
@@ -283,7 +252,7 @@ router.post("/api/upgrade", function(req, res) {
 });
 
 // route for account deletion
-router.delete("/api/deleteAccount", function(req, res) {
+router.delete("/api/deleteAccount", check, function(req, res) {
   logger.l("ACCOUNT DELETION | requester: " + req.session.authUser.username);
 
   // account deletion chain
@@ -336,7 +305,7 @@ router.delete("/api/deleteAccount", function(req, res) {
 });
 
 // new link generation
-router.patch("/api/newLink", function(req, res) {
+router.patch("/api/newLink", check, function(req, res) {
   logger.l("NEW LINKS | requester: " + req.session.authUser.username);
 
   let returner = genericResponseObject();
@@ -439,7 +408,7 @@ router.patch("/api/newLink", function(req, res) {
 });
 
 // route for video name changes
-router.patch("/api/rename", function(req, res) {
+router.patch("/api/rename", check, function(req, res) {
   logger.l("RENAME | requester: " + req.session.authUser.username);
 
   let returner = genericResponseObject();
@@ -477,7 +446,7 @@ router.patch("/api/rename", function(req, res) {
 });
 
 // route for video upload finalization (cancel or confirm)
-router.put("/api/finalizeUpload", function(req, res) {
+router.put("/api/finalizeUpload", check, function(req, res) {
   logger.l(
     "UPLOAD FINALIZATION | requester: " + req.session.authUser.username,
     0
@@ -495,12 +464,11 @@ router.put("/api/finalizeUpload", function(req, res) {
         return cb();
       }
 
-      log(
+      logger.l(
         "UPLOAD FINALIZATION | got new name " +
           req.body.newNames[oldName] +
           " for " +
-          oldName,
-        0
+          oldName
       );
 
       let newName = req.body.newNames[oldName].replace(/[^a-z0-9\s]/gi, "");
@@ -536,7 +504,7 @@ router.put("/api/finalizeUpload", function(req, res) {
 });
 
 // post to remove video
-router.delete("/api/removeVideo", function(req, res) {
+router.delete("/api/removeVideo", check, function(req, res) {
   logger.l("VIDEO DELETION | requester: " + req.session.authUser.username);
   let returner = genericResponseObject();
   returner.selection = req.body.selection;
@@ -624,7 +592,7 @@ router.delete("/api/removeVideo", function(req, res) {
 });
 
 // route for video uploads
-router.post("/api/upload", function(req, res) {
+router.post("/api/upload", check, function(req, res) {
   let returner = genericResponseObject(),
     totalSizeInMegabytes = 0;
   returner.newVideos = [];
@@ -776,7 +744,7 @@ router.post("/api/upload", function(req, res) {
 });
 
 // post to actually change the password (both in-profile and token-based password reset)
-router.patch("/api/password/regular", function(req, res) {
+router.patch("/api/password/regular", check, function(req, res) {
   logger.l("PASSWORD CHANGE || regular");
 
   // resetting password
@@ -822,7 +790,7 @@ router.patch("/api/password/regular", function(req, res) {
 });
 
 // removing usre from req.session on logout
-router.post("/api/logout", function(req, res) {
+router.post("/api/logout", check, function(req, res) {
   delete req.session.authUser;
   return res.json({
     ok: true
@@ -895,18 +863,9 @@ function removeUnconfirmed(user) {
         );
 
         // removing video
-        db.videos.remove(
-          {
-            videoID: selection.videoID
-          },
-          function(err, docs) {
-            if (err) {
-              logger.l("UPLOAD FINALIZATION " + err);
-            }
-            //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant
-            //return errors from foreach async operations.
-          }
-        );
+        db.videos.remove({
+          videoID: selection.videoID
+        });
       });
     });
 }

@@ -77,7 +77,7 @@ router.post("/api/login", check, function(req, res) {
 });
 
 // post to request a password reset
-router.post("/api/requestReset", function(req, res) {
+router.post("/api/requestReset", check, function(req, res) {
   logger.l("PASSWORD RESET | reset request");
 
   db.users
@@ -148,7 +148,7 @@ router.post("/api/requestReset", function(req, res) {
 });
 
 // token checking route
-router.get("/api/checkToken/:token", function(req, res) {
+router.get("/api/checkToken/:token", check, function(req, res) {
   let returner = genericResponseObject();
   returner.valid = false;
 
@@ -181,7 +181,7 @@ router.get("/api/checkToken/:token", function(req, res) {
 });
 
 // registration post
-router.post("/api/register", function(req, res) {
+router.post("/api/register", check, function(req, res) {
   let storageSpace = defaultStorageSpace,
     userStatus = defaultUserStatus;
 
@@ -310,7 +310,7 @@ router.post("/api/register", function(req, res) {
 });
 
 // post to actually change the password (both in-profile and token-based password reset)
-router.patch("/api/password/token", function(req, res) {
+router.patch("/api/password/token", check, function(req, res) {
   logger.l("PASSWORD CHANGE || token");
 
   //token reset
