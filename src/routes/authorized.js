@@ -15,6 +15,8 @@ const { genericResponseObject, genericErrorObject } = require(path.resolve(
   "responses.js"
 ));
 
+const saltAmount = 12;
+
 const { Router } = require("express");
 
 let router = Router();
@@ -773,16 +775,17 @@ router.patch("/api/password/regular", check, function(req, res) {
       }
       //all fine
       // hashing the new password
-      let hashedPass = hashUpPass(req.body.newPassword);
-
+      return bcrypt.hash(req.body.newPassword, saltAmount);
+    })
+    .then(hashed => {
       // changing the password
-      db.users.update(
+      return db.users.update(
         {
           email: req.session.authUser.email
         },
         {
           $set: {
-            password: hashedPass
+            password: hashed
           }
         },
         {

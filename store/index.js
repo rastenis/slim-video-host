@@ -107,25 +107,15 @@ export const actions = {
       })
     })
       .then(res => {
-        switch (res.status) {
-          case 599:
-            throw {
-              msg: "An account with that username already exists."
-            };
-          case 598:
-            throw {
-              msg: "The server cannot accept new registrations at this moment."
-            };
-          case 597:
-            throw {
-              msg: "An account with that email already exists."
-            };
-          default:
-            return res.data;
-        }
+        return res.data;
       })
       .then(authUser => {
         commit("SET_USER", authUser);
+      })
+      .catch(e => {
+        throw {
+          msg: e.response.data.meta.msg
+        };
       });
   },
   setActiveTab({ commit }, tabNumber) {

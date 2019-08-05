@@ -18,7 +18,7 @@ const { genericResponseObject, genericErrorObject } = require(path.resolve(
 const defaultUserStatus = 0; //1 - admin
 const defaultStorageSpace = 10000; // in megabytes
 const defaultTokenExpiry = 1800000; // 30 mins
-const saltAmount = 12; // 30 mins
+const saltAmount = 12;
 
 const { Router } = require("express");
 
@@ -188,25 +188,13 @@ router.post("/api/register", check, function(req, res) {
   du(path.resolve("static", config.storagePath))
     .then(size => {
       logger.l(
-        "REGISTRATION | The size of the video folder is:" + size + "bytes",
-        0
+        "REGISTRATION | The size of the video folder is:" + size + "bytes"
       );
       if (size >= config.spaceLimit) {
         return res.status(500).json({
           error: "No registrations accepted at this time."
         });
       }
-
-      logger.l("registering");
-
-      logger.l(
-        chalk.bgRed(
-          chalk.bgCyanBright.black(
-            "REGISTRATION | no duplicate account! proceeding with the creation of the account."
-          )
-        ),
-        0
-      );
 
       return db.users.find({
         $or: [
@@ -218,15 +206,9 @@ router.post("/api/register", check, function(req, res) {
     .then(docs => {
       if (docs.length != 0) {
         //duplicate email
-        logger.l(
-          chalk.bgRed(
-            "REGISTRATION | Failed account creation (duplicate emails)"
-          ),
-          0
-        );
-        return res.status(597).json({
-          error: "An account with that email or username already exists."
-        });
+        logger.l("REGISTRATION | Failed account creation (duplicate emails)");
+
+        throw "An account with that email or username already exists.";
       }
 
       return db.codes.find({
@@ -280,28 +262,25 @@ router.post("/api/register", check, function(req, res) {
     })
     .then(() => {
       //inserting the new user
-      bcrypt.hash(req.body.password, saltAmount).then(hashed => {
-        db.users
-          .insert({
-            username: req.body.username.toLowerCase(),
-            password: hashed,
-            email: req.body.email,
-            totalSpace: storageSpace,
-            remainingSpace: storageSpace,
-            userStatus: userStatus,
-            accountStanding: 0
-          })
-          .then(doc => {
-            logger.l(
-              chalk.bgCyanBright.black(
-                "REGISTRATION | successfully inserted user " + doc.username
-              ),
-              0
-            );
-            req.session.authUser = doc; // attaching to session for easy access
-            return res.json(doc);
-          });
+      return bcrypt.hash(req.body.password, saltAmount);
+    })
+    .then(hashed => {
+      return db.users.insert({
+        username: req.body.username.toLowerCase(),
+        password: hashed,
+        email: req.body.email,
+        totalSpace: storageSpace,
+        remainingSpace: storageSpace,
+        userStatus: userStatus,
+        accountStanding: 0
       });
+    })
+    .then(inserted => {
+      logger.l(
+        "REGISTRATION | successfully registered user " + inserted.username
+      );
+      req.session.authUser = inserted;
+      return res.status(201).json(inserted);
     })
     .catch(e => {
       logger.l(e);

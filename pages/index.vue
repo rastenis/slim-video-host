@@ -118,7 +118,6 @@ export default {
     redirectToRegister() {
       this.$nuxt._router.push("/regg");
       this.$store.dispatch("setActiveTab", "2");
-      this.$store.state.activeTab = "2";
     },
     async login() {
       try {
