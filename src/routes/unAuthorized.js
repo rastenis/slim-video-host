@@ -73,78 +73,71 @@ router.post("/api/login", check, function(req, res) {
 router.post("/api/requestReset", function(req, res) {
   console.log("PASSWORD RESET | reset request", 0);
 
-  db.users.find(
-    {
+  db.users
+    .findOne({
       email: req.body.email
-    },
-    function(err, docs) {
-      if (docs.length > 1) {
-        console.log(
-          chalk.bgRed.white("CRITICAL!") +
-            chalk.bgRed.white("PASS RESET | duplicate account emails."),
-          1
-        );
-        res.json(genericErrorObject("Internal error. Please try again later."));
-      } else if (docs.length < 1) {
-        console.log("PASS RESET | no such user.", 0);
-        res.json(genericErrorObject("No account with that email."));
-      } else {
-        //token found
-        let token = crypto.randomBytes(23).toString("hex");
-
-        let nmlTrans = nodemailer.createTransport({
-          service: "Gmail",
-          auth: {
-            user: config.mail.username,
-            pass: config.mail.password
-          }
-        });
-
-        let mailOptions = {
-          to: req.body.email,
-          from: config.mail.username,
-          subject: "Password Reset",
-          text:
-            "You are receiving this because a password reset for your account was requested.\n\n" +
-            "Please click on the following link, or paste this into your browser to complete the process:\n\n" +
-            "https://" +
-            req.headers.host +
-            "/r/" +
-            token +
-            "\n\n" +
-            "If you did not request this, please ignore this email and your password will remain unchanged.\n\n"
-        };
-        nmlTrans.sendMail(mailOptions, function(err) {
-          if (err) {
-            console.log("PASS RESET | " + err, 1);
-          }
-        });
-
-        //store token
-        db.users.update(
-          {
-            email: req.body.email
-          },
-          {
-            $set: {
-              resetToken: token,
-              tokenExpiry: Date.now() + defaultTokenExpiry
-            }
-          },
-          {
-            upsert: false
-          },
-          function(err, docs) {
-            res.json(
-              genericResponseObject(
-                "Success! Check your email for further instructions."
-              )
-            );
-          }
-        );
+    })
+    .then(user => {
+      if (!user) {
+        throw "No account with that email.";
       }
-    }
-  );
+      //token found
+      let token = crypto.randomBytes(23).toString("hex");
+
+      let nmlTrans = nodemailer.createTransport({
+        service: "Gmail",
+        auth: {
+          user: config.mail.username,
+          pass: config.mail.password
+        }
+      });
+
+      let mailOptions = {
+        to: req.body.email,
+        from: config.mail.username,
+        subject: "Password Reset",
+        text:
+          "You received this email because a password reset for your account was requested.\n\n" +
+          "Please click on the following link, or paste this into your browser to complete the process:\n\n" +
+          config.host +
+          "/r/" +
+          token +
+          "\n\n" +
+          "If you did not request this, please ignore this email and your password will remain unchanged.\n\n"
+      };
+      nmlTrans.sendMail(mailOptions, function(err) {
+        if (err) {
+          console.log("PASS RESET | " + err, 1);
+        }
+      });
+
+      //store token
+      return db.users.update(
+        {
+          email: req.body.email
+        },
+        {
+          $set: {
+            resetToken: token,
+            tokenExpiry: Date.now() + defaultTokenExpiry
+          }
+        },
+        {
+          upsert: false
+        }
+      );
+    })
+    .then(() => {
+      return res.json(
+        genericResponseObject(
+          "Success! Check your email for further instructions."
+        )
+      );
+    })
+    .catch(e => {
+      console.error(e);
+      return res.json(genericErrorObject(e));
+    });
 });
 
 // token checking route
@@ -154,44 +147,30 @@ router.get("/api/checkToken/:token", function(req, res) {
 
   console.log("PASS RESET | checking for token " + req.params.token, 0);
 
-  db.users.find(
-    {
+  db.users
+    .findOne({
       resetToken: req.params.token,
       tokenExpiry: {
         $gt: Date.now()
       }
-    },
-    function(err, docs) {
-      if (docs.length > 1) {
-        console.log("PASS RESET | duplicate tokens; purging all", 1);
-        returner.meta.error = true;
-        db.users.remove(
-          {
-            resetToken: req.params.token
-          },
-          {
-            multi: true
-          },
-          function(err, docs) {
-            if (err) {
-              console.log("PASS RESET | " + err, 1);
-            }
-          }
-        );
-      } else if (docs.length < 1) {
-        console.log("PASS RESET | no such token.", 0);
-        returner.token = null;
-        returner.meta.error = true;
-      } else {
-        //token found
-        console.log("PASS RESET | found token!", 0);
-        returner.token = docs[0].resetToken;
-        returner.valid = true;
-        returner.meta.error = false;
+    })
+    .then(token => {
+      if (!token) {
+        throw "Invalid password reset token";
       }
-      res.json(returner);
-    }
-  );
+
+      //token found
+      console.log("PASS RESET | found token!", 0);
+      returner.token = token.resetToken;
+      returner.valid = true;
+      returner.meta.error = false;
+
+      return res.json(returner);
+    })
+    .catch(e => {
+      console.error(e);
+      return res.json(genericErrorObject(e));
+    });
 });
 
 // registration post
@@ -323,6 +302,142 @@ router.post("/api/register", function(req, res) {
         error: e
       });
     });
+});
+
+// post to actually change the password (both in-profile and token-based password reset)
+router.patch("/api/changePassword", function(req, res) {
+  log(
+    "PASSWORD CHANGE || " + (req.body.resetType == 0 ? "normal" : "token"),
+    0
+  );
+
+  let returner = genericResponseObject();
+  // single route for both the standard password reset and the 'forgot password' token based reset
+  if (req.body.resetType == 1) {
+    //token reset
+    let hashedPass = hashUpPass(req.body.newPass);
+    // updating right away
+    db.users.update(
+      {
+        resetToken: req.body.token,
+        tokenExpiry: {
+          $gt: Date.now()
+        }
+      },
+      {
+        $set: {
+          password: hashedPass,
+          tokenExpiry: 0
+        }
+      },
+      {
+        upsert: false,
+        returnUpdatedDocs: true
+      },
+      function(err, numAffected, affectedDocs) {
+        log("PASSWORD CHANGE || found the token", 0);
+        if (numAffected == 0) {
+          log("PASSWORD CHANGE || password was NOT successfully changed", 0);
+          returner = genericErrorObject(
+            "Password reset token is invalid or has expired."
+          );
+        } else if (numAffected > 1) {
+          //shouldnt ever hrouteren, severe edge
+          log(
+            chalk.bgRed.white("CRITICAL!") +
+              "PASSWORD CHANGE || multiple passwords updated somehow",
+            1
+          );
+        } else {
+          //all ok
+          log("PASSWORD CHANGE || password was successfully changed", 0);
+          returner = genericResponseObject(
+            "You have successfully changed your password!"
+          );
+          res.json(returner);
+        }
+      }
+    );
+  } else {
+    // regular reset
+    if (!req.session.authUser) {
+      // cannot initiate password change without logging in
+      returner = genericErrorObject("You are not authorized for this action.");
+      res.json(returner);
+    } else {
+      // user is logged in
+      // password checks
+      async.waterfall(
+        [
+          function(done) {
+            db.users.find(
+              {
+                username: req.session.authUser.username.toLowerCase()
+              },
+              function(err, docs) {
+                done(null, docs[0]);
+              }
+            );
+          },
+          function(fetchedUser, done) {
+            bcrypt.compare(
+              req.body.currentPassword,
+              fetchedUser.password,
+              function(err, valid) {
+                if (err) {
+                  log("PASSWORD CHANGE || " + err, 1);
+                } else {
+                  done(null, valid);
+                }
+              }
+            );
+          },
+          function(valid, done) {
+            if (valid) {
+              //all fine
+              // hashing the new password
+              let hashedPass = hashUpPass(req.body.newPassword);
+
+              // changing the password
+              db.users.update(
+                {
+                  email: req.session.authUser.email
+                },
+                {
+                  $set: {
+                    password: hashedPass
+                  }
+                },
+                {
+                  upsert: false
+                },
+                function(err) {
+                  if (err) {
+                    log("PASSWORD CHANGE || " + err, 1);
+                  } else {
+                    returner = genericResponseObject(
+                      "You have successfully changed your password!"
+                    );
+                    done(null);
+                  }
+                }
+              );
+            } else {
+              returner = genericErrorObject("Incorrect old password!");
+              done(null);
+            }
+          }
+        ],
+        function(err) {
+          if (err) {
+            log("PASSWORD CHANGE || " + err, 1);
+          } else {
+            res.json(returner);
+          }
+        }
+      );
+    }
+  }
 });
 
 // a base object for most api responses
