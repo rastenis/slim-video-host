@@ -74,6 +74,16 @@ router.post("/api/login", check, function(req, res) {
 router.post("/api/requestReset", check, function(req, res) {
   logger.l("PASSWORD RESET | reset request");
 
+  if (!config.mail.username || !config.mail.password) {
+    return res
+      .status(500)
+      .json(
+        genericErrorObject(
+          "The server has not been configured to handle password resets."
+        )
+      );
+  }
+
   db.users
     .findOne({
       email: req.body.email
@@ -90,6 +100,9 @@ router.post("/api/requestReset", check, function(req, res) {
         auth: {
           user: config.mail.username,
           pass: config.mail.password
+        },
+        tls: {
+          rejectUnauthorized: false
         }
       });
 

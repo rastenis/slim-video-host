@@ -67,7 +67,10 @@ export default {
               });
             })
             .catch(e => {
-              console.log(e);
+              this.$message({
+                type: "error",
+                message: e.response.data.meta.msg
+              });
             });
         } else {
           console.log("validation error");
@@ -91,7 +94,6 @@ export default {
   }
 };
 </script>
-
 
 <style>
 .ResetForm {
