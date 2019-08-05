@@ -6,6 +6,11 @@ const bcrypt = require("bcrypt");
 const chalk = require("chalk");
 const config = require(path.resolve("config.json"));
 const db = require(path.resolve("src", "external", "db.js"));
+const { genericResponseObject, genericErrorObject } = require(path.resolve(
+  "src",
+  "helpers",
+  "responses.js"
+));
 
 // default options
 const defaultUserStatus = 0; //1 - admin
@@ -345,27 +350,6 @@ router.patch("/api/password/token", function(req, res) {
       return res.json(genericErrorObject(e));
     });
 });
-
-// a base object for most api responses
-function genericResponseObject(message) {
-  return {
-    meta: {
-      error: false,
-      msgType: "success",
-      msg: message ? message : null
-    }
-  };
-}
-
-function genericErrorObject(message) {
-  return {
-    meta: {
-      error: true,
-      msgType: "error",
-      msg: message ? message : "An error has occured."
-    }
-  };
-}
 
 // logger
 function log(message, type) {

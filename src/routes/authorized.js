@@ -8,6 +8,12 @@ const async = require("async");
 const chalk = require("chalk");
 const bcrypt = require("bcrypt");
 
+const { genericResponseObject, genericErrorObject } = require(path.resolve(
+  "src",
+  "helpers",
+  "responses.js"
+));
+
 const { Router } = require("express");
 
 let router = Router();
@@ -835,27 +841,6 @@ router.post("/api/logout", function(req, res) {
     ok: true
   });
 });
-
-// a base object for most api responses
-function genericResponseObject(message) {
-  return {
-    meta: {
-      error: false,
-      msgType: "success",
-      msg: message ? message : null
-    }
-  };
-}
-
-function genericErrorObject(message) {
-  return {
-    meta: {
-      error: true,
-      msgType: "error",
-      msg: message ? message : "An error has occured."
-    }
-  };
-}
 
 function removeVideo(video) {
   // removing files
