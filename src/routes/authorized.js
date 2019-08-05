@@ -6,6 +6,7 @@ const db = require(path.resolve("src", "external", "db.js"));
 const extractFrames = require("ffmpeg-extract-frames");
 const async = require("async");
 const bcrypt = require("bcrypt");
+const shortid = require("shortid");
 
 const logger = require(path.resolve("src", "helpers", "logger.js"));
 const { genericResponseObject, genericErrorObject } = require(path.resolve(
@@ -108,9 +109,9 @@ router.get("/api/dash", check, function(req, res) {
   db.users
     .findOne({ _id: req.session.authUser._id })
     .then(user => {
-      req.ression.authUser = user;
+      req.session.authUser = user;
       return db.videos.find({
-        username: req.session.authUser.username.toLowerCase()
+        username: user.username.toLowerCase()
       });
     })
     .then(docs => {
@@ -144,11 +145,13 @@ router.get("/api/dash", check, function(req, res) {
             });
         },
         () => {
+          returner.videos = docs;
           return res.json(returner);
         }
       );
     })
     .catch(e => {
+      logger.e(e);
       return res
         .status(500)
         .json(genericErrorObject("Could not fetch dashboard."));
@@ -220,7 +223,7 @@ router.post("/api/upgrade", check, function(req, res) {
             multi: false
           }
         )
-        .then((numAffected, affectedDocument) => {
+        .then(affectedDocument => {
           // updating user session
           req.session.authUser = affectedDocument;
 
@@ -447,19 +450,16 @@ router.patch("/api/rename", check, function(req, res) {
 
 // route for video upload finalization (cancel or confirm)
 router.put("/api/finalizeUpload", check, function(req, res) {
-  logger.l(
-    "UPLOAD FINALIZATION | requester: " + req.session.authUser.username,
-    0
-  );
+  logger.l("UPLOAD FINALIZATION | requester: " + req.session.authUser.username);
 
   if (req.body.cancelled) {
     logger.l("UPLOAD FINALIZATION | upload(s) cancelled");
     return res.json(genericErrorObject("You have cancelled the upload."));
   }
 
-  async.eachOf(
+  async.each(
     Object.keys(req.body.newNames),
-    (oldName, index, cb) => {
+    (oldName, cb) => {
       if (!req.body.newNames.hasOwnProperty(oldName)) {
         return cb();
       }
@@ -487,17 +487,16 @@ router.put("/api/finalizeUpload", check, function(req, res) {
             uploadDate: new Date()
           }
         },
-        {
-          returnUpdatedDocs: true,
-          multi: false
-        }
+        {}
       );
+
+      return cb();
     },
     () => {
       // removing all unconfirmed
       removeUnconfirmed(req.session.authUser.username);
       return res.json(
-        genericResponseObject("You successfully uploaded the video.")
+        genericResponseObject("You have successfully uploaded the video.")
       );
     }
   );
@@ -609,6 +608,14 @@ router.post("/api/upload", check, function(req, res) {
       }
     })
     .then(() => {
+      // getting user data to compute space requirements
+      return db.users.findOne({ _id: req.session.authUser._id });
+    })
+    .then(user => {
+      if (!user) {
+        throw "Internal error.";
+      }
+
       async.each(
         Object.keys(req.files),
         (file, cb) => {
@@ -623,6 +630,18 @@ router.post("/api/upload", check, function(req, res) {
           logger.l(
             "UPLOAD | uploaded video size is " + fileSizeInMegabytes + "mb"
           );
+
+          // checking against users limits
+          if (user.remainingSpace < totalSizeInMegabytes) {
+            logger.l("UPLOAD | skipping video due to insufficient user space.");
+            return res
+              .status(500)
+              .json(
+                genericErrorObject(
+                  "You do not have enough space remaining to upload one or more files."
+                )
+              );
+          }
 
           if (fileSizeInMegabytes > 10000) {
             //hard limitas to avoid files over 10gb
@@ -653,20 +672,12 @@ router.post("/api/upload", check, function(req, res) {
                 );
           }
 
-          var cleanedName = req.files[file].name.replace(/[^a-z0-9\s]/gi, "");
+          let cleanedName = req.files[file].name.replace(/[^a-z0-9\s]/gi, "");
           // checking if user's storage space is sufficient
-          if (docs[0].remainingSpace < fileSizeInMegabytes) {
-            return res
-              .status(500)
-              .json(
-                genericErrorObject(
-                  "You do not have enough space remaining to upload this file."
-                )
-              );
-          }
-          // dedam video i storage
-          var videoID = shortid.generate();
-          var vidLink = config.host + "/v/" + videoID;
+
+          // storing video
+          let videoID = shortid.generate();
+          let vidLink = config.host + "/v/" + videoID;
           logger.l("UPLOAD | storing video!");
 
           db.videos
@@ -730,9 +741,10 @@ router.post("/api/upload", check, function(req, res) {
                 multi: false
               }
             )
-            .then((numAffected, affectedDocument) => {
+            .then(affectedDocument => {
               // updating session
               req.session.authUser = affectedDocument;
+              return res.json(returner);
             });
         }
       );
@@ -824,7 +836,7 @@ function removeVideo(video) {
   // removing ratings
   db.ratings.remove(
     {
-      videoID: selection.videoID
+      videoID: video.videoID
     },
     {
       multi: true
@@ -848,7 +860,7 @@ function removeUnconfirmed(user) {
         // restoring user space
         db.users.update(
           {
-            username: req.session.authUser.username
+            username: user.username
           },
           {
             $inc: {
@@ -856,10 +868,7 @@ function removeUnconfirmed(user) {
               remainingSpace: Math.abs(unconfirmedVideo.size)
             }
           },
-          {
-            returnUpdatedDocs: true,
-            multi: false
-          }
+          {}
         );
 
         // removing video

@@ -1,5 +1,6 @@
 const chalk = require("chalk");
 const path = require("path");
+const moment = require("moment");
 const config = require(path.resolve("config.json"));
 
 const logger = {
