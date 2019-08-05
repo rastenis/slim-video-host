@@ -103,7 +103,7 @@ export default {
       this.$refs["resetForm"].validate(valid => {
         if (valid) {
           axios({
-            url: "/api/changePassword",
+            url: "/api/password/token",
             method: "patch",
             credentials: "same-origin",
             data: {

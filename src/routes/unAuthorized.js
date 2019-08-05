@@ -298,26 +298,19 @@ router.post("/api/register", function(req, res) {
     })
     .catch(e => {
       console.log(e);
-      return res.status(500).json({
-        error: e
-      });
+      return res.status(500).json(genericErrorObject(e));
     });
 });
 
 // post to actually change the password (both in-profile and token-based password reset)
-router.patch("/api/changePassword", function(req, res) {
-  log(
-    "PASSWORD CHANGE || " + (req.body.resetType == 0 ? "normal" : "token"),
-    0
-  );
+router.patch("/api/password/token", function(req, res) {
+  log("PASSWORD CHANGE || token", 0);
 
-  let returner = genericResponseObject();
-  // single route for both the standard password reset and the 'forgot password' token based reset
-  if (req.body.resetType == 1) {
-    //token reset
-    let hashedPass = hashUpPass(req.body.newPass);
-    // updating right away
-    db.users.update(
+  //token reset
+  let hashedPass = hashUpPass(req.body.newPass);
+  // updating right away
+  db.users
+    .update(
       {
         resetToken: req.body.token,
         tokenExpiry: {
@@ -333,111 +326,24 @@ router.patch("/api/changePassword", function(req, res) {
       {
         upsert: false,
         returnUpdatedDocs: true
-      },
-      function(err, numAffected, affectedDocs) {
-        log("PASSWORD CHANGE || found the token", 0);
-        if (numAffected == 0) {
-          log("PASSWORD CHANGE || password was NOT successfully changed", 0);
-          returner = genericErrorObject(
-            "Password reset token is invalid or has expired."
-          );
-        } else if (numAffected > 1) {
-          //shouldnt ever hrouteren, severe edge
-          log(
-            chalk.bgRed.white("CRITICAL!") +
-              "PASSWORD CHANGE || multiple passwords updated somehow",
-            1
-          );
-        } else {
-          //all ok
-          log("PASSWORD CHANGE || password was successfully changed", 0);
-          returner = genericResponseObject(
-            "You have successfully changed your password!"
-          );
-          res.json(returner);
-        }
       }
-    );
-  } else {
-    // regular reset
-    if (!req.session.authUser) {
-      // cannot initiate password change without logging in
-      returner = genericErrorObject("You are not authorized for this action.");
-      res.json(returner);
-    } else {
-      // user is logged in
-      // password checks
-      async.waterfall(
-        [
-          function(done) {
-            db.users.find(
-              {
-                username: req.session.authUser.username.toLowerCase()
-              },
-              function(err, docs) {
-                done(null, docs[0]);
-              }
-            );
-          },
-          function(fetchedUser, done) {
-            bcrypt.compare(
-              req.body.currentPassword,
-              fetchedUser.password,
-              function(err, valid) {
-                if (err) {
-                  log("PASSWORD CHANGE || " + err, 1);
-                } else {
-                  done(null, valid);
-                }
-              }
-            );
-          },
-          function(valid, done) {
-            if (valid) {
-              //all fine
-              // hashing the new password
-              let hashedPass = hashUpPass(req.body.newPassword);
+    )
+    .then((err, numAffected, affectedDocs) => {
+      if (numAffected == 0) {
+        log("PASSWORD CHANGE || password was NOT successfully changed", 0);
+        throw "Password reset token is invalid or has expired.";
+      }
 
-              // changing the password
-              db.users.update(
-                {
-                  email: req.session.authUser.email
-                },
-                {
-                  $set: {
-                    password: hashedPass
-                  }
-                },
-                {
-                  upsert: false
-                },
-                function(err) {
-                  if (err) {
-                    log("PASSWORD CHANGE || " + err, 1);
-                  } else {
-                    returner = genericResponseObject(
-                      "You have successfully changed your password!"
-                    );
-                    done(null);
-                  }
-                }
-              );
-            } else {
-              returner = genericErrorObject("Incorrect old password!");
-              done(null);
-            }
-          }
-        ],
-        function(err) {
-          if (err) {
-            log("PASSWORD CHANGE || " + err, 1);
-          } else {
-            res.json(returner);
-          }
-        }
+      //all ok
+      log("PASSWORD CHANGE || password was successfully changed", 0);
+      return res.json(
+        genericResponseObject("You have successfully changed your password!")
       );
-    }
-  }
+    })
+    .catch(e => {
+      console.error(e);
+      return res.json(genericErrorObject(e));
+    });
 });
 
 // a base object for most api responses

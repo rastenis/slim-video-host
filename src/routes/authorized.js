@@ -330,6 +330,7 @@ router.delete("/api/deleteAccount", function(req, res) {
       return res.json(genericResponseObject);
     })
     .catch(e => {
+      console.error(e);
       return res.json(genericErrorObject(e));
     });
 });
@@ -421,6 +422,10 @@ router.patch("/api/newLink", function(req, res) {
         })
         .then(() => {
           return cb();
+        })
+        .catch(e => {
+          console.error(e);
+          return res.json(genericErrorObject(e));
         });
     },
     err => {
@@ -467,6 +472,10 @@ router.patch("/api/rename", function(req, res) {
       returner.newName = req.body.newName;
 
       return res.json(returner);
+    })
+    .catch(e => {
+      console.error(e);
+      return res.json(genericErrorObject(e));
     });
 });
 
@@ -766,6 +775,56 @@ router.post("/api/upload", function(req, res) {
             });
         }
       );
+    })
+    .catch(e => {
+      console.error(e);
+      return res.json(genericErrorObject(e));
+    });
+});
+
+// post to actually change the password (both in-profile and token-based password reset)
+router.patch("/api/password/regular", function(req, res) {
+  log("PASSWORD CHANGE || regular", 0);
+
+  // resetting password
+  db.users
+    .findOne({
+      username: req.session.authUser.username.toLowerCase()
+    })
+    .then(user => {
+      return bcrypt.compare(req.body.currentPassword, user.password);
+    })
+    .then(match => {
+      if (!match) {
+        throw "Incorrect old password!";
+      }
+      //all fine
+      // hashing the new password
+      let hashedPass = hashUpPass(req.body.newPassword);
+
+      // changing the password
+      db.users.update(
+        {
+          email: req.session.authUser.email
+        },
+        {
+          $set: {
+            password: hashedPass
+          }
+        },
+        {
+          upsert: false
+        }
+      );
+    })
+    .then(() => {
+      return res.json(
+        genericResponseObject("You have successfully changed your password!")
+      );
+    })
+    .catch(e => {
+      console.error(e);
+      return res.json(genericErrorObject(e));
     });
 });
 

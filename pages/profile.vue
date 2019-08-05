@@ -127,7 +127,7 @@ export default {
         if (valid) {
           this.passReset.loading = true;
           axios({
-            url: "/api/changePassword",
+            url: "/api/password/regular",
             method: "patch",
             credentials: "same-origin",
             data: {
