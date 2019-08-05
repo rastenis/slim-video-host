@@ -47,9 +47,7 @@ router.post("/api/login", check, function(req, res) {
         // no user with that username
         logger.l("No matching account.");
 
-        return res
-          .status(500)
-          .json({ error: true, msg: "No account with that username found." });
+        throw "No account with that username found.";
       }
 
       return bcrypt.compare(req.body.password, docs[0].password);
@@ -64,15 +62,11 @@ router.post("/api/login", check, function(req, res) {
       }
 
       logger.l("LOGIN | passwords don't match!");
-      return res.status(403).json({
-        error: "Bad credentials"
-      });
+      throw "Bad credentials.";
     })
     .catch(e => {
       logger.e(e);
-      return res.status(500).json({
-        error: "Could not log you in. Try again later."
-      });
+      return res.status(500).json(genericErrorObject(e));
     });
 });
 

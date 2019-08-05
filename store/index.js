@@ -57,19 +57,15 @@ export const actions = {
       })
     })
       .then(res => {
-        switch (res.status) {
-          case 556:
-            throw new Error("Bad credentials.");
-          case 555:
-            throw new Error("No user with those credentials found.");
-          case 557:
-            throw new Error("Server error.");
-          default:
-            return res.data;
-        }
+        return res.data;
       })
       .then(authUser => {
         commit("SET_USER", authUser);
+      })
+      .catch(e => {
+        throw {
+          msg: e.response.data.meta.msg
+        };
       });
   },
   upload({ commit }, { file }) {

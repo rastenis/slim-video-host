@@ -131,14 +131,17 @@ export default {
         this.$nuxt._router.push("/dash");
         this.$store.dispatch("setActiveTab", "2");
       } catch (e) {
-        this.$message.error(e.message);
+        this.$message.error(e.msg);
       }
     },
     async logout() {
       try {
         await this.$store.dispatch("logout");
       } catch (e) {
-        this.$message.error(e.message);
+        this.$message({
+          type: "error",
+          message: e.msg
+        });
       }
     }
   },
