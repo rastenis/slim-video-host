@@ -2,11 +2,12 @@ const fs = require("fs-extra");
 const path = require("path");
 const config = require(path.resolve("config.json"));
 const maintenance = require(path.resolve("src", "external", "maintenance.js"));
-
 const db = require(path.resolve("src", "external", "db.js"));
 const themes = require(path.resolve("static", "style", "themes"));
 const chalk = require("chalk");
 
+// importing helpers
+const logger = require(path.resolve("src", "helpers", "logger.js"));
 const { genericResponseObject } = require(path.resolve(
   "src",
   "helpers",
@@ -22,14 +23,14 @@ let settings = require(path.resolve(config.dbPath, "system", "settings.json"));
 // reject if the user is not signed in
 const check = (req, res, next) => {
   if (!req.session.authUser || req.session.authUser.userStatus != 1) {
-    console.error("Unauthorized attempt to access admin API.");
+    logger.e("Unauthorized attempt to access admin API.");
     return res.sendStatus(403);
   }
   return next();
 };
 
 router.post("/api/changeTheme", check, function(req, res) {
-  log("THEME CHANGE | requester: " + req.session.authUser.username, 0);
+  logger.l("THEME CHANGE | requester: " + req.session.authUser.username);
   // only signed in admins
   let returner = genericResponseObject();
 
@@ -51,7 +52,7 @@ router.post("/api/changeTheme", check, function(req, res) {
 
 router.post("/api/runMaintenance", function(req, res) {
   let returner = genericResponseObject();
-  log("RUN MAINTENANCE | requester: " + req.session.authUser.username, 0);
+  logger.l("RUN MAINTENANCE | requester: " + req.session.authUser.username);
 
   try {
     maintenance.preLaunch(config);
@@ -65,7 +66,9 @@ router.post("/api/runMaintenance", function(req, res) {
 
 // postas adminu statistikom
 router.get("/api/getAdminStats", function(req, res) {
-  log("FETCHING ADMIN STATS | requester: " + req.session.authUser.username, 0);
+  logger.l(
+    "FETCHING ADMIN STATS | requester: " + req.session.authUser.username
+  );
   let returner = genericResponseObject();
   returner.stats = {};
 
@@ -95,22 +98,10 @@ router.get("/api/getAdminStats", function(req, res) {
       return res.json(returner);
     })
     .catch(e => {
-      log(chalk.bgRed.white("FETCHING ADMIN STATS | " + e), 1);
+      logger.e(chalk.bgRed.white("FETCHING ADMIN STATS | " + e));
       returner.meta.error = 1;
       return res.json(returner);
     });
 });
-
-// logger
-function log(message, type) {
-  if (
-    config.productionLogging === "all" ||
-    process.env.NODE_ENV !== "production"
-  ) {
-    console.log(message);
-  } else if (config.productionLogging === "error" && type === 1) {
-    console.log(message);
-  }
-}
 
 module.exports = router;

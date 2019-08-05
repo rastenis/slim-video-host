@@ -84,43 +84,4 @@ if (nuxt_config.dev) {
 
 app.use(nuxt.render);
 
-// password hashing function
-function hashUpPass(pass) {
-  var hash = bcrypt.hashSync(pass, 12);
-  return hash;
-}
-
-// a base object for most api responses
-function genericResponseObject(message) {
-  return {
-    meta: {
-      error: false,
-      msgType: "success",
-      msg: message ? message : null
-    }
-  };
-}
-
-function genericErrorObject(message) {
-  return {
-    meta: {
-      error: true,
-      msgType: "error",
-      msg: message ? message : "An error has occured."
-    }
-  };
-}
-
-// logger
-function log(message, type) {
-  if (
-    config.productionLogging === "all" ||
-    process.env.NODE_ENV !== "production"
-  ) {
-    console.log(message);
-  } else if (config.productionLogging === "error" && type === 1) {
-    console.log(message);
-  }
-}
-
 module.exports = app;

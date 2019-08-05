@@ -5,9 +5,9 @@ const config = require(path.resolve("config.json"));
 const db = require(path.resolve("src", "external", "db.js"));
 const extractFrames = require("ffmpeg-extract-frames");
 const async = require("async");
-const chalk = require("chalk");
 const bcrypt = require("bcrypt");
 
+const logger = require(path.resolve("src", "helpers", "logger.js"));
 const { genericResponseObject, genericErrorObject } = require(path.resolve(
   "src",
   "helpers",
@@ -33,7 +33,7 @@ router.put("/api/act", function(req, res) {
     return;
   }
 
-  log("ACT | requester: " + req.session.authUser.username, 0);
+  logger.l("ACT | requester: " + req.session.authUser.username);
   async.waterfall(
     [
       function(done) {
@@ -44,7 +44,7 @@ router.put("/api/act", function(req, res) {
           },
           function(err, docs) {
             if (docs.length > 2 || docs.length < 0) {
-              log(chalk.bgRed.white("CRITICAL!") + "ACT | rating error.", 1);
+              logger.l("ACT | rating error.");
             }
             let userRatings = {};
             userRatings.liked = false;
@@ -99,7 +99,7 @@ router.put("/api/act", function(req, res) {
             {},
             function(err) {
               if (err) {
-                log("ACT | " + err, 1);
+                log("ACT | " + err);
               }
               done();
             }
@@ -113,7 +113,7 @@ router.put("/api/act", function(req, res) {
             },
             function(err) {
               if (err) {
-                log("ACT | " + err, 1);
+                log("ACT | " + err);
               }
               done();
             }
@@ -123,7 +123,7 @@ router.put("/api/act", function(req, res) {
     ],
     function(err) {
       if (err) {
-        log("ACT | " + err, 1);
+        log("ACT | " + err);
       }
     }
   );
@@ -133,7 +133,7 @@ router.put("/api/act", function(req, res) {
 router.get("/api/dash", function(req, res) {
   let returner = genericResponseObject();
 
-  log("DASH | requester : " + req.session.authUser.username, 0);
+  logger.l("DASH | requester : " + req.session.authUser.username);
 
   // refreshing user data and getting videos
   db.users
@@ -188,12 +188,11 @@ router.get("/api/dash", function(req, res) {
 
 // route for storage upgrades
 router.post("/api/upgrade", function(req, res) {
-  log(
+  logger.l(
     "UPGRADE | requester : " +
       req.session.authUser.username +
       ", code:" +
-      req.body.code,
-    0
+      req.body.code
   );
 
   db.codes
@@ -203,7 +202,7 @@ router.post("/api/upgrade", function(req, res) {
     })
     .then(code => {
       if (!code) {
-        log("UPGRADE | unsuccessful: no such code", 0);
+        logger.l("UPGRADE | unsuccessful: no such code");
         return res.json(genericErrorObject("No such code exists."));
       }
       // adding granted benefit:
@@ -273,10 +272,10 @@ router.post("/api/upgrade", function(req, res) {
         {}
       );
 
-      log("UPGRADE | successful upgrade", 0);
+      logger.l("UPGRADE | successful upgrade");
     })
     .catch(e => {
-      log(chalk.bgRed.white("UPGRADE | " + err), 1);
+      logger.e("UPGRADE | " + e);
       return res.json(
         genericErrorObject("Server error. Couldn't handle code.")
       );
@@ -285,7 +284,7 @@ router.post("/api/upgrade", function(req, res) {
 
 // route for account deletion
 router.delete("/api/deleteAccount", function(req, res) {
-  log("ACCOUNT DELETION | requester: " + req.session.authUser.username, 0);
+  logger.l("ACCOUNT DELETION | requester: " + req.session.authUser.username);
 
   // account deletion chain
   db.users
@@ -294,10 +293,8 @@ router.delete("/api/deleteAccount", function(req, res) {
     })
     .then(user => {
       if (!user) {
-        log(
-          chalk.bgRed.white("CRITICAL!") +
-            "ACCOUNT DELETION | delete reqests for non-existent accounts!",
-          1
+        logger.e(
+          "ACCOUNT DELETION | delete reqests for non-existent accounts!"
         );
         throw "Server error.";
       }
@@ -333,14 +330,14 @@ router.delete("/api/deleteAccount", function(req, res) {
       return res.json(genericResponseObject);
     })
     .catch(e => {
-      console.error(e);
+      logger.e(e);
       return res.json(genericErrorObject(e));
     });
 });
 
 // new link generation
 router.patch("/api/newLink", function(req, res) {
-  log("NEW LINKS | requester: " + req.session.authUser.username, 0);
+  logger.l("NEW LINKS | requester: " + req.session.authUser.username);
 
   let returner = genericResponseObject();
 
@@ -369,7 +366,7 @@ router.patch("/api/newLink", function(req, res) {
             returnUpdatedDocs: true
           }
         )
-        .then((err, numAffected, affectedDocs) => {
+        .then((numAffected, affectedDocs) => {
           if (numAffected < 1) {
             return cb("Link regeneration failed.");
           }
@@ -427,7 +424,7 @@ router.patch("/api/newLink", function(req, res) {
           return cb();
         })
         .catch(e => {
-          console.error(e);
+          logger.e(e);
           return res.json(genericErrorObject(e));
         });
     },
@@ -443,7 +440,7 @@ router.patch("/api/newLink", function(req, res) {
 
 // route for video name changes
 router.patch("/api/rename", function(req, res) {
-  log("RENAME | requester: " + req.session.authUser.username, 0);
+  logger.l("RENAME | requester: " + req.session.authUser.username);
 
   let returner = genericResponseObject();
 
@@ -463,10 +460,7 @@ router.patch("/api/rename", function(req, res) {
         upsert: false
       }
     )
-    .then((err, numAffected, affectedDocs) => {
-      if (err) {
-        log("RENAME | " + err, 1);
-      }
+    .then((numAffected, affectedDocs) => {
       if (numAffected < 1) {
         returner = genericErrorObject("Renaming failed; No such video.");
       } else {
@@ -477,19 +471,20 @@ router.patch("/api/rename", function(req, res) {
       return res.json(returner);
     })
     .catch(e => {
-      console.error(e);
+      logger.e(e);
       return res.json(genericErrorObject(e));
     });
 });
 
 // route for video upload finalization (cancel or confirm)
 router.put("/api/finalizeUpload", function(req, res) {
-  log("UPLOAD FINALIZATION | requester: " + req.session.authUser.username, 0);
-
-  let returner = genericResponseObject();
+  logger.l(
+    "UPLOAD FINALIZATION | requester: " + req.session.authUser.username,
+    0
+  );
 
   if (req.body.cancelled) {
-    log(chalk.red("UPLOAD FINALIZATION | upload(s) cancelled"), 0);
+    logger.l("UPLOAD FINALIZATION | upload(s) cancelled");
     return res.json(genericErrorObject("You have cancelled the upload."));
   }
 
@@ -542,7 +537,7 @@ router.put("/api/finalizeUpload", function(req, res) {
 
 // post to remove video
 router.delete("/api/removeVideo", function(req, res) {
-  log("VIDEO DELETION | " + "requester: " + req.session.authUser.username, 0);
+  logger.l("VIDEO DELETION | requester: " + req.session.authUser.username);
   let returner = genericResponseObject();
   returner.selection = req.body.selection;
 
@@ -637,7 +632,7 @@ router.post("/api/upload", function(req, res) {
   du(path.resolve("static", config.storagePath))
     .then(size => {
       if (size >= config.spaceLimit) {
-        log("UPLOAD | Max space exceeded! Interrupting download...", 1);
+        logger.e("UPLOAD | Max space exceeded! Interrupting download...");
         returner = genericErrorObject(
           "The server cannot accept videos at the moment. Try again later!"
         );
@@ -657,9 +652,8 @@ router.post("/api/upload", function(req, res) {
           let fileSizeInBytes = req.files[file].dataSize;
           let fileSizeInMegabytes = fileSizeInBytes / 1000 / 1000;
           totalSizeInMegabytes += fileSizeInMegabytes;
-          log(
-            "UPLOAD | uploaded video size is " + fileSizeInMegabytes + "mb",
-            0
+          logger.l(
+            "UPLOAD | uploaded video size is " + fileSizeInMegabytes + "mb"
           );
 
           if (fileSizeInMegabytes > 10000) {
@@ -683,7 +677,7 @@ router.post("/api/upload", function(req, res) {
               extension = ".mp4";
               break;
             default:
-              log("UPLOAD | unsupported video format!", 0);
+              logger.l("UPLOAD | unsupported video format!");
               return res
                 .status(500)
                 .json(
@@ -705,7 +699,7 @@ router.post("/api/upload", function(req, res) {
           // dedam video i storage
           var videoID = shortid.generate();
           var vidLink = config.host + "/v/" + videoID;
-          log(chalk.green("UPLOAD | storing video!"), 0);
+          logger.l("UPLOAD | storing video!");
 
           db.videos
             .insert({
@@ -741,11 +735,7 @@ router.post("/api/upload", function(req, res) {
                     ),
                     offsets: [0]
                   }).catch(e => {
-                    console.log(
-                      chalk.bgYellow.black("WARN") +
-                        "Failed to save thumbnail:",
-                      e
-                    );
+                    logger.e("Failed to save thumbnail:", e);
                   });
 
                   returner.newVideos.push(newDoc);
@@ -772,7 +762,7 @@ router.post("/api/upload", function(req, res) {
                 multi: false
               }
             )
-            .then((err, numAffected, affectedDocument) => {
+            .then((numAffected, affectedDocument) => {
               // updating session
               req.session.authUser = affectedDocument;
             });
@@ -780,14 +770,14 @@ router.post("/api/upload", function(req, res) {
       );
     })
     .catch(e => {
-      console.error(e);
+      logger.e(e);
       return res.json(genericErrorObject(e));
     });
 });
 
 // post to actually change the password (both in-profile and token-based password reset)
 router.patch("/api/password/regular", function(req, res) {
-  log("PASSWORD CHANGE || regular", 0);
+  logger.l("PASSWORD CHANGE || regular");
 
   // resetting password
   db.users
@@ -826,7 +816,7 @@ router.patch("/api/password/regular", function(req, res) {
       );
     })
     .catch(e => {
-      console.error(e);
+      logger.e(e);
       return res.json(genericErrorObject(e));
     });
 });
@@ -860,7 +850,7 @@ function removeVideo(video) {
       )
     );
   } catch (e) {
-    console.error(e);
+    logger.e(e);
   }
 
   // removing ratings
@@ -883,33 +873,9 @@ function removeUnconfirmed(user) {
     .then(unconfirmedvideos => {
       // no need to be in order, we're not returning anything to the client.
       unconfirmedvideos.forEach(unconfirmedVideo => {
-        log(chalk.red("UPLOAD FINALIZATION | removing unconfirmed"), 0);
+        logger.l("UPLOAD FINALIZATION | removing unconfirmed");
 
-        // deleting video and thumbnail
-        try {
-          fs.unlink(
-            path.resolve(
-              "static",
-              config.storagePath,
-              unconfirmedVideo.videoID + unconfirmedVideo.extension
-            )
-          );
-        } catch (e) {
-          log("UPLOAD FINALIZATION | " + e, 1);
-        }
-        // removing thumbnail
-        try {
-          fs.unlink(
-            path.resolve(
-              "static",
-              config.storagePath,
-              "thumbs",
-              unconfirmedVideo.videoID + ".jpg"
-            )
-          );
-        } catch (e) {
-          log("UPLOAD FINALIZATION | " + e, 1);
-        }
+        removeVideo(unconfirmedVideo);
 
         // restoring user space
         db.users.update(
@@ -935,7 +901,7 @@ function removeUnconfirmed(user) {
           },
           function(err, docs) {
             if (err) {
-              log(chalk.bgRed.white("UPLOAD FINALIZATION | " + err, 1));
+              logger.l("UPLOAD FINALIZATION " + err);
             }
             //TODO: returner + refrac both removal routes into one AND waterwall or promise it, b/c cant
             //return errors from foreach async operations.
@@ -943,18 +909,6 @@ function removeUnconfirmed(user) {
         );
       });
     });
-}
-
-// logger
-function log(message, type) {
-  if (
-    config.productionLogging === "all" ||
-    process.env.NODE_ENV !== "production"
-  ) {
-    console.log(message);
-  } else if (config.productionLogging === "error" && type === 1) {
-    console.log(message);
-  }
 }
 
 module.exports = router;

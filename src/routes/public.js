@@ -4,6 +4,9 @@ const config = require(path.resolve("config.json"));
 const db = require(path.resolve("src", "external", "db.js"));
 const themes = require(path.resolve("static", "style", "themes"));
 const chalk = require("chalk");
+
+// importing helpers
+const logger = require(path.resolve("src", "helpers", "logger.js"));
 const { genericResponseObject, genericErrorObject } = require(path.resolve(
   "src",
   "helpers",
@@ -18,7 +21,7 @@ let settings = require(path.resolve(config.dbPath, "system", "settings.json"));
 
 // video fetch route
 router.get("/api/cv/:id", function(req, res) {
-  log("FETCHING VIDEO | id: " + req.params.id, 0);
+  logger.l("FETCHING VIDEO | id: " + req.params.id);
 
   let returner = genericResponseObject();
   returner.ratings = {};
@@ -45,13 +48,12 @@ router.get("/api/cv/:id", function(req, res) {
     )
     .then((numAffected, affectedDocument, upsert) => {
       if (!affectedDocument) {
-        log("FETCHING VIDEO | no such video!", 0);
+        logger.l("FETCHING VIDEO | no such video!");
         returner.meta.error = 1;
         return res.json(returner);
       }
-      log(
-        "FETCHING VIDEO | added a view to video " + affectedDocument.videoID,
-        0
+      logger.l(
+        "FETCHING VIDEO | added a view to video " + affectedDocument.videoID
       );
       affectedDocument.src =
         "/" +
@@ -87,7 +89,9 @@ router.get("/api/cv/:id", function(req, res) {
           )
           .then(docs => {
             if (docs.length > 2 || docs.length < 0) {
-              log(chalk.yellow("FETCHING VIDEO | RATING ERROR==========="), 1);
+              logger.e(
+                chalk.yellow("FETCHING VIDEO | RATING ERROR===========")
+              );
             }
             returner.userRatings.liked = false;
             returner.userRatings.disliked = false;
@@ -106,7 +110,7 @@ router.get("/api/cv/:id", function(req, res) {
           });
       }
       // anonymous viewer.
-      log("FETCHING VIDEO | anonymous viewer", 0);
+      logger.l("FETCHING VIDEO | anonymous viewer");
       return;
     })
     .then(() => {
@@ -137,22 +141,10 @@ router.get("/api/settings", function(req, res) {
     returner.settings.theme = themes[settings.theme];
     returner.settings.themeID = settings.theme;
   } else {
-    log("SETTINGS | no settings in db", 1);
+    logger.l("SETTINGS | no settings in db");
   }
 
   return res.json(returner);
 });
-
-// logger
-function log(message, type) {
-  if (
-    config.productionLogging === "all" ||
-    process.env.NODE_ENV !== "production"
-  ) {
-    console.log(message);
-  } else if (config.productionLogging === "error" && type === 1) {
-    console.log(message);
-  }
-}
 
 module.exports = router;

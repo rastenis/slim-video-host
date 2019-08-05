@@ -6,6 +6,8 @@ const bcrypt = require("bcrypt");
 const chalk = require("chalk");
 const config = require(path.resolve("config.json"));
 const db = require(path.resolve("src", "external", "db.js"));
+
+const logger = require(path.resolve("src", "helpers", "logger.js"));
 const { genericResponseObject, genericErrorObject } = require(path.resolve(
   "src",
   "helpers",
@@ -32,7 +34,7 @@ const check = (req, res, next) => {
 
 // post for the login procedure
 router.post("/api/login", check, function(req, res) {
-  log("LOGIN | requester: " + req.body.username, 0);
+  logger.l("LOGIN | requester: " + req.body.username);
   let found;
 
   db.users
@@ -43,7 +45,7 @@ router.post("/api/login", check, function(req, res) {
       found = docs;
       if (found.length == 0) {
         // no user with that username
-        log(chalk.bgRed("No matching account."), 0);
+        logger.l("No matching account.");
 
         return res
           .status(500)
@@ -56,18 +58,18 @@ router.post("/api/login", check, function(req, res) {
       // user exists, no duplicates. Proceeding to the password check
       if (match) {
         //password matches
-        log(chalk.green("LOGIN | passwords match!"), 0);
+        logger.l("LOGIN | passwords match!");
         req.session.authUser = found[0];
         return res.json(found[0]);
       }
 
-      log(chalk.red("LOGIN | passwords don't match!"));
+      logger.l("LOGIN | passwords don't match!");
       return res.status(403).json({
         error: "Bad credentials"
       });
     })
     .catch(e => {
-      console.error(e);
+      logger.e(e);
       return res.status(500).json({
         error: "Could not log you in. Try again later."
       });
@@ -76,7 +78,7 @@ router.post("/api/login", check, function(req, res) {
 
 // post to request a password reset
 router.post("/api/requestReset", function(req, res) {
-  console.log("PASSWORD RESET | reset request", 0);
+  logger.l("PASSWORD RESET | reset request");
 
   db.users
     .findOne({
@@ -112,7 +114,7 @@ router.post("/api/requestReset", function(req, res) {
       };
       nmlTrans.sendMail(mailOptions, function(err) {
         if (err) {
-          console.log("PASS RESET | " + err, 1);
+          logger.l("PASS RESET | " + err);
         }
       });
 
@@ -140,7 +142,7 @@ router.post("/api/requestReset", function(req, res) {
       );
     })
     .catch(e => {
-      console.error(e);
+      logger.e(e);
       return res.json(genericErrorObject(e));
     });
 });
@@ -150,7 +152,7 @@ router.get("/api/checkToken/:token", function(req, res) {
   let returner = genericResponseObject();
   returner.valid = false;
 
-  console.log("PASS RESET | checking for token " + req.params.token, 0);
+  logger.l("PASS RESET | checking for token " + req.params.token);
 
   db.users
     .findOne({
@@ -165,7 +167,7 @@ router.get("/api/checkToken/:token", function(req, res) {
       }
 
       //token found
-      console.log("PASS RESET | found token!", 0);
+      logger.l("PASS RESET | found token!");
       returner.token = token.resetToken;
       returner.valid = true;
       returner.meta.error = false;
@@ -173,7 +175,7 @@ router.get("/api/checkToken/:token", function(req, res) {
       return res.json(returner);
     })
     .catch(e => {
-      console.error(e);
+      logger.e(e);
       return res.json(genericErrorObject(e));
     });
 });
@@ -185,7 +187,7 @@ router.post("/api/register", function(req, res) {
 
   du(path.resolve("static", config.storagePath))
     .then(size => {
-      console.log(
+      logger.l(
         "REGISTRATION | The size of the video folder is:" + size + "bytes",
         0
       );
@@ -195,9 +197,9 @@ router.post("/api/register", function(req, res) {
         });
       }
 
-      console.log("registering");
+      logger.l("registering");
 
-      console.log(
+      logger.l(
         chalk.bgRed(
           chalk.bgCyanBright.black(
             "REGISTRATION | no duplicate account! proceeding with the creation of the account."
@@ -216,7 +218,7 @@ router.post("/api/register", function(req, res) {
     .then(docs => {
       if (docs.length != 0) {
         //duplicate email
-        console.log(
+        logger.l(
           chalk.bgRed(
             "REGISTRATION | Failed account creation (duplicate emails)"
           ),
@@ -290,7 +292,7 @@ router.post("/api/register", function(req, res) {
             accountStanding: 0
           })
           .then(doc => {
-            console.log(
+            logger.l(
               chalk.bgCyanBright.black(
                 "REGISTRATION | successfully inserted user " + doc.username
               ),
@@ -302,14 +304,14 @@ router.post("/api/register", function(req, res) {
       });
     })
     .catch(e => {
-      console.log(e);
+      logger.l(e);
       return res.status(500).json(genericErrorObject(e));
     });
 });
 
 // post to actually change the password (both in-profile and token-based password reset)
 router.patch("/api/password/token", function(req, res) {
-  log("PASSWORD CHANGE || token", 0);
+  logger.l("PASSWORD CHANGE || token");
 
   //token reset
   let hashedPass = hashUpPass(req.body.newPass);
@@ -333,34 +335,22 @@ router.patch("/api/password/token", function(req, res) {
         returnUpdatedDocs: true
       }
     )
-    .then((err, numAffected, affectedDocs) => {
+    .then((numAffected, affectedDocs) => {
       if (numAffected == 0) {
-        log("PASSWORD CHANGE || password was NOT successfully changed", 0);
+        logger.l("PASSWORD CHANGE || password was NOT successfully changed");
         throw "Password reset token is invalid or has expired.";
       }
 
       //all ok
-      log("PASSWORD CHANGE || password was successfully changed", 0);
+      logger.l("PASSWORD CHANGE || password was successfully changed");
       return res.json(
         genericResponseObject("You have successfully changed your password!")
       );
     })
     .catch(e => {
-      console.error(e);
+      logger.e(e);
       return res.json(genericErrorObject(e));
     });
 });
-
-// logger
-function log(message, type) {
-  if (
-    config.productionLogging === "all" ||
-    process.env.NODE_ENV !== "production"
-  ) {
-    console.log(message);
-  } else if (config.productionLogging === "error" && type === 1) {
-    console.log(message);
-  }
-}
 
 module.exports = router;
