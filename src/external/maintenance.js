@@ -71,8 +71,48 @@ function preLaunch(config) {
 
   // checking through all thumbnails & the videos themselves
   db.videos
-    .find({})
+    .remove({ confirmed: false }, { multi: true })
+    .then(() => {
+      return db.videos.find({});
+    })
     .then(docs => {
+      fs.readdir(path.resolve("static", config.storagePath), (err, files) => {
+        if (docs.length < files.length - 1) {
+          console.log("Detected undeleted video files.");
+
+          // leaving the thumbs dir alone
+          let index = files.indexOf("thumbs");
+          files.splice(index, 1);
+
+          let difference = files.diff(videoNames);
+          if (difference.length != 0) {
+            difference.forEach(item => {
+              //removing unneeded
+              fs.unlink(path.resolve("static", config.storagePath, item));
+            });
+          }
+        }
+      });
+
+      fs.readdir(
+        path.resolve("static", config.storagePath, "thumbs"),
+        (err, files) => {
+          if (docs.length < files.length) {
+            console.log("Detected undeleted video thumbnails.");
+
+            let difference = files.diff(thumbnailNames);
+            if (difference.length != 0) {
+              difference.forEach(item => {
+                //removing unneeded
+                fs.unlink(
+                  path.resolve("static", config.storagePath, "thumbs", item)
+                );
+              });
+            }
+          }
+        }
+      );
+
       docs.forEach(video => {
         // adding for further cleaning
         videoNames.push(video.videoID + video.extension);
@@ -137,43 +177,6 @@ function preLaunch(config) {
             console.error("Could not generate thumbnails:", e);
           });
       });
-
-      fs.readdir(path.resolve("static", config.storagePath), (err, files) => {
-        if (docs.length < files.length - 1) {
-          //console.log("WARN! Detected undeleted video files.");
-
-          // leaving the thumbs dir alone
-          let index = files.indexOf("thumbs");
-          files.splice(index, 1);
-
-          let difference = files.diff(videoNames);
-          if (difference.length != 0) {
-            difference.forEach(item => {
-              //removing unneeded
-              fs.unlink(path.resolve("static", config.storagePath, item));
-            });
-          }
-        }
-      });
-
-      fs.readdir(
-        path.resolve("static", config.storagePath, "thumbs"),
-        (err, files) => {
-          if (docs.length < files.length) {
-            //console.log("WARN! Detected undeleted video thumbnails.");
-
-            let difference = files.diff(thumbnailNames);
-            if (difference.length != 0) {
-              difference.forEach(item => {
-                //removing unneeded
-                fs.unlink(
-                  path.resolve("static", config.storagePath, "thumbs", item)
-                );
-              });
-            }
-          }
-        }
-      );
     })
     .catch(e => {
       console.error(e);

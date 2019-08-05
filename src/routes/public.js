@@ -46,7 +46,7 @@ router.get("/api/cv/:id", function(req, res) {
         multi: false
       }
     )
-    .then((numAffected, affectedDocument, upsert) => {
+    .then(affectedDocument => {
       if (!affectedDocument) {
         logger.l("FETCHING VIDEO | no such video!");
         returner.meta.error = 1;
@@ -111,22 +111,19 @@ router.get("/api/cv/:id", function(req, res) {
       }
       // anonymous viewer.
       logger.l("FETCHING VIDEO | anonymous viewer");
-      return;
-    })
-    .then(() => {
       return db.ratings.count({
         action: 1, //like
         videoID: returner.video.videoID
       });
     })
-    .then(() => {
+    .then(count => {
       returner.ratings.likes = count;
       return db.ratings.count({
         action: 0, //dislike
         videoID: returner.video.videoID
       });
     })
-    .then(() => {
+    .then(count => {
       returner.ratings.dislikes = count;
       return res.json(returner);
     });

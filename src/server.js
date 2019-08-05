@@ -1,7 +1,6 @@
 process.env.DEBUG = process.env.NODE_ENV === "production" ? "" : "nuxt:*";
-const bcrypt = require("bcrypt");
+const path = require("path");
 const shortid = require("shortid");
-const chalk = require("chalk");
 const { Nuxt, Builder } = require("nuxt");
 const bodyParser = require("body-parser");
 const session = require("express-session");
@@ -9,10 +8,9 @@ const app = require("express")();
 const fileUpload = require("express-fileupload");
 const helmet = require("helmet");
 const NedbStore = require("nedb-session-store")(session);
-const config = require("../config");
-const maintenance = require("./external/maintenance.js");
+const config = require(path.resolve("config.json"));
+const maintenance = require(path.resolve("src", "external", "maintenance.js"));
 const favicon = require("serve-favicon");
-const path = require("path");
 
 // removed _ and - from the generator because of issues with nuxt dynamic routing
 shortid.characters(
