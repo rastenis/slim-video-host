@@ -100,7 +100,7 @@ export default {
       this.$store.state.authUser &&
       this.$store.state.authUser.userStatus == 1
     ) {
-      this.$store.state.activeTab = "5";
+      this.$store.dispatch("setActiveTab", "5");
     } else {
       this.$nuxt._router.push("/");
     }

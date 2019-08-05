@@ -103,7 +103,7 @@ export default {
       } else {
         //user pressed "welcome back". Redirect to dashboard
         this.$nuxt._router.push("/dash");
-        this.$store.state.activeTab = "2";
+        this.$store.dispatch("setActiveTab", "2");
       }
     },
     handleListener(event) {
@@ -117,6 +117,7 @@ export default {
     },
     redirectToRegister() {
       this.$nuxt._router.push("/regg");
+      this.$store.dispatch("setActiveTab", "2");
       this.$store.state.activeTab = "2";
     },
     async login() {
@@ -129,7 +130,7 @@ export default {
         this.form.password = "";
         this.formError = null;
         this.$nuxt._router.push("/dash");
-        this.$store.state.activeTab = "2";
+        this.$store.dispatch("setActiveTab", "2");
       } catch (e) {
         this.$message.error(e.message);
       }

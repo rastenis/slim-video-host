@@ -541,7 +541,7 @@ router.delete("/api/removeVideo", check, function(req, res) {
             }
           );
         })
-        .then((numAffected, affectedDocument) => {
+        .then(affectedDocument => {
           // removing video
           // renewing session user, but not if the user is an admin
           if (req.session.authUser.userStatus != 1) {

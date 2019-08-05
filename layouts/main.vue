@@ -97,15 +97,14 @@ export default {
         case "2":
           if (this.$store.state.authUser) {
             this.$nuxt._router.push("/dash");
-            this.$store.state.activeTab = "2";
           } else {
             this.$nuxt._router.push("/regg");
-            this.$store.state.activeTab = "2";
           }
+          this.$store.dispatch("setActiveTab", "2");
           break;
         case "3":
           this.$nuxt._router.push("/upload");
-          this.$store.state.activeTab = "3";
+          this.$store.dispatch("setActiveTab", "3");
           break;
         case "4":
           this.logout();
@@ -116,7 +115,7 @@ export default {
           } else {
             this.$nuxt._router.push("/profile");
           }
-          this.$store.state.activeTab = "5";
+          this.$store.dispatch("setActiveTab", "5");
           break;
         default:
           console.log("invalid nav choice");

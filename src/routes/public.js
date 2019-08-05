@@ -79,7 +79,7 @@ router.get("/api/cv/:id", function(req, res) {
 
       // logged in viewer.
       if (req.body.user) {
-        return db.ratings
+        db.ratings
           .find(
             {
               username: req.body.user.username,
@@ -111,6 +111,9 @@ router.get("/api/cv/:id", function(req, res) {
       }
       // anonymous viewer.
       logger.l("FETCHING VIDEO | anonymous viewer");
+      return null;
+    })
+    .then(() => {
       return db.ratings.count({
         action: 1, //like
         videoID: returner.video.videoID
