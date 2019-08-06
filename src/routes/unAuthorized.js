@@ -300,27 +300,29 @@ router.patch("/api/password/token", check, function(req, res) {
   logger.l("PASSWORD CHANGE || token");
 
   //token reset
-  let hashedPass = hashUpPass(req.body.newPass);
-  // updating right away
-  db.users
-    .update(
-      {
-        resetToken: req.body.token,
-        tokenExpiry: {
-          $gt: Date.now()
+  // updating right away, if token is incorrect no update will occur.
+  bcrypt
+    .hash(req.body.newPass, saltAmount)
+    .then(hashed => {
+      return db.users.update(
+        {
+          resetToken: req.body.token,
+          tokenExpiry: {
+            $gt: Date.now()
+          }
+        },
+        {
+          $set: {
+            password: hashed,
+            tokenExpiry: 0
+          }
+        },
+        {
+          upsert: false,
+          returnUpdatedDocs: true
         }
-      },
-      {
-        $set: {
-          password: hashedPass,
-          tokenExpiry: 0
-        }
-      },
-      {
-        upsert: false,
-        returnUpdatedDocs: true
-      }
-    )
+      );
+    })
     .then((numAffected, affectedDocs) => {
       if (numAffected == 0) {
         logger.l("PASSWORD CHANGE || password was NOT successfully changed");

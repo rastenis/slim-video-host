@@ -78,8 +78,6 @@ if (nuxt_config.dev) {
   builder.build();
 }
 
-//TODO: recalculate user remaining space each start
-
 app.use(nuxt.render);
 
 module.exports = app;
