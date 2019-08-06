@@ -15,7 +15,7 @@ let config = require(path.resolve("configExample.json"));
 // outputting intro splash
 console.log(
   chalk.yellow(
-    figlet.textSync("S-VidHost", {
+    figlet.textSync("slim-video-host", {
       font: "Doom",
       horizontalLayout: "default",
       verticalLayout: "default"
@@ -27,16 +27,14 @@ console.log(
   chalk.bgYellow.black("                                                    ")
 );
 console.log(
-  chalk.bgYellow.black("SUCCESS! Starting setup...                          ")
+  chalk.bgYellow.black("Starting setup...                          ")
 );
 console.log(
   chalk.bgYellow.black("                                                    ")
 );
 
-config.spaceLimit = prompt(
-  "Enter total space in bytes (100GB): ",
-  config.spaceLimit
-);
+config.spaceLimit =
+  prompt("Enter total space in bytes (100GB): ", 100) * 1000000000;
 
 config.storagePath = prompt(
   `Enter video storage path (${config.storagePath}): `,

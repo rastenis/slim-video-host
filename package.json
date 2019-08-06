@@ -1,5 +1,5 @@
 {
-  "name": "s-vidhost",
+  "name": "slim-video-host",
   "version": "1.8.1",
   "description": "Redistributable video hosting site",
   "main": "src/index.js",
