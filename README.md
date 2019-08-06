@@ -1,5 +1,7 @@
 # slim-video-host
 
+[![Status](https://travis-ci.org/scharkee/slim-video-host.svg?branch=master)](https://travis-ci.org/scharkee/slim-video-host)
+
 ### a cross-platform private video hosting platform.
 
 ## Features
@@ -85,6 +87,12 @@ $ npm run dev
 Google requires "Less secure app access" to be enabled for you to be able to use a basic login (email,password) in order to send out password reset tokens. You can enable it by going to your [Google account settings](https://myaccount.google.com/), and by enabling "Less secure app access".
 
 You can also use OAuth, but that requires additional setup within Google's Developer console, and some manual reconfiguration in the transport setup. More information can be found in the [nodemailer docs.](https://nodemailer.com/usage/using-gmail/)
+
+### Issues and contributions
+
+Submit bugs and requests through the project's [issue tracker.](https://repo.hepha.co.uk/root/slim-video-host/issues)
+
+Contributions are welcome! [Submit a merge request to my GitLab.](https://repo.hepha.co.uk/root/slim-video-host/merge_requests)
 
 ### Automatic maintenance
 
