@@ -9,6 +9,7 @@
     "care": "node src/helpers/care.js",
     "maintenance": "node src/helpers/care.js",
     "setup": "node src/setup/setup.js",
+    "setup:default": "node src/setup/setup.default.js",
     "config": "node src/setup/setup.js",
     "build": "nuxt build",
     "start": "cross-env NODE_ENV=production node src/index.js",
