@@ -177,9 +177,54 @@ function preLaunch(config) {
             console.error("Could not generate thumbnails:", e);
           });
       });
+
+      recalculateUserSpace();
     })
     .catch(e => {
       console.error(e);
+    });
+}
+
+function recalculateUserSpace() {
+  // recalculating user space
+  let users, videos;
+  db.users
+    .find({})
+    .then(foundUsers => {
+      users = foundUsers;
+      return db.videos.find({});
+    })
+    .then(foundVideos => {
+      videos = foundVideos;
+
+      let userSpaceMap = {};
+      users.forEach(user => {
+        userSpaceMap[user.username] = 0;
+      });
+
+      videos.forEach(video => {
+        userSpaceMap[video.username] += video.size;
+      });
+
+      // updating space
+      users.forEach(user => {
+        if (
+          Math.abs(
+            users.remainingSpace -
+              (user.totalSpace - userSpaceMap[user.username])
+          ) > 1
+        ) {
+          // 2 mb headroom
+          db.users.update(
+            { _id: users._id },
+            {
+              $set: {
+                remainingSpace: user.totalSpace - userSpaceMap[user.username]
+              }
+            }
+          );
+        }
+      });
     });
 }
 
