@@ -156,7 +156,7 @@ export default {
   },
   mounted() {
     if (!this.$store.state.authUser) {
-      this.$store.state.activeTab = "2";
+      this.$store.dispatch("setActiveTab", "2");
     } else {
       //if user has an account, push him to dashboard
       this.$nuxt._router.push("/dash");

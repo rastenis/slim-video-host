@@ -67,7 +67,10 @@ export default {
               });
             })
             .catch(e => {
-              console.log(e);
+              this.$message({
+                type: "error",
+                message: e.response.data.meta.msg
+              });
             });
         } else {
           console.log("validation error");
@@ -78,7 +81,7 @@ export default {
   },
   mounted() {
     if (!this.$store.state.authUser) {
-      this.$store.state.activeTab = "9";
+      this.$store.dispatch("setActiveTab", "9");
     } else {
       //if user has an account, push him to dashboard
       this.$nuxt._router.push("/dash");
@@ -91,7 +94,6 @@ export default {
   }
 };
 </script>
-
 
 <style>
 .ResetForm {

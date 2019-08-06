@@ -103,7 +103,7 @@ export default {
       this.$refs["resetForm"].validate(valid => {
         if (valid) {
           axios({
-            url: "/api/changePassword",
+            url: "/api/password/token",
             method: "patch",
             credentials: "same-origin",
             data: {
@@ -140,7 +140,7 @@ export default {
   },
   mounted() {
     if (!this.$store.state.authUser) {
-      this.$store.state.activeTab = "9";
+      this.$store.dispatch("setActiveTab", "9");
     } else {
       //if user has an account, push him to dashboard
       this.$nuxt._router.push("/dash");

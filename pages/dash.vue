@@ -91,7 +91,7 @@
           <div v-else>
             <p>You don't have any videos yet!</p>
             <el-button
-              @click="$store.app.router.push('/upload'); this.$store.state.activeTab = '3';"
+              @click="$store.app.router.push('/upload'); this.$store.dispatch('setActiveTab', '3');"
             >Upload a video</el-button>
           </div>
         </el-card>
@@ -338,7 +338,7 @@ export default {
       this.$nuxt._router.push("/");
       return;
     } else {
-      this.$store.state.activeTab = "2";
+      this.$store.dispatch("setActiveTab", "2");
     }
 
     // stats

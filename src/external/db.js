@@ -1,21 +1,22 @@
 const config = require("../../config.json");
-var Datastore = require("nedb");
-var path = require("path");
+const Datastore = require("nedb-promises");
+const path = require("path");
 
 module.exports = {
-  users: new Datastore({
+  users: Datastore.create({
     filename: path.resolve(config.dbPath, "users"),
     autoload: true
   }),
-  codes: new Datastore({
+  codes: Datastore.create({
     filename: path.resolve(config.dbPath, "codes"),
-    corruptAlertThreshold: 1 // headway manually pridetiems kodams
+    corruptAlertThreshold: 1, // headway for manually added codes
+    autoload: true
   }),
-  videos: new Datastore({
+  videos: Datastore.create({
     filename: path.resolve(config.dbPath, "videos"),
     autoload: true
   }),
-  ratings: new Datastore({
+  ratings: Datastore.create({
     filename: path.resolve(config.dbPath, "ratings"),
     autoload: true
   })

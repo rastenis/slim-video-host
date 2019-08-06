@@ -127,7 +127,7 @@ export default {
         if (valid) {
           this.passReset.loading = true;
           axios({
-            url: "/api/changePassword",
+            url: "/api/password/regular",
             method: "patch",
             credentials: "same-origin",
             data: {
@@ -202,7 +202,7 @@ export default {
   },
   mounted() {
     if (this.$store.state.authUser) {
-      this.$store.state.activeTab = "5";
+      this.$store.dispatch("setActiveTab", "5");
     } else {
       // non-logged in users have no right to be here
       this.$nuxt._router.push("/");

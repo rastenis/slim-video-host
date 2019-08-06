@@ -1,9 +1,9 @@
-const Datastore = require("nedb");
+const Datastore = require("nedb-promises");
 const chalk = require("chalk");
 const prompt = require("prompt-sync")({});
 
-var db = {};
-db.codes = new Datastore({
+let db = {};
+db.codes = Datastore.create({
   filename: "db/codes",
   autoload: true,
   corruptAlertThreshold: 1
@@ -18,64 +18,69 @@ mainLoop: while (true) {
   console.log("5. Add code - account standing reset");
   console.log("ENTER. Exit.");
 
-  var choice = prompt("choose:");
+  let choice = prompt("choose:");
 
   switch (choice) {
     case "1":
-      var code = prompt("enter code:");
-      var space = prompt("enter space ammount in GB:");
-      var typeBool = prompt(
+      let code = prompt("enter code:");
+      let space = prompt("enter space ammount in GB:");
+      let typeBool = prompt(
         "enter type (0 for registration code, 1 for upgrade code):"
       );
       type = typeBool ? "upgrade" : "reg";
-      db.codes.insert(
-        {
+      db.codes
+        .insert({
           code: code,
           space: parseFloat(space) * 1000,
           type: type,
           benefit: 0,
           active: true
-        },
-        function(err) {
-          if (err) {
-            console.log(err);
-          }
-        }
-      );
-      console.log(
-        chalk.green("DONE! Code ") +
-          chalk.yellow(code) +
-          chalk.green(" inserted!")
-      );
+        })
+        .then(() => {
+          console.log(
+            chalk.green("DONE! Code ") +
+              chalk.yellow(code) +
+              chalk.green(" inserted!")
+          );
+        })
+        .catch(e => {
+          console.error(e);
+        });
       break;
     case "2":
-      var code = prompt("enter code:");
-      var typeBool = prompt(
+      let code = prompt("enter code:");
+      let typeBool = prompt(
         "enter type (0 for registration code, 1 for upgrade code):"
       );
       type = typeBool ? "upgrade" : "reg";
-      db.codes.insert(
-        { code: code, space: null, type: type, benefit: 1, active: true },
-        function(err) {
-          if (err) {
-            console.log(err);
-          }
-        }
-      );
-      console.log(
-        chalk.green("DONE! Code ") +
-          chalk.yellow(code) +
-          chalk.green(" inserted!")
-      );
+      db.codes
+        .insert({
+          code: code,
+          space: null,
+          type: type,
+          benefit: 1,
+          active: true
+        })
+        .then(() => {
+          console.log(
+            chalk.green("DONE! Code ") +
+              chalk.yellow(code) +
+              chalk.green(" inserted!")
+          );
+        })
+        .catch(e => {
+          console.error(e);
+        });
+
       break;
     case "3":
-      var code = prompt("enter code:");
+      let code = prompt("enter code:");
       db.codes.remove({ code: code }, {});
       console.log(chalk.green("DONE!"));
       break;
     case "4":
-      var code = prompt("enter code:");
-      var active = prompt("enter state (0 for inactive, 1 for active):");
+      let code = prompt("enter code:");
+      let active = prompt("enter state (0 for inactive, 1 for active):");
       db.codes.update(
         { code: code },
         { $set: { active: Boolean(active) } },
@@ -84,21 +89,19 @@ mainLoop: while (true) {
       console.log(chalk.green("DONE!"));
       break;
     case "5":
-      var code = prompt("enter code:");
-      db.codes.insert(
-        { code: code, space: null, type: "upgrade", benefit: 2, active: true },
-        function(err) {
-          if (err) {
-            console.log(err);
-          }
-        }
-      );
+      let code = prompt("enter code:");
+      db.codes.insert({
+        code: code,
+        space: null,
+        type: "upgrade",
+        benefit: 2,
+        active: true
+      });
       console.log(chalk.green("DONE!"));
       break;
     case "":
       console.log("finishing up....");
       break mainLoop;
-      break;
     default:
       break;
   }

@@ -4,8 +4,7 @@ const config = require("./config.json");
 
 module.exports = {
   build: {
-    analyze: false,
-    vendor: ["element-ui", "axios", "vue-clipboard2", "lodash"]
+    analyze: false
   },
   plugins: ["~plugins/element-ui", "~plugins/vue-clipboard2"],
   css: [

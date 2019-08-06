@@ -297,7 +297,7 @@ export default {
     if (!this.$store.state.authUser) {
       this.$nuxt._router.push("/");
     } else {
-      this.$store.state.activeTab = "3";
+      this.$store.dispatch("setActiveTab", "3");
     }
     this.uploader = this.$refs.uploader;
   },
