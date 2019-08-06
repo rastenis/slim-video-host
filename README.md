@@ -32,6 +32,8 @@
 $ git clone https://repo.hepha.co.uk/root/slim-video-host.git
 # instal dependencies and trigger setup (you must have an interactive shell)
 $ npm install
+# perform setup (you must have an interactive shell)
+$ npm run setup
 # run the system in devmode
 $ npm run dev
 ```

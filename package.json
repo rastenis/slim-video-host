@@ -12,8 +12,7 @@
     "setup:default": "node src/setup/setup.default.js",
     "config": "node src/setup/setup.js",
     "build": "nuxt build",
-    "start": "cross-env NODE_ENV=production node src/index.js",
-    "postinstall": "node src/setup/setup.js"
+    "start": "cross-env NODE_ENV=production node src/index.js"
   },
   "author": "Scharkee",
   "license": "ISC",
