@@ -27,7 +27,7 @@ console.log(
   chalk.bgYellow.black("                                                    ")
 );
 console.log(
-  chalk.bgYellow.black("Starting setup...                          ")
+  chalk.bgYellow.black("Starting setup...                                   ")
 );
 console.log(
   chalk.bgYellow.black("                                                    ")

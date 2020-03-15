@@ -36,6 +36,11 @@ $ npm install
 $ npm run setup
 # run the system in devmode
 $ npm run dev
+
+# build the client
+$ npm run build
+# run the system in production mode
+$ npm run start
 ```
 
 - The application can now be accessed at port you configured.
