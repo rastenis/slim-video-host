@@ -30,22 +30,28 @@
 ```bash
 # clone the repo
 $ git clone https://repo.hepha.co.uk/root/slim-video-host.git
+
 # instal dependencies and trigger setup (you must have an interactive shell)
-$ npm install
+$ yarn        # or npm install
+
 # perform setup (you must have an interactive shell)
-$ npm run setup
+$ yarn setup  # or npm run setup
+
 # run the system in devmode
-$ npm run dev
+$ yarn dev    # or npm run dev
+
+# ...
 
 # build the client
-$ npm run build
+$ yarn build  # or npm run build
+
 # run the system in production mode
-$ npm run start
+$ yarn start  # or npm run start
 ```
 
 - The application can now be accessed at port you configured.
 - The first registered user will be set as admin.
-  - You can create codes via `npm run codes` that upgrade other users to admins,
+  - You can create codes via `yarn codes` that upgrade other users to admins,
   - Or you can adjust their userStatus directly in the database file.
 - The registration page is accessible by pressing **Alt+R** in the landing/login page or by going to the /regg route( `//hostname.domain/regg` )
 
@@ -53,7 +59,7 @@ $ npm run start
 
 - **config.json file must be in the root directory with the following contents:**
 
-  > The config generator gets automatically launched after the initial installation. Be sure to fill everything in correctly! It can be rerun with `npm run setup`
+  > The config generator gets automatically launched after the initial installation. Be sure to fill everything in correctly! It can be rerun with `yarn setup`
 
 1. `storagePath` - video storage path, must also be served as static content, relative to the root dir
 2. `host` - set up the domain you want your website to be accessible through. HTTP/HTTPS will be automatically added according to the `selfHosted` setting.
@@ -68,26 +74,26 @@ $ npm run start
 9. `dbPath` - database path, relative to root dir. No need to change the default value.
 10. `infiniteSessions` - whether user sessions should persist forever ar have a 24h lifespan.
 
-- ConfigExample.json is in the root dir with demo settings set. If needed, use it as guidance while filling out `npm run setup`
+- ConfigExample.json is in the root dir with demo settings set. If needed, use it as guidance while filling out `yarn setup`
 
 ## Scripts
 
 - Development:
-  - `npm run dev` runs the server in devmode
+  - `yarn dev` runs the server in devmode
 - Production:
-  - `npm run build` builds the server for production
-  - `npm run start` starts the built server
+  - `yarn build` builds the server for production
+  - `yarn start` starts the built server
 - Setup and maintenance:
-  - `npm run setup` or `npm run config` - starts the config generation sequence. Runs automatically after npm install.
-  - `npm run codes` opens the code manipulation console interface (upgrade and registration codes: space upgrades, admin status codes)
-  - `npm run care` or `npm run maintenance` - opens the maintenance console interface. Used for manually runnign tasks that check the integrity and health of the platform, as well as other operations, such as a complete wipe. Config.json must be present in order for these commands to work.
+  - `yarn setup` or `yarn config` - starts the config generation sequence. Runs automatically after yarn install.
+  - `yarn codes` opens the code manipulation console interface (upgrade and registration codes: space upgrades, admin status codes)
+  - `yarn care` or `yarn maintenance` - opens the maintenance console interface. Used for manually runnign tasks that check the integrity and health of the platform, as well as other operations, such as a complete wipe. Config.json must be present in order for these commands to work.
 
 ### Independant TLS precautions
 
 - The server will most likely need to be ran as root, so it can take control of 80/443 ports
 - This may in turn generate databases, temporary files and certs that have root ownership:
   - Shouldn't be a problem if the TLS mode isn't changed
-  - System wipe will also need to be ran as root. When it's finished, normal non-root operation without auto TLS generation can be reinstated (after reconfiguring config.json via `npm run setup`).
+  - System wipe will also need to be ran as root. When it's finished, normal non-root operation without auto TLS generation can be reinstated (after reconfiguring config.json via `yarn setup`).
 
 ### Email setup
 
