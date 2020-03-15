@@ -1,0 +1,20 @@
+stages:
+  - build
+  - test
+
+build:
+  stage: build
+  image: node
+  before_script:
+    - yarn
+    - yarn setup:default
+  script:
+    - yarn build
+
+test:
+  stage: test
+  image: node
+  before_script:
+    - yarn
+  script:
+    - yarn test

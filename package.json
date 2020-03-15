@@ -4,6 +4,7 @@
   "description": "Redistributable video hosting site",
   "main": "src/index.js",
   "scripts": {
+    "test": "echo 'Tests WIP'",
     "dev": "node src/index.js",
     "codes": "node src/helpers/manageCodes.js",
     "care": "node src/helpers/care.js",
