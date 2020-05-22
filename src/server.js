@@ -14,7 +14,7 @@ const favicon = require("serve-favicon");
 
 // removed special chars from the generator because of issues with nuxt dynamic routing
 shortid.characters(
-  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ<>"
 );
 
 // route imports

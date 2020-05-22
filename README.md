@@ -2,7 +2,7 @@
 
 [![Status](https://travis-ci.org/scharkee/slim-video-host.svg?branch=master)](https://travis-ci.org/scharkee/slim-video-host)
 
-[Demo](https://svh.demos.matasr.com/)
+[Demo](https://svh.demos.matasr.com/) - Click ALT+R a few times to enter the hidden registration page.
 
 ### a cross-platform private video hosting platform.
 
@@ -125,4 +125,5 @@ On launch:
 ![login screenshot](https://i.imgur.com/S0P51Bx.jpg "Login")
 ![admin panel screenshot](https://i.imgur.com/llwidnK.png "Admin Panel")
 ![styling screenshot](https://i.imgur.com/RSpxYQX.png "Admin style options")
-![randomized login](https://i.imgur.com/OxXAzg9.jpg "Randomized login demo")
+![randomized login screenshot](https://i.imgur.com/OxXAzg9.jpg "Randomized login demo")
+![video viewing screenshot](https://i.imgur.com/Z2KdYwv.png "Video viewing")
