@@ -31,7 +31,7 @@
 
 ```bash
 # clone the repo
-$ git clone https://repo.hepha.co.uk/root/slim-video-host.git
+$ git clone https://github.com/Scharkee/slim-video-host.git
 
 # instal dependencies and trigger setup (you must have an interactive shell)
 $ yarn        # or npm install
@@ -103,18 +103,11 @@ Google requires "Less secure app access" to be enabled for you to be able to use
 
 You can also use OAuth, but that requires additional setup within Google's Developer console, and some manual reconfiguration in the transport setup. More information can be found in the [nodemailer docs.](https://nodemailer.com/usage/using-gmail/)
 
-### Screenshots
-
-![dashboard screenshot](https://i.imgur.com/ozd2tCH.png "Dashboard")
-![login screenshot](https://i.imgur.com/S0P51Bx.jpg "Login")
-![admin panel screenshot](https://i.imgur.com/llwidnK.png "Admin Panel")
-![styling screenshot](https://i.imgur.com/RSpxYQX.png "Admin style options")
-
 ### Issues and contributions
 
-Submit bugs and requests through the project's [issue tracker.](https://repo.hepha.co.uk/root/slim-video-host/issues)
+Submit bugs and requests through the project's [issue tracker.](https://github.com/Scharkee/slim-video-host/issues)
 
-Contributions are welcome! [Submit a merge request to my GitLab.](https://repo.hepha.co.uk/root/slim-video-host/merge_requests)
+Contributions are welcome! [Submit a merge request to my GitLab.](https://github.com/Scharkee/slim-video-host/merge_requests)
 
 ### Automatic maintenance
 
@@ -125,3 +118,11 @@ On launch:
 - User remaining space ir recalculated, in order to avoid issues caused by malformed uploads and/or client crashes.
 - Videos without a thumbnail get their thumbnails regenerated.
 - Total space is checked with current space. A **Warning** will be displayed on build if the storagePath is exceeded (the system will still function, but uploads will no longer be accepted).
+
+### Screenshots
+
+![dashboard screenshot](https://i.imgur.com/ozd2tCH.png "Dashboard")
+![login screenshot](https://i.imgur.com/S0P51Bx.jpg "Login")
+![admin panel screenshot](https://i.imgur.com/llwidnK.png "Admin Panel")
+![styling screenshot](https://i.imgur.com/RSpxYQX.png "Admin style options")
+![randomized login](https://i.imgur.com/OxXAzg9.jpg "Randomized login demo")
