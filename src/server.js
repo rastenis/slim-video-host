@@ -12,9 +12,9 @@ const config = require(path.resolve("config.json"));
 const maintenance = require(path.resolve("src", "external", "maintenance.js"));
 const favicon = require("serve-favicon");
 
-// removed _ and - from the generator because of issues with nuxt dynamic routing
+// removed special chars from the generator because of issues with nuxt dynamic routing
 shortid.characters(
-  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@"
+  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 );
 
 // route imports
@@ -34,9 +34,9 @@ app.use(helmet());
 app.use(
   fileUpload({
     limits: {
-      fileSize: 10 * 1000 * 1000 * 1000 //100 GB
+      fileSize: 10 * 1000 * 1000 * 1000, //100 GB
     },
-    safeFileNames: true
+    safeFileNames: true,
   })
 );
 app.use(bodyParser.json());
@@ -47,11 +47,11 @@ app.use(
     saveUninitialized: false,
     cookie: {
       secure: config.selfHosted,
-      maxAge: config.infiniteSessions ? null : 24 * 60 * 60 * 1000 //24 hours or infinite, depending on the config
+      maxAge: config.infiniteSessions ? null : 24 * 60 * 60 * 1000, //24 hours or infinite, depending on the config
     },
     store: new NedbStore({
-      filename: "db/persistance"
-    })
+      filename: "db/persistance",
+    }),
   })
 );
 
