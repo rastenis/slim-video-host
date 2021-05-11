@@ -36,7 +36,7 @@
     "greenlock-express": "^4.0.3",
     "greenlock-store-fs": "^3.0.2",
     "helmet": "^3.11.0",
-    "lodash": "^4.17.5",
+    "lodash": "^4.17.21",
     "moment": "^2.24.0",
     "nedb-promises": "^4.0.0",
     "nedb-session-store": "^1.1.2",
