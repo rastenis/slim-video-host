@@ -40,7 +40,7 @@
     "moment": "^2.24.0",
     "nedb-promises": "^4.0.0",
     "nedb-session-store": "^1.1.2",
-    "nodemailer": "^6.3.0",
+    "nodemailer": "^6.4.16",
     "nuxt": "^2.8.1",
     "prompt-sync": "^4.1.5",
     "serve-favicon": "^2.4.5",
