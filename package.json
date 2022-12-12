@@ -27,7 +27,7 @@
     "cross-env": "^7.0.2",
     "du": "^1.0.0",
     "element-ui": "^2.2.0",
-    "express": "^4.16.2",
+    "express": "^4.17.3",
     "express-fileupload": "https://github.com/Scharkee/express-fileupload-membufferless",
     "express-session": "^1.15.6",
     "ffmpeg-extract-frames": "^2.0.2",
